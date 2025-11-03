@@ -1,0 +1,754 @@
+:root {
+    --chmsu-green: #2e7d32; /* A slightly lighter, vibrant green */
+    --chmsu-dark-green: #1b5e20;
+    --text-color-dark: #333;
+    --text-color-light: #fff;
+    --input-border-color: #ccc;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --form-bg-color: #ffffff;
+    --button-hover-bg: #4caf50; /* A brighter green for hover */
+
+    /* Layout tokens */
+    --header-height: 56px;
+    --radius: 10px;
+    --ring-size: 6px; /* white ring around floating logo to avoid border collision */
+}
+
+/* Base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column; /* Allows header at top, main content below */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5; /* Light subtle background */
+    color: var(--text-color-dark);
+    position: relative; /* For absolute positioning of background images/overlay */
+    overflow-x: hidden; /* Allow vertical scrolling on small screens */
+}
+
+/* Header Banner */
+.header-banner {
+    width: 100%;
+    background-color: var(--chmsu-dark-green);
+    color: var(--text-color-light);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    position: fixed; /* Stays at the top */
+    top: 0;
+    left: 0;
+    z-index: 100; /* Ensure it's above other content */
+    box-shadow: 0 2px 5px var(--shadow-color);
+    min-height: var(--header-height);
+    gap: 10px;
+}
+
+.header-logo {
+    height: clamp(28px, 4vw, 40px); /* Responsive logo */
+    margin-right: 10px;
+}
+
+/* Make the header logo rounded without affecting other images */
+.header-banner .header-logo,
+.top-nav .header-logo {
+    border-radius: 50%;
+    aspect-ratio: 1 / 1;   /* keep it perfectly circular */
+    width: auto;           /* allow width to follow height */
+    object-fit: cover;     /* crop if the source isn't square */
+}
+
+.header-title {
+    font-weight: 500;
+    font-size: clamp(1rem, 1.6vw, 1.1rem);
+}
+
+/* ====== Top navigation (for dashboards) ====== */
+.top-nav {
+    width: 100%;
+    background-color: var(--chmsu-dark-green);
+    color: var(--text-color-light);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    min-height: var(--header-height);
+    gap: 10px;
+    justify-content: space-between;
+}
+.top-left { display: flex; align-items: center; gap: 10px; }
+.top-right { display: flex; align-items: center; gap: 12px; }
+.icon-btn { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.icon-btn:hover { background: rgba(255,255,255,0.1); }
+.profile-menu { position: relative; }
+.profile-btn { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); color:#fff; border: none; border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+.profile-btn .avatar { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--chmsu-dark-green); display:grid; place-items:center; font-weight:600; }
+.profile-menu .dropdown { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.15); min-width: 180px; display: none; overflow: hidden; }
+.profile-menu .dropdown a { display:block; padding:10px 12px; color:#333; text-decoration:none; }
+.profile-menu .dropdown a:hover { background:#f2f4f7; }
+.profile-menu.open .dropdown { display: block; }
+
+.searchbar { position: relative; display: flex; align-items: center; }
+.searchbar input { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color:#fff; padding:8px 10px 8px 30px; border-radius: 999px; outline:none; }
+.searchbar i { position: absolute; left: 10px; color: rgba(255,255,255,0.85); }
+
+/* ====== Dashboard cards & layout ====== */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+.dashboard-content { max-width: 1200px; margin: 100px auto 50px; padding: 30px; background: #fff; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.dash-card { background:#fff; border:1px solid #e5e7eb; border-radius: 12px; padding:16px; text-decoration:none; color:inherit; box-shadow: 0 6px 18px rgba(0,0,0,0.06); transition: transform .15s ease, box-shadow .15s ease; }
+.dash-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.12); }
+/* Make stat cards clickable when needed */
+.dash-card.clickable {
+    cursor: pointer;
+}
+.dash-card .card-icon { font-size: 24px; color: var(--chmsu-green); margin-bottom: 6px; }
+.dash-card .card-title { font-weight:600; margin-bottom: 4px; }
+.dash-card .card-desc { color:#666; font-size:.9rem; }
+.dash-card .card-metric { font-size: 1.4rem; font-weight:700; color: var(--chmsu-dark-green); }
+
+/* Cards and sections */
+.card { background:#fff; border:1px solid #e5e7eb; border-radius: 12px; padding:16px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+.table-toolbar { margin-bottom: 10px; }
+.table-responsive { overflow:auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align:left; padding:10px 12px; border-bottom:1px solid #eee; }
+.badge { padding: 4px 8px; font-size:.8rem; border-radius: 999px; }
+.badge-warning { background:#fff3cd; color:#856404; }
+.badge-success { background:#d4edda; color:#155724; }
+.quick-links { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Modals */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; padding: 20px; z-index: 200; }
+.modal.show { display:flex; }
+.modal-card { background:#fff; border-radius:12px; width:min(560px, 92vw); box-shadow: 0 16px 36px rgba(0,0,0,0.2); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eee; }
+.modal-body { padding: 14px; }
+.modal-actions { padding: 12px 14px; border-top:1px solid #eee; display:flex; justify-content:flex-end; }
+
+/* Notifications panel */
+.notif-panel { position: fixed; right: 16px; top: calc(var(--header-height) + 12px); background:#fff; border:1px solid #e5e7eb; border-radius:12px; width: min(360px, 92vw); box-shadow:0 10px 24px rgba(0,0,0,0.15); display:none; z-index: 150; }
+.notif-panel.show { display:block; }
+.notif-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid #eee; }
+.notif-list { list-style:none; padding: 10px 12px; }
+.notif-list li { padding: 8px 0; border-bottom:1px solid #f1f3f5; }
+
+/* Forms */
+.form-card .form-group { margin-bottom: 14px; }
+.form-two-col { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-card input[type="text"], .form-card input[type="datetime-local"], .form-card input[type="file"], .form-card select, .form-card textarea {
+    width: 100%; border:1px solid #dfe3e8; border-radius: 6px; padding: 10px; font: inherit;
+}
+.form-card textarea { resize: vertical; }
+
+@media (max-width: 720px) {
+    .form-two-col { grid-template-columns: 1fr; }
+}
+
+/* Background Image and Overlay */
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/bg_abstract.svg'); /* Subtle abstract brand background */
+    background-size: cover;
+    background-position: center;
+    filter: blur(0px); /* Abstract is already soft */
+    z-index: 1; /* Below the content */
+}
+
+.background-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* Darker overlay for readability */
+    z-index: 2; /* Between image and content */
+}
+
+/* Main Login Container */
+.login-container {
+    position: relative; /* To contain its absolutely positioned logo */
+    z-index: 3; /* Above background and overlay */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: calc(var(--header-height) + clamp(24px, 6vh, 48px)); /* Push below fixed header */
+}
+
+.university-logo-main {
+    margin-bottom: 20px;
+    background-color: var(--form-bg-color); /* White background for visibility */
+    border-radius: 50%; /* Makes it circular */
+    box-shadow: 0 8px 20px var(--shadow-color);
+    position: absolute;
+    top: calc(-1 * (clamp(48px, 10vw, 72px) / 2)); /* float nicely above the card */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4; /* Above the form to overlap */
+    width: clamp(72px, 13vw, 110px);
+    height: clamp(72px, 13vw, 110px);
+    display: grid;
+    place-items: center;
+    border: var(--ring-size) solid #fff; /* white ring to prevent visual collision */
+}
+
+.university-logo-main img {
+    width: 75%; /* Keep some breathing space inside the circle */
+    height: auto;
+    display: block;
+}
+
+/* Login Form */
+.login-form {
+    background-color: var(--form-bg-color);
+    padding: clamp(72px, 12vh, 96px) clamp(20px, 4vw, 40px) 30px; /* Extra top padding to avoid logo collision */
+    border-radius: var(--radius);
+    box-shadow: 0 8px 20px var(--shadow-color);
+    width: 100%;
+    max-width: min(92vw, 420px);
+    text-align: center;
+    margin-top: 20px; /* Space from main logo */
+    border: 1px solid rgba(0,0,0,0.06); /* subtle outline to separate from bg */
+}
+
+.login-form h1 {
+    font-size: clamp(1.4rem, 2.2vw, 1.8rem);
+    margin-bottom: 30px;
+    color: var(--text-color-dark);
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-color-dark);
+    font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="email"] {
+    width: 100%;
+    padding: 14px 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 6px;
+    font-size: 1em;
+    color: var(--text-color-dark);
+    transition: border-color 0.3s ease;
+}
+
+/* Make number and select controls match text/email inputs */
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 6px;
+    font-size: 1em;
+    color: var(--text-color-dark);
+    transition: border-color 0.3s ease;
+    background-color: #fff;
+}
+
+/* Consistent, minimal custom look for selects */
+.form-group select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'><path d='M5 7l5 6 5-6' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    padding-right: 40px; /* room for arrow */
+}
+
+.form-group input:focus {
+    border-color: var(--chmsu-green);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2); /* Soft focus ring */
+}
+
+.form-group select:focus,
+.form-group input[type="number"]:focus,
+.form-group textarea:focus {
+    border-color: var(--chmsu-green);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+}
+
+/* Password field specific styling */
+.password-group {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    font-size: 1rem;
+    padding: 8px; /* Increase clickable area */
+    line-height: 1;
+    border-radius: 6px;
+}
+
+.password-toggle .fas {
+    pointer-events: none; /* Allows click to pass through to parent span */
+}
+
+/* Login Button */
+.login-button {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--chmsu-green);
+    color: var(--text-color-light);
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px; /* Space below password field */
+}
+
+.login-button:hover {
+    background-color: var(--button-hover-bg);
+    transform: translateY(-2px);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+/* Form Links */
+.form-links {
+    margin-top: 25px;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* For responsiveness on small screens */
+    gap: 5px; /* Space between links */
+}
+
+.form-links a {
+    color: var(--chmsu-green);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.form-links a:hover {
+    text-decoration: underline;
+    color: var(--chmsu-dark-green);
+}
+
+.form-links .separator {
+    color: #999;
+    margin: 0 5px;
+}
+
+/* University Name Footer */
+.university-name-footer {
+    margin-top: 30px;
+    font-size: 0.85em;
+    color: #777;
+}
+
+/* Error Messages */
+.error-message {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.field-error {
+    display: block;
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 5px;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .login-form {
+        padding: clamp(68px, 18vh, 90px) 20px 24px;
+        margin: 0 12px; /* Add some side margin on very small screens */
+        max-width: 480px;
+    }
+
+    .login-form h1 {
+        font-size: 1.4em;
+    }
+
+    .form-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-links .separator {
+        display: none; /* Hide separator when stacked */
+    }
+
+    .header-title {
+        font-size: 1em;
+    }
+
+    .university-logo-main {
+        top: calc(-1 * (clamp(48px, 12vw, 64px) / 2));
+        width: clamp(64px, 22vw, 88px);
+        height: clamp(64px, 22vw, 88px);
+        border-width: 5px;
+    }
+}
+
+/* Medium screens */
+@media (max-width: 768px) and (min-width: 481px) {
+    .login-form {
+        max-width: 520px;
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* =============================
+   Auth Card (two-panel layout)
+   ============================= */
+.auth-wrapper {
+    width: 100%;
+    padding: clamp(12px, 1.5rem, 24px);
+    display: grid;
+    place-items: center;
+}
+
+.auth-card {
+    display: grid;
+    grid-template-columns: 1.1fr 1.6fr;
+    gap: 0;
+    background: transparent;
+    border-radius: 20px;
+    overflow: hidden; /* Ensures rounded corners are respected */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    max-width: 980px;
+    position: relative;
+    width: min(980px, 92vw);
+    min-width: 720px; /* keep card from collapsing on mild zoom; will stack below 700px */
+}
+
+.auth-left {
+    background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
+    color: #fff;
+    padding: clamp(24px, 2.5rem, 40px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 1.25rem, 20px);
+    position: relative;
+}
+
+.brand-logo-circle {
+    width: clamp(80px, 8.5rem, 110px);
+    height: clamp(80px, 8.5rem, 110px);
+    border-radius: 50%;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+}
+.brand-logo-circle img {
+    width: 78%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 50%; /* make the logo image itself rounded */
+    object-fit: cover;   /* ensure circular crop if source isn't square */
+    display: block;
+    transition: opacity 0.2s ease; /* smooth fade for role-based swaps */
+}
+
+.auth-welcome { font-weight: 600; letter-spacing: 0.2px; font-size: clamp(1.1rem, 1.8vw, 1.4rem); }
+.auth-subtext { opacity: 0.9; font-size: 0.95rem; }
+
+.ghost-btn {
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.65);
+    padding: 8px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 500;
+}
+.ghost-btn:hover { background: rgba(255,255,255,0.1); }
+
+.auth-right {
+    background: #fff;
+    padding: clamp(22px, 4.5vw, 40px);
+}
+
+/* Decorative notch that cuts into the right panel (desktop/tablet only) */
+.auth-left::after {
+    content: "";
+    position: absolute;
+    right: -24px; /* pull a bit into the right side */
+    top: 50%;
+    width: 48px;
+    height: 48px;
+    background: #fff; /* same as right panel */
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+/* Hide the notch when stacked */
+@media (max-width: 860px) {
+    .auth-left::after { display: none; }
+}
+
+/* Buttons alignment to echo reference */
+.auth-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.ghost-btn { transition: background-color .2s ease, border-color .2s ease; }
+.login-button {
+    border-radius: 999px;
+    padding: 12px 18px;
+}
+
+.auth-title {
+    font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+    margin-bottom: 18px;
+    color: var(--text-color-dark);
+}
+
+.auth-form { width: 100%; max-width: 520px; }
+.auth-actions { margin-top: 8px; }
+
+/* Inputs with subtle outline (to echo the reference design) */
+.auth-form .form-group input[type="text"],
+.auth-form .form-group input[type="email"],
+.auth-form .form-group input[type="password"] {
+    border: 1px solid #dfe3e8;
+    background: #fff;
+}
+.auth-form .form-group input:focus {
+    border-color: var(--chmsu-green);
+}
+.auth-form .form-group select:focus {
+    border-color: var(--chmsu-green);
+}
+
+/* Role selector shared styles (login & signup) */
+.role-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+.role-btn {
+    padding: 10px 16px;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.role-btn.active {
+    border-color: var(--chmsu-green);
+    background: var(--chmsu-green);
+    color: #fff;
+}
+
+/* Segmented look */
+.role-selector--segmented {
+    background: #f4f6f8;
+    border: 1px solid #e5e7eb;
+    padding: 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    gap: 6px;
+}
+.role-selector--segmented .role-btn {
+    border-color: transparent;
+    background: transparent;
+    color: #333;
+    padding: 8px 14px;
+}
+.role-selector--segmented .role-btn.active {
+    background: #fff;
+    color: var(--chmsu-dark-green);
+    border-color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Show/hide role-bound form groups without affecting other groups */
+.form-group[data-role] { display: none; }
+.form-group[data-role].active { display: block; }
+
+/* Hide/show entire sections by role as well */
+.form-section[data-role] { display: none; }
+.form-section[data-role].active { display: block; }
+
+/* Form sections and grid for enhanced layout */
+.form-section { margin: 10px 0 18px; }
+.section-title {
+    font-size: 1rem;
+    color: #222;
+    font-weight: 600;
+    margin: 8px 0 10px;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
+}
+@media (max-width: 720px) {
+    .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Inputs with icons */
+.input-with-icon { position: relative; }
+.input-with-icon > i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #98a2b3;
+    pointer-events: none;
+}
+.input-with-icon input,
+.input-with-icon select,
+.input-with-icon textarea {
+    padding-left: 38px !important;
+}
+
+/* Helper text */
+.helper-text { display: block; margin-top: 6px; color: #6b7280; font-size: 0.85rem; }
+
+/* File input row */
+.file-input-row input[type="file"] {
+    width: 100%;
+    border: 1px solid #dfe3e8;
+    border-radius: 6px;
+    padding: 10px;
+    background: #fff;
+}
+
+/* Password toggle alignment within icon input */
+.password-group .input-with-icon .password-toggle {
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Collapsible Sections */
+.collapsible {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+}
+.collapsible + .collapsible { margin-top: 12px; }
+.collapsible-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f7faf9;
+    border: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1f2937;
+}
+.collapsible.open .collapsible-header {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.collapsible-header .chevron { transition: transform .2s ease; color: #6b7280; }
+.collapsible.open .collapsible-header .chevron { transform: rotate(180deg); }
+.collapsible-content {
+    overflow: hidden;
+    height: 0;
+    transition: height .25s ease;
+}
+.collapsible .form-grid { padding: 12px; }
+
+/* Mobile stacking */
+@media (max-width: 700px) {
+    .auth-card { grid-template-columns: 1fr; max-width: 640px; }
+    .auth-card { min-width: 0; width: min(640px, 95vw); }
+    .auth-left { padding: 24px 20px; }
+    .auth-right { padding: 20px; }
+}

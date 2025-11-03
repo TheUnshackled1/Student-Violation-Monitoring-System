@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard - CHMSU Student Violation Tracker</title>
+    <link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="top-left">
+            <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
+            <span class="header-title">Student Dashboard</span>
+        </div>
+        <div class="top-right">
+            <button class="icon-btn" id="notifBtn" aria-label="Notifications">
+                <i class="fas fa-bell"></i>
+            </button>
+            <div class="profile-menu">
+                <button class="profile-btn" id="profileBtn">
+                    <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+                    <span class="name">{{ request.user.first_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown" id="profileDropdown">
+                    <a href="#">View Profile</a>
+                    <a href="{% url 'violations:auth_logout' %}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="background-overlay"></div>
+    <div class="background-image"></div>
+
+    <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
+        <!-- Welcome -->
+        <section class="card" style="margin-bottom:16px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <h2 style="margin-bottom:4px;">Welcome{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}!</h2>
+                    <p style="color:#667085;">Logged in as <strong>{{ request.user.username }}</strong></p>
+                </div>
+                <a href="{% url 'violations:auth_logout' %}" class="ghost-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="dashboard-grid">
+            <div class="dash-card">
+                <div class="card-icon"><i class="fas fa-list"></i></div>
+                <div class="card-title">Total Violations</div>
+                <div class="card-metric">{{ violations|length }}</div>
+            </div>
+            <div class="dash-card">
+                <div class="card-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="card-title">Latest Status</div>
+                <div class="card-desc">{% if violations and violations.0 %}{{ violations.0.get_status_display }}{% else %}None{% endif %}</div>
+            </div>
+            <div class="dash-card clickable" id="loginHistoryCard" role="button" tabindex="0" title="View login history">
+                <div class="card-icon"><i class="fas fa-right-to-bracket"></i></div>
+                <div class="card-title">Logged in History</div>
+                <div class="card-desc">{% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}—{% endif %}</div>
+            </div>
+            <div class="dash-card">
+                <div class="card-icon"><i class="fas fa-scale-balanced"></i></div>
+                <div class="card-title">Standing</div>
+                <div class="card-desc">{% if violations|length %}Under Monitoring{% else %}Good Standing{% endif %}</div>
+            </div>
+        </section>
+
+        <!-- Two-column layout: Profile + Violations -->
+        <section class="grid-2" style="display:grid; grid-template-columns: 1fr 2fr; gap:16px; margin-top:16px;">
+            <!-- Profile Card -->
+            <aside class="card">
+                <h3 style="margin-bottom:12px;">Your Information</h3>
+                <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+                    {% if student and student.profile_image %}
+                        <img src="{{ student.profile_image.url }}" alt="Profile" style="width:64px; height:64px; border-radius:50%; object-fit:cover;" />
+                    {% else %}
+                        <div style="width:64px; height:64px; border-radius:50%; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-weight:600;">
+                            {{ request.user.first_name|default:request.user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div style="font-weight:600;">{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div style="color:#667085; font-size: 0.9rem;">{{ student.program|default:'No program set' }}</div>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div>
+                        <p><strong>Student ID:</strong> {{ student.student_id|default:'—' }}</p>
+                        <p><strong>Year Level:</strong> {{ student.year_level|default:'—' }}</p>
+                        <p><strong>Status:</strong> {{ student.enrollment_status|default:'—' }}</p>
+                    </div>
+                    <div>
+                        <p><strong>Department:</strong> {{ student.department|default:'—' }}</p>
+                        <p><strong>Contact:</strong> {{ student.contact_number|default:'—' }}</p>
+                        <p><strong>Guardian:</strong> {{ student.guardian_name|default:'—' }}</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Violations Table -->
+            <section class="card">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <h3>Your Violations</h3>
+                    <span class="badge badge-warning">{{ violations|length }} records</span>
+                </div>
+                {% if violations %}
+                <div class="table-responsive" style="margin-top: 10px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Reported By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in violations %}
+                            <tr>
+                                <td>{{ v.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if v.type == 'major' %}
+                                        <span class="badge" style="background:#fee2e2; color:#b91c1c;">{{ v.get_type_display }}</span>
+                                    {% else %}
+                                        <span class="badge" style="background:#e0e7ff; color:#3730a3;">{{ v.get_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if v.status == 'reported' %}
+                                        <span class="badge" style="background:#fff7ed; color:#9a3412;">{{ v.get_status_display }}</span>
+                                    {% elif v.status == 'under_review' %}
+                                        <span class="badge" style="background:#fef9c3; color:#854d0e;">{{ v.get_status_display }}</span>
+                                    {% elif v.status == 'resolved' %}
+                                        <span class="badge" style="background:#dcfce7; color:#166534;">{{ v.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge" style="background:#f3f4f6; color:#374151;">{{ v.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ v.reporter.get_full_name|default:v.reporter.username }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p style="color:#555; margin-top:8px;">No violations found. Keep up the good conduct!</p>
+                {% endif %}
+            </section>
+        </section>
+    </main>
+
+    <!-- Notifications Panel (optional UI) -->
+    <aside class="notif-panel" id="notifPanel" aria-hidden="true">
+        <div class="notif-header">
+            <h3>Notifications</h3>
+            <button class="icon-btn" id="notifClose"><i class="fas fa-times"></i></button>
+        </div>
+        <ul class="notif-list">
+            <li>Stay updated: new reports will show here.</li>
+        </ul>
+    </aside>
+
+    <!-- Login History Modal -->
+    <div class="modal" id="loginHistoryModal" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Logged in History</h3>
+                <button class="icon-btn" id="loginHistClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Last login:</strong> {% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}—{% endif %}</p>
+                <p><strong>Account created:</strong> {{ request.user.date_joined|date:"M d, Y H:i" }}</p>
+                <p style="color:#667085; margin-top:8px;">Full login history can be enabled in a future update.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="login-button" id="loginHistCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'violations/js/script.js' %}"></script>
+</body>
+</html>

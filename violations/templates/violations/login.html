@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>CHMSU Student Violation Tracker - Sign In</title>
+	<link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+</head>
+<body>
+	<div class="header-banner">
+		<img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo" class="header-logo" />
+		<span class="header-title">Student Violation Tracker</span>
+	</div>
+
+	<div class="background-overlay"></div>
+	<div class="background-image"></div>
+
+	<main class="login-container">
+		<div class="auth-wrapper">
+			<section class="auth-card" data-role-img-student="{% static 'violations/images/student.png' %}"
+								 data-role-img-staff="{% static 'violations/images/staff.png' %}"
+								 data-role-img-faculty="{% static 'violations/images/faculty.png' %}">
+				<aside class="auth-left">
+					<div class="brand-logo-circle">
+						<img src="{% static 'violations/images/chmsu_logo.png' %}" alt="Student Logo" id="roleImage" />
+					</div>
+					<h2 class="auth-welcome" id="welcomeText">Get Started</h2>
+					<p class="auth-subtext">Select your role and sign in to continue.</p>
+					<!-- 🔹 Added id="authCta" -->
+						<div class="auth-cta" id="authCta">
+							<a class="ghost-btn" href="{% url 'violations:signup' %}">Create account</a>
+					</div>
+				</aside>
+
+				<section class="auth-right">
+					<h1 class="auth-title">Sign in</h1>
+
+					<!-- Role Selector -->
+					<div class="role-selector role-selector--segmented" role="tablist" aria-label="Select your role">
+						<button type="button" class="role-btn active" data-role="student" onclick="selectRole('student')" role="tab" aria-selected="true">
+							<i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+							<span>Student</span>
+						</button>
+						<button type="button" class="role-btn" data-role="staff" onclick="selectRole('staff')" role="tab" aria-selected="false">
+							<i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+							<span>Staff</span>
+						</button>
+						<button type="button" class="role-btn" data-role="faculty" onclick="selectRole('faculty')" role="tab" aria-selected="false">
+							<i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i>
+							<span>Faculty</span>
+						</button>
+					</div>
+
+					<form class="auth-form" novalidate id="loginForm" method="post" action="{% url 'violations:student_login' %}" data-mode="student-backend" data-student-action="{% url 'violations:student_login' %}" data-credentials-action="{% url 'violations:credentials_login' %}" {% if default_role %}data-default-role="{{ default_role }}"{% endif %}>
+						{% csrf_token %}
+						<input type="hidden" name="role" id="login_role_field" value="student" />
+						{% if messages %}
+						<div class="form-messages" style="margin-bottom:12px;">
+							{% for message in messages %}
+								<div class="alert {{ message.tags }}" style="padding:10px; border-radius:6px; background:#ffe9e9; color:#b20000; margin-bottom:8px;">
+									{{ message }}
+								</div>
+							{% endfor %}
+						</div>
+						{% endif %}
+						<!-- Student Fields -->
+						<div class="form-group active" data-role="student">
+							<label for="student_id">Student ID Number</label>
+							<div class="input-with-icon">
+								<i class="fa-solid fa-id-card"></i>
+								<input type="text" id="student_id" name="student_id" placeholder="e.g., 21-12345" value="{{ prefill_student_id|default:'' }}" required />
+							</div>
+						</div>
+
+						<!-- Staff Fields -->
+                        
+						<div class="form-group" data-role="staff">
+							<label for="staff_email">Email</label>
+							<div class="input-with-icon">
+								<i class="fa-solid fa-envelope"></i>
+								<input type="email" id="staff_email" name="staff_email" placeholder="you@chmsu.edu.ph" required />
+							</div>
+						</div>
+						<div class="form-group" data-role="staff">
+							<label for="staff_password">Password</label>
+							<div class="password-group input-with-icon">
+								<i class="fa-solid fa-lock"></i>
+								<input type="password" id="staff_password" name="staff_password" placeholder="Enter your password" required />
+								<span class="password-toggle" onclick="togglePasswordVisibility('staff_password')">
+									<i class="fas fa-eye"></i>
+								</span>
+							</div>
+						</div>
+
+						<!-- Faculty Fields (Django admin-style: username + password) -->
+						<div class="form-group" data-role="faculty">
+							<label for="faculty_username">Username</label>
+							<div class="input-with-icon">
+								<i class="fa-solid fa-user"></i>
+								<input type="text" id="faculty_username" name="username" placeholder="Enter your username" required />
+							</div>
+						</div>
+						<div class="form-group" data-role="faculty">
+							<label for="faculty_password">Password</label>
+							<div class="password-group input-with-icon">
+								<i class="fa-solid fa-lock"></i>
+								<input type="password" id="faculty_password" name="password" placeholder="Enter your password" required />
+								<span class="password-toggle" onclick="togglePasswordVisibility('faculty_password')">
+									<i class="fas fa-eye"></i>
+								</span>
+							</div>
+						</div>
+
+
+						<div class="auth-actions">
+							<button type="submit" class="login-button">Sign In</button>
+						</div>
+
+						<!-- Sign Up link -->
+						<div class="form-links" style="margin-top:16px;" id="signupLink" data-role="student">
+							<span>Don't have an account?</span>
+							<a href="{% url 'violations:signup' %}" class="signup-link">Sign Up</a>
+						</div>
+
+
+					</form>
+				</section>
+			</section>
+		</div>
+	</main>
+
+
+	<script src="{% static 'violations/js/script.js' %}"></script>
+</body>
+</html>

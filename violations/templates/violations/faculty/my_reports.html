@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Reported Violations - Faculty</title>
+  <link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+  <header class="top-nav">
+    <div class="top-left">
+      <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
+      <span class="header-title">My Reported Violations</span>
+    </div>
+    <div class="top-right">
+      <a href="{% url 'violations:faculty_dashboard' %}" class="ghost-btn" style="color:#fff; border-color: rgba(255,255,255,.6)">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+      <button class="icon-btn" id="notifBtn" aria-label="Notifications" style="margin-left:8px;">
+        <i class="fas fa-bell"></i>
+      </button>
+      <div class="profile-menu">
+        <button class="profile-btn" id="profileBtn">
+          <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+          <span class="name">{{ request.user.first_name|default:request.user.username }}</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="dropdown" id="profileDropdown">
+          <a href="#">View Profile</a>
+          <a href="{% url 'violations:auth_logout' %}">Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="background-overlay"></div>
+  <div class="background-image"></div>
+
+  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Incident</th>
+              <th>Reported</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if reports and reports|length %}
+              {% for v in reports %}
+              <tr>
+                <td>#{{ v.id }}</td>
+                <td>{{ v.student.user.get_full_name|default:v.student.user.username }}</td>
+                <td>{{ v.get_type_display }}</td>
+                <td>{{ v.get_status_display }}</td>
+                <td>{{ v.incident_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ v.created_at|date:"Y-m-d" }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align:center; color:#555;">No reports found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Details Modal -->
+  <div class="modal" id="detailsModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Violation Details</h3>
+        <button class="icon-btn" id="detailsClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="detailsBody">
+        <!-- Populated by JS (placeholder) -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Panel -->
+  <aside class="notif-panel" id="notifPanel" aria-hidden="true">
+    <div class="notif-header">
+      <h3>Notifications</h3>
+      <button class="icon-btn" id="notifClose"><i class="fas fa-times"></i></button>
+    </div>
+    <ul class="notif-list">
+      <li>OSA status updates will appear here.</li>
+    </ul>
+  </aside>
+
+  <script src="{% static 'violations/js/script.js' %}"></script>
+</body>
+</html>

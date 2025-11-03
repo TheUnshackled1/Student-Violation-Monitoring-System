@@ -1,0 +1,243 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>CHMSU Student Violation Tracker - Sign Up</title>
+	<link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+	<div class="header-banner">
+		<img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo" class="header-logo" />
+		<span class="header-title">Student Violation Tracker</span>
+	</div>
+
+	<div class="background-overlay"></div>
+	<div class="background-image"></div>
+
+	<main class="login-container">
+		<div class="auth-wrapper">
+			<section class="auth-card" data-role-img-student="{% static 'violations/images/student.png' %}"
+								 data-role-img-staff="{% static 'violations/images/staff.png' %}">
+				<aside class="auth-left">
+					<div class="brand-logo-circle">
+						<!-- Add id to easily target this image -->
+						<img src="{% static 'violations/images/chmsu_logo.png' %}" alt="Student Logo" id="roleImage" />
+					</div>
+					<h2 class="auth-welcome" id="welcomeText">Get Started</h2>
+					<p class="auth-subtext">Select your role and create an account.</p>
+					<div class="auth-cta">
+						<a class="ghost-btn" href="{% url 'violations:login' %}">Log in</a>
+					</div>
+				</aside>
+
+				<section class="auth-right">
+					<div class="auth-right-top">Need help?</div>
+					<h1 class="auth-title">Create account</h1>
+
+					<!-- Role Selector -->
+					<div class="role-selector role-selector--segmented" role="tablist" aria-label="Select your role">
+						<button type="button" class="role-btn" data-role="student" onclick="selectRole('student')" role="tab" aria-selected="true">
+							<i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+							<span>Student</span>
+						</button>
+						<button type="button" class="role-btn" data-role="staff" onclick="selectRole('staff')" role="tab" aria-selected="false">
+							<i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+							<span>Staff</span>
+						</button>
+					</div>
+
+					<form class="auth-form" style="max-width:520px;" novalidate id="signupForm" method="post" enctype="multipart/form-data" data-mode="backend" action="{% url 'violations:signup' %}">
+						{% csrf_token %}
+						<input type="hidden" name="role" id="role_field" value="student" />
+						{% if messages %}
+						<div class="form-messages" style="margin-bottom:12px;">
+							{% for message in messages %}
+								<div class="alert {{ message.tags }}" style="padding:10px; border-radius:6px; background:#ffe9e9; color:#b20000; margin-bottom:8px;">
+									{{ message }}
+								</div>
+							{% endfor %}
+						</div>
+						{% endif %}
+						<!-- Student Fields -->
+						<div class="form-section collapsible open" data-role="student" id="student-account">
+							<button class="collapsible-header" type="button" aria-expanded="true" aria-controls="student-account-content">
+								<span class="section-title">Account</span>
+								<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+							</button>
+							<div class="collapsible-content" id="student-account-content">
+							<div class="form-grid">
+								<div class="form-group" data-role="student">
+									<label for="student_id">Student ID Number</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-id-card"></i>
+										<input type="text" id="student_id" name="student_id" placeholder="e.g., 21-12345" />
+									</div>
+									<small class="helper-text">Use your official CHMSU student ID.</small>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_name">Full Name</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-user"></i>
+										<input type="text" id="student_name" name="student_name" placeholder="Surname, Firstname Middlename" />
+									</div>
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_email">E-mail Address</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-envelope"></i>
+										<input type="email" id="student_email" name="student_email" placeholder="you@chmsu.edu.ph" />
+									</div>
+								</div>
+								<div class="form-group password-group" data-role="student">
+									<label for="student_password">Password</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-lock"></i>
+										<input type="password" id="student_password" name="student_password" placeholder="Create a strong password" />
+										<span class="password-toggle" onclick="togglePasswordVisibility('student_password')">
+											<i class="fas fa-eye"></i>
+										</span>
+									</div>
+									<small class="helper-text">Use at least 8 characters with a mix of letters and numbers.</small>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-section collapsible" data-role="student" id="student-academic">
+							<button class="collapsible-header" type="button" aria-expanded="false" aria-controls="student-academic-content">
+								<span class="section-title">Academic Information</span>
+								<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+							</button>
+							<div class="collapsible-content" id="student-academic-content">
+							<div class="form-grid">
+								<div class="form-group" data-role="student">
+									<label for="student_program">Program / Course</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-graduation-cap"></i>
+										<input type="text" id="student_program" name="student_program" placeholder="e.g., BS Computer Science" />
+									</div>
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_year_level">Year Level</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-layer-group"></i>
+										<input type="number" min="1" max="10" id="student_year_level" name="student_year_level" placeholder="e.g., 3" />
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_department">Department</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-building-columns"></i>
+										<input type="text" id="student_department" name="student_department" placeholder="e.g., College of ICT" />
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_enrollment_status">Enrollment Status</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-toggle-on"></i>
+										<select id="student_enrollment_status" name="student_enrollment_status">
+											<option value="Active">Active</option>
+											<option value="Suspended">Suspended</option>
+											<option value="Graduated">Graduated</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-section collapsible" data-role="student" id="student-contact">
+							<button class="collapsible-header" type="button" aria-expanded="false" aria-controls="student-contact-content">
+								<span class="section-title">Contact &amp; Guardian</span>
+								<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+							</button>
+							<div class="collapsible-content" id="student-contact-content">
+							<div class="form-grid">
+								<div class="form-group" data-role="student">
+									<label for="student_contact_number">Contact Number</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-phone"></i>
+										<input type="text" id="student_contact_number" name="student_contact_number" placeholder="e.g., 09XXXXXXXXX" />
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="guardian_name">Guardian Name</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-user-shield"></i>
+										<input type="text" id="guardian_name" name="guardian_name" placeholder="Parent/Guardian full name" />
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="guardian_contact">Guardian Contact</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-mobile-screen-button"></i>
+										<input type="text" id="guardian_contact" name="guardian_contact" placeholder="e.g., 09XXXXXXXXX" />
+									</div>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_profile_image">Profile Image (2x2)</label>
+									<div class="file-input-row">
+										<input type="file" id="student_profile_image" name="student_profile_image" accept="image/*" />
+									</div>
+									<small class="helper-text">JPG/PNG, clear face, plain background preferred.</small>
+								</div>
+							</div>
+							</div>
+						</div>
+
+						<!-- Staff Fields -->
+						<div class="form-section" data-role="staff">
+							<div class="form-grid">
+								<div class="form-group" data-role="staff">
+									<label for="staff_name">Full Name</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-user-tie"></i>
+										<input type="text" id="staff_name" name="staff_name" placeholder="Surname, Firstname Middlename" />
+									</div>
+								</div>
+								<div class="form-group" data-role="staff">
+									<label for="staff_email">E-mail Address</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-envelope"></i>
+										<input type="email" id="staff_email" name="staff_email" placeholder="you@chmsu.edu.ph" />
+									</div>
+								</div>
+								<div class="form-group password-group" data-role="staff">
+									<label for="staff_password">Password</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-lock"></i>
+										<input type="password" id="staff_password" name="staff_password" placeholder="Create a strong password" />
+										<span class="password-toggle" onclick="togglePasswordVisibility('staff_password')">
+											<i class="fas fa-eye"></i>
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<label class="terms-row" id="termsCheckbox" style="display:none;">
+							<input type="checkbox" required />
+							<span>I accept the terms of the agreement</span>
+						</label>
+
+						<div class="auth-actions">
+							<button type="submit" class="login-button">Sign Up</button>
+						</div>
+
+						<div class="form-links" style="margin-top:16px;">
+							<span>Already have an account?</span>
+							<a href="{% url 'violations:login' %}">Sign In</a>
+						</div>
+					</form>
+				</section>
+			</section>
+		</div>
+	</main>
+
+	<script src="{% static 'violations/js/script.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Dashboard - CHMSU Student Violation Tracker</title>
+  <link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+  <header class="top-nav">
+    <div class="top-left">
+      <img src="{% static 'violations/images/chmsu_logo_white.png' %}" class="header-logo" alt="CHMSU" />
+      <span class="header-title">OSA Staff Dashboard</span>
+    </div>
+    <div class="top-right">
+      <div class="searchbar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search student..." />
+      </div>
+      <button class="icon-btn" id="notifBtn"><i class="fas fa-bell"></i></button>
+      <div class="profile-menu">
+        <button class="profile-btn" id="profileBtn">
+          <span class="avatar">S</span>
+          <span class="name">OSA Staff</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="dropdown" id="profileDropdown">
+          <a href="#">View Profile</a>
+          <a href="#">Request Temporary Access</a>
+          <a href="{% url 'violations:auth_logout' %}">Logout</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="background-overlay"></div>
+  <div class="background-image"></div>
+
+  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
+    <section class="dashboard-grid">
+      <a href="#" class="dash-card">
+        <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
+        <div class="card-title">Total Students with Violations</div>
+        <div class="card-metric">245</div>
+      </a>
+      <a href="#" class="dash-card">
+        <div class="card-icon"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="card-title">Pending Violations</div>
+        <div class="card-metric">18</div>
+      </a>
+      <a href="#" class="dash-card">
+        <div class="card-icon"><i class="fas fa-check"></i></div>
+        <div class="card-title">Resolved Violations</div>
+        <div class="card-metric">512</div>
+      </a>
+      <a href="#" class="dash-card">
+        <div class="card-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="card-title">Ongoing Sanctions</div>
+        <div class="card-metric">37</div>
+      </a>
+    </section>
+
+    <section class="card" style="margin-top:20px;">
+      <h3 style="margin-bottom:12px;">Quick Links</h3>
+      <div class="quick-links">
+        <a href="#" class="ghost-btn">Violation Management</a>
+        <a href="#" class="ghost-btn">Sanction Management</a>
+        <a href="#" class="ghost-btn">Student Monitoring</a>
+        <a href="#" class="ghost-btn">Report Generation</a>
+        <a href="#" class="ghost-btn">Temporary Access</a>
+      </div>
+    </section>
+  </main>
+
+  <aside class="notif-panel" id="notifPanel" aria-hidden="true">
+    <div class="notif-header">
+      <h3>Notifications</h3>
+      <button class="icon-btn" id="notifClose"><i class="fas fa-times"></i></button>
+    </div>
+    <ul class="notif-list">
+      <li>New violation report submitted by Faculty.</li>
+      <li>Sanction nearing deadline for Student #22001234.</li>
+    </ul>
+  </aside>
+
+  <script src="{% static 'violations/js/script.js' %}"></script>
+</body>
+</html>
