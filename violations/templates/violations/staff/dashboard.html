@@ -93,7 +93,23 @@
               {% for s in students %}
               <tr>
                 <td>{{ s.student_id }}</td>
-                <td>{{ s.user.get_full_name|default:s.user.username }}</td>
+                <td>
+                  <a href="#" class="student-detail-link"
+                     data-student-id="{{ s.student_id }}"
+                     data-name="{{ s.user.get_full_name|default:s.user.username }}"
+                     data-email="{{ s.user.email|default:'' }}"
+                     data-contact="{{ s.contact_number|default:'' }}"
+                     data-program="{{ s.program|default:'' }}"
+                     data-year="{{ s.year_level }}"
+                     data-department="{{ s.department|default:'' }}"
+                     data-enrollment="{{ s.enrollment_status|default:'' }}"
+                     data-guardian-name="{{ s.guardian_name|default:'' }}"
+                     data-guardian-contact="{{ s.guardian_contact|default:'' }}"
+                     data-image="{% if s.profile_image %}{{ s.profile_image.url }}{% endif %}"
+                     style="color: var(--chmsu-dark-green); text-decoration: underline;">
+                    {{ s.user.get_full_name|default:s.user.username }}
+                  </a>
+                </td>
                 <td>{{ s.program|default:'—' }}</td>
                 <td>{{ s.year_level }}</td>
                 <td>{{ s.department|default:'—' }}</td>
@@ -125,6 +141,51 @@
     </section>
   </main>
 
+  <!-- Student Detail Modal -->
+  <div class="modal" id="studentDetailModal" aria-hidden="true">
+    <div class="modal-card" style="max-width:720px;">
+      <div class="modal-header">
+        <h3 id="studentDetailTitle">Student Details</h3>
+        <button class="icon-btn" id="studentDetailClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+          <div class="brand-logo-circle" style="width:72px; height:72px; flex:0 0 auto; position:relative; overflow:hidden;">
+            <img id="sdAvatarImg" src="" alt="Student" style="width:100%; height:100%; object-fit:cover; display:none;" />
+            <div id="sdAvatarFallback" style="
+                width:100%; height:100%; border-radius:50%; background:#eaf4ee;
+                display:flex; align-items:center; justify-content:center; color:#0a4d2a; font-weight:700; font-size:28px;">
+              <span id="sdAvatarInitial">S</span>
+            </div>
+          </div>
+          <div style="flex:1 1 auto; min-width:240px;">
+            <h2 id="sdName" style="margin:0 0 6px;">Student Name</h2>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; color:#667085;">
+              <span><strong>ID:</strong> <span id="sdId">—</span></span>
+              <span><strong>Email:</strong> <span id="sdEmail">—</span></span>
+              <span><strong>Contact:</strong> <span id="sdContact">—</span></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <a class="ghost-btn" id="sdEmailBtn" href="#" style="display:none;"><i class="fas fa-envelope"></i> Email</a>
+            <a class="ghost-btn" id="sdPhoneBtn" href="#" style="display:none;"><i class="fas fa-phone"></i> Call</a>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-top:12px;">
+          <div class="stat-card small"><div class="label">Program</div><div class="value" id="sdProgram">—</div></div>
+          <div class="stat-card small"><div class="label">Year Level</div><div class="value" id="sdYear">—</div></div>
+          <div class="stat-card small"><div class="label">Department</div><div class="value" id="sdDepartment">—</div></div>
+          <div class="stat-card small"><div class="label">Enrollment</div><div class="value" id="sdEnrollment">—</div></div>
+          <div class="stat-card small"><div class="label">Guardian</div><div class="value" id="sdGuardian">—</div></div>
+          <div class="stat-card small"><div class="label">Guardian Contact</div><div class="value" id="sdGuardianContact">—</div></div>
+        </div>
+        <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+          <button class="login-button" id="studentDetailCloseBtn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <aside class="notif-panel" id="notifPanel" aria-hidden="true">
     <div class="notif-header">
       <h3>Notifications</h3>
@@ -147,6 +208,59 @@
         row.style.display = text.includes(q) ? '' : 'none';
       });
     }
+  </script>
+  <script>
+    // Student detail modal logic
+    (function(){
+      const modal = document.getElementById('studentDetailModal');
+      const btnClose = document.getElementById('studentDetailClose');
+      const btnClose2 = document.getElementById('studentDetailCloseBtn');
+
+      function openModal(){ if(modal) modal.classList.add('show'); }
+      function closeModal(){ if(modal) modal.classList.remove('show'); }
+      if (btnClose) btnClose.addEventListener('click', closeModal);
+      if (btnClose2) btnClose2.addEventListener('click', closeModal);
+      if (modal) modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+
+      function setText(id, value){
+        const el = document.getElementById(id);
+        if (el) el.textContent = (value && String(value).trim()) ? value : '—';
+      }
+      function setLink(id, href){
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (href){ el.href = href; el.style.display='inline-flex'; } else { el.removeAttribute('href'); el.style.display='none'; }
+      }
+      function setAvatar(imgUrl, name){
+        const img = document.getElementById('sdAvatarImg');
+        const fb = document.getElementById('sdAvatarFallback');
+        const init = document.getElementById('sdAvatarInitial');
+        if (imgUrl){ if(img){ img.src = imgUrl; img.style.display='block'; } if(fb) fb.style.display='none'; }
+        else { if(img) img.style.display='none'; if(fb) fb.style.display='flex'; if(init) init.textContent = (name||'?').trim().charAt(0).toUpperCase(); }
+      }
+
+      document.querySelectorAll('.student-detail-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const d = link.dataset;
+          setText('sdName', d.name);
+          setText('sdId', d.studentId);
+          setText('sdEmail', d.email);
+          setText('sdContact', d.contact);
+          setText('sdProgram', d.program);
+          setText('sdYear', d.year);
+          setText('sdDepartment', d.department);
+          setText('sdEnrollment', d.enrollment);
+          setText('sdGuardian', d.guardianName);
+          setText('sdGuardianContact', d.guardianContact);
+          setAvatar(d.image, d.name);
+          setLink('sdEmailBtn', d.email ? `mailto:${d.email}` : '');
+          setLink('sdPhoneBtn', d.contact ? `tel:${d.contact}` : '');
+          openModal();
+        });
+      });
+    })();
   </script>
 </body>
 </html>
