@@ -32,6 +32,7 @@ urlpatterns = [
 
     # OSA Staff
     path('staff/dashboard/', views.staff_dashboard_view, name='staff_dashboard'),
+    path('staff/students/<str:student_id>/', views.staff_student_detail_view, name='staff_student_detail'),
 
     # Authentication (Django built-ins for testing/demo)
     path('auth/login/', auth_views.LoginView.as_view(template_name='violations/auth/login.html'), name='auth_login'),

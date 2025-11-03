@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
-<body>
+<body class="role-staff">
   <header class="top-nav">
     <div class="top-left">
-      <img src="{% static 'violations/images/chmsu_logo_white.png' %}" class="header-logo" alt="CHMSU" />
+      <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
       <span class="header-title">OSA Staff Dashboard</span>
     </div>
     <div class="top-right">
@@ -63,14 +63,64 @@
       </a>
     </section>
 
+    
+
+    <!-- Student Directory Table -->
     <section class="card" style="margin-top:20px;">
-      <h3 style="margin-bottom:12px;">Quick Links</h3>
-      <div class="quick-links">
-        <a href="#" class="ghost-btn">Violation Management</a>
-        <a href="#" class="ghost-btn">Sanction Management</a>
-        <a href="#" class="ghost-btn">Student Monitoring</a>
-        <a href="#" class="ghost-btn">Report Generation</a>
-        <a href="#" class="ghost-btn">Temporary Access</a>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <h3 style="margin:0;">Student Directory</h3>
+        <div class="searchbar" style="max-width:320px; width:100%;">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Filter by name, ID, program…" oninput="filterStudentTable(this.value)" />
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table" id="studentsTable">
+          <thead>
+            <tr>
+              <th style="min-width:120px;">Student ID</th>
+              <th style="min-width:180px;">Name</th>
+              <th>Program</th>
+              <th>Year</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th style="min-width:140px;">Contact</th>
+              <th style="min-width:180px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if students and students|length %}
+              {% for s in students %}
+              <tr>
+                <td>{{ s.student_id }}</td>
+                <td>{{ s.user.get_full_name|default:s.user.username }}</td>
+                <td>{{ s.program|default:'—' }}</td>
+                <td>{{ s.year_level }}</td>
+                <td>{{ s.department|default:'—' }}</td>
+                <td>{{ s.enrollment_status }}</td>
+                <td>{{ s.contact_number|default:'—' }}</td>
+                <td>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a class="ghost-btn" style="padding:6px 10px;" href="{% url 'violations:staff_student_detail' s.student_id %}"><i class="fas fa-id-card"></i> View</a>
+                    <a class="ghost-btn" style="padding:6px 10px;" href="{% url 'violations:staff_student_detail' s.student_id %}#violations"><i class="fas fa-list"></i> Violations</a>
+                    {% if s.user.email %}
+                      <a class="ghost-btn" style="padding:6px 10px;" href="mailto:{{ s.user.email }}"><i class="fas fa-envelope"></i> Contact</a>
+                    {% elif s.contact_number %}
+                      <a class="ghost-btn" style="padding:6px 10px;" href="tel:{{ s.contact_number }}"><i class="fas fa-phone"></i> Contact</a>
+                    {% else %}
+                      <button class="ghost-btn" style="padding:6px 10px; opacity:.6; cursor:not-allowed;" disabled><i class="fas fa-ban"></i> Contact</button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" style="text-align:center; color:#555;">No students found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
@@ -87,5 +137,16 @@
   </aside>
 
   <script src="{% static 'violations/js/script.js' %}"></script>
+  <script>
+    // Lightweight client-side filter for the student table
+    function filterStudentTable(query) {
+      const q = (query || '').toLowerCase();
+      const rows = document.querySelectorAll('#studentsTable tbody tr');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+  </script>
 </body>
 </html>

@@ -370,8 +370,32 @@ def faculty_my_reports_view(request):
 
 @role_required({User.Role.STAFF})
 def staff_dashboard_view(request):
-	"""Staff dashboard (UI-only) — restricted to Staff role."""
-	return render(request, "violations/staff/dashboard.html")
+	"""Staff dashboard — shows overview cards and a student directory table."""
+	from .models import Student as StudentModel
+	# Fetch students with related user for names; keep it simple (no pagination yet)
+	students = StudentModel.objects.select_related("user").order_by("user__first_name", "user__last_name", "student_id")
+	ctx = {
+		"students": students,
+	}
+	return render(request, "violations/staff/dashboard.html", ctx)
+
+
+@role_required({User.Role.STAFF})
+def staff_student_detail_view(request, student_id: str):
+	"""Staff: View a student's profile details and violations by student_id."""
+	# Resolve student by ID (case-insensitive)
+	student = StudentModel.objects.select_related("user").filter(student_id__iexact=student_id).first()
+	if not student:
+		messages.error(request, "Student not found.")
+		return redirect("violations:staff_dashboard")
+
+	# Fetch violations for this student
+	vqs = Violation.objects.select_related("reported_by").filter(student=student).order_by("-created_at")
+	ctx = {
+		"student": student,
+		"violations": vqs,
+	}
+	return render(request, "violations/staff/student_detail.html", ctx)
 
 
 ############################################

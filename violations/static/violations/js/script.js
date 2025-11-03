@@ -104,6 +104,21 @@ function selectRole(role) {
     const loginRoleField = document.getElementById('login_role_field');
     if (loginRoleField) loginRoleField.value = role;
 
+    // Add a subtle pulse on the auth form when switching roles
+    const authFormCard = document.querySelector('.auth-form');
+    if (authFormCard) {
+        authFormCard.classList.remove('role-pulse');
+        // Force reflow to restart animation if already present
+        void authFormCard.offsetWidth;
+        authFormCard.classList.add('role-pulse');
+        // Clean up the class after animation ends
+        const removePulse = () => {
+            authFormCard.classList.remove('role-pulse');
+            authFormCard.removeEventListener('animationend', removePulse);
+        };
+        authFormCard.addEventListener('animationend', removePulse);
+    }
+
     // Update login form action/mode depending on role
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
