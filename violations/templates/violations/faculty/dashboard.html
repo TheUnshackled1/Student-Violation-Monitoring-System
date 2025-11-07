@@ -27,6 +27,7 @@
                 </button>
                 <div class="dropdown" id="profileDropdown">
                     <a href="#">View Profile</a>
+                    <a href="#" id="headerLoginHistoryLink">Login History</a>
                     <a href="{% url 'violations:auth_logout' %}">Logout</a>
                 </div>
             </div>
@@ -78,11 +79,7 @@
                 <div class="card-title">Latest Report</div>
                 <div class="card-desc">{% if stats.latest_created_at %}{{ stats.latest_created_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</div>
             </div>
-            <div class="dash-card clickable" id="loginHistoryCard" role="button" tabindex="0" title="View login history">
-                <div class="card-icon"><i class="fas fa-right-to-bracket"></i></div>
-                <div class="card-title">My Login History</div>
-                <div class="card-desc">Last login: {% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}—{% endif %}</div>
-            </div>
+            
         </section>
     </main>
 
@@ -145,16 +142,13 @@
         <script src="{% static 'violations/js/script.js' %}"></script>
         <script>
             (function(){
-                const card = document.getElementById('loginHistoryCard');
                 const modal = document.getElementById('loginHistoryModal');
                 const btnClose = document.getElementById('loginHistClose');
                 const btnClose2 = document.getElementById('loginHistCloseBtn');
+                const headerLink = document.getElementById('headerLoginHistoryLink');
                 function open(){ if(modal) modal.classList.add('show'); }
                 function close(){ if(modal) modal.classList.remove('show'); }
-                if(card){
-                    card.addEventListener('click', open);
-                    card.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); open(); } });
-                }
+                if(headerLink){ headerLink.addEventListener('click', (e)=>{ e.preventDefault(); open(); }); }
                 if(btnClose) btnClose.addEventListener('click', close);
                 if(btnClose2) btnClose2.addEventListener('click', close);
                 if(modal) modal.addEventListener('click', (e)=>{ if(e.target===modal) close(); });

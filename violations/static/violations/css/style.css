@@ -118,6 +118,24 @@ body {
 .dash-card .card-desc { color:#666; font-size:.9rem; }
 .dash-card .card-metric { font-size: 1.4rem; font-weight:700; color: var(--chmsu-dark-green); }
 
+/* Equal-height alignment for Faculty dashboard cards */
+body.role-faculty .dashboard-grid { align-items: stretch; }
+body.role-faculty .dashboard-grid .dash-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Equal-height alignment for Staff dashboard cards */
+body.role-staff .dashboard-grid { align-items: stretch; }
+body.role-staff .dashboard-grid .dash-card {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 /* Cards and sections */
 .card { background:#fff; border:1px solid #e5e7eb; border-radius: 12px; padding:16px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
 .table-toolbar { margin-bottom: 10px; }
