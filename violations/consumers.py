@@ -29,17 +29,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         room_name = self.scope["url_route"]["kwargs"].get("room_name") or ROOM_NAME
-    self.room_name = room_name
-    self.room_group_name = f"chat_{room_name}"
+        self.room_name = room_name
+        self.room_group_name = f"chat_{room_name}"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
         # Send recent history (last 50 messages) directly to the connecting socket
         try:
             msgs = await sync_to_async(list)(
-                ChatMessage.objects.filter(room=room_name).order_by('created_at').values('sender__username', 'content', 'created_at')[:50]
+                ChatMessage.objects.filter(room=room_name).order_by("created_at").values("sender__username", "content", "created_at")[:50]
             )
             history = [
-                {"user": m['sender__username'], "message": m['content'], "ts": m['created_at'].isoformat()}
+                {"user": m["sender__username"], "message": m["content"], "ts": m["created_at"].isoformat()}
                 for m in msgs
             ]
             await self.send(text_data=json.dumps({"kind": "history", "messages": history}))
