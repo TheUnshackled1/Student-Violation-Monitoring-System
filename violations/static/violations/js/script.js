@@ -1,5 +1,49 @@
 // Global role state used by both login and signup
 window.currentRole = window.currentRole || '';
+let roleSpeechEnabled = false;
+
+function announceRoleSelection(role) {
+    if (!roleSpeechEnabled) return;
+    
+    // Use Jarvis TTS if available (defined in jarvis_tts.js)
+    if (typeof window.announceRoleJarvis === 'function') {
+        window.announceRoleJarvis(role);
+        return;
+    }
+    
+    // Fallback to basic browser TTS
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    const messageMap = {
+        student: 'Student role selected. Use your student ID to sign in.',
+        staff: 'Staff role selected. Enter your email and password.',
+        faculty: 'Faculty role selected. Enter your administrator credentials.'
+    };
+    const utteranceText = messageMap[role] || `${role} role selected.`;
+
+    try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(utteranceText);
+
+        // 🎙️ Adjust to make it sound more “Jarvis-like”
+        utterance.rate = 0.4;   // slightly slower
+        utterance.pitch = 0.21;  // deeper tone
+        utterance.volume = 1;   // full volume
+
+        // 🔍 Try to pick a male / deep voice from available list
+        const voices = window.speechSynthesis.getVoices();
+        const jarvisVoice = voices.find(v =>
+            v.name.toLowerCase().includes('male') ||
+            v.name.toLowerCase().includes('jarvis') ||
+            v.name.toLowerCase().includes('alex') ||
+            v.name.toLowerCase().includes('daniel') ||
+            v.name.toLowerCase().includes('google uk english male')
+        );
+        if (jarvisVoice) utterance.voice = jarvisVoice;
+
+        window.speechSynthesis.speak(utterance);
+    } catch (err) {}
+}
 
 // Toggle password visibility helper (used by inline onclicks)
 function togglePasswordVisibility(fieldId) {
@@ -28,10 +72,14 @@ function togglePasswordVisibility(fieldId) {
 // Role selection shared logic for login and signup
 // Debounce rapid role switching and add a slight delayed responsive animation
 let roleSwitchLock = false;
-function selectRole(role) {
+function selectRole(role, options) {
+    const silent = !!(options && options.silent);
     if (roleSwitchLock || !role) return; // prevent spam clicks
     roleSwitchLock = true;
     window.currentRole = role;
+    if (!silent && !roleSpeechEnabled) {
+        roleSpeechEnabled = true;
+    }
 
     // Toggle active class on role buttons with a subtle pulse on the selected one
     document.querySelectorAll('.role-btn').forEach(btn => {
@@ -172,6 +220,10 @@ function selectRole(role) {
         // If animation elements not found, release lock immediately
         roleSwitchLock = false;
     }
+
+    if (!silent) {
+        announceRoleSelection(role);
+    }
 }
 
 // Page-specific initialization
@@ -187,8 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         // Default role from template hint (if any), else student
         const hintedRole = loginForm.getAttribute('data-default-role');
-        if (!window.currentRole) window.currentRole = hintedRole || 'student';
-        selectRole(window.currentRole);
+    if (!window.currentRole) window.currentRole = hintedRole || 'student';
+    selectRole(window.currentRole, { silent: true });
 
         loginForm.addEventListener('submit', (e) => {
             const isStudentBackend = loginForm.dataset.mode === 'student-backend' && window.currentRole === 'student';
