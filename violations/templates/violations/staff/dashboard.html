@@ -274,6 +274,15 @@
   </aside>
 
   <script src="{% static 'violations/js/script.js' %}"></script>
+  <script src="{% static 'violations/js/welcome_tts.js' %}"></script>
+  <script>
+    (function(){
+      if (window.welcomeRole) {
+        var fullName = "{{ request.user.get_full_name|default:request.user.username|escapejs }}";
+        window.welcomeRole(fullName, 'staff');
+      }
+    })();
+  </script>
   <script src="{% static 'violations/js/chat.js' %}"></script>
   <script>
     // Header chat button toggles chat panel
