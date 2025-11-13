@@ -2,8 +2,6 @@ from django.urls import path
 from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
 from . import views
-from .views_tts import text_to_speech_view
-
 # Optional namespace for clarity when reverse() is used from other apps
 app_name = "violations"
 
@@ -13,7 +11,6 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='violations:login', permanent=False), name='home'),
     
     # Text-to-Speech API (ElevenLabs / Jarvis voice)
-    path('api/tts/', text_to_speech_view, name='text_to_speech'),
     path('login/', views.login_view, name='login'),           # Explicit login path (renders login page)
     path('login/student/', views.student_login_auth, name='student_login'),  # Student login (by ID)
     path('login/credentials/', views.credentials_login_auth, name='credentials_login'),  # Staff/Faculty login (email+password)

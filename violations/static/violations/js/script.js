@@ -26,17 +26,15 @@ function announceRoleSelection(role) {
         const utterance = new SpeechSynthesisUtterance(utteranceText);
 
         // 🎙️ Adjust to make it sound more “Jarvis-like”
-        utterance.rate = 0.4;   // slightly slower
-        utterance.pitch = 0.21;  // deeper tone
-        utterance.volume = 1;   // full volume
+        utterance.rate = 0.95;   // slightly slower
+        utterance.pitch = 3.9;  // deeper tone
+        utterance.volume = 2;   // full volume
 
         // 🔍 Try to pick a male / deep voice from available list
         const voices = window.speechSynthesis.getVoices();
         const jarvisVoice = voices.find(v =>
             v.name.toLowerCase().includes('male') ||
             v.name.toLowerCase().includes('jarvis') ||
-            v.name.toLowerCase().includes('alex') ||
-            v.name.toLowerCase().includes('daniel') ||
             v.name.toLowerCase().includes('google uk english male')
         );
         if (jarvisVoice) utterance.voice = jarvisVoice;
