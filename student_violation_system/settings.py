@@ -31,15 +31,230 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "jazzmin",  # Jazzmin MUST be before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "channels",  # WebSocket support for realtime features
+    # "channels",  # WebSocket support for realtime features (temporarily commented)
     "violations",  # Add the violations app
 ]
+
+# =============================================================================
+# JAZZMIN SETTINGS - Modern Admin Panel Theme
+# Documentation: https://django-jazzmin.readthedocs.io/
+# =============================================================================
+
+JAZZMIN_SETTINGS = {
+    # Title on the login screen (19 chars max)
+    "site_title": "CHMSU Violations",
+    
+    # Title on the brand (19 chars max)
+    "site_header": "CHMSU Violations",
+    
+    # Title on the brand in the sidebar
+    "site_brand": "CHMSU OSA",
+    
+    # Logo to use for your site, must be present in static files
+    "site_logo": "violations/images/chmsu_logo.png",
+    
+    # Logo to use for your site on the login screen (uses site_logo if None)
+    "login_logo": None,
+    
+    # Logo to use for login form in dark themes
+    "login_logo_dark": None,
+    
+    # CSS classes that are applied to the logo above
+    "site_logo_classes": "img-circle",
+    
+    # Relative path to a favicon for your site
+    "site_icon": None,
+    
+    # Welcome text on the login screen
+    "welcome_sign": "Welcome to CHMSU Student Violation Management System",
+    
+    # Copyright on the footer
+    "copyright": "Carlos Hilado Memorial State University - OSA",
+    
+    # List of model admins to search from the search bar
+    "search_model": ["violations.Student", "violations.User", "violations.Violation"],
+    
+    # Field name on user model that contains avatar ImageField/URLField/Charfield
+    "user_avatar": None,
+
+    ############
+    # Top Menu #
+    ############
+    
+    # Links to put along the top menu
+    "topmenu_links": [
+        # Url that gets reversed (Alarm.URLs first)
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        
+        # External URLs open in new window
+        {"name": "Staff Dashboard", "url": "/staff/dashboard/", "new_window": True},
+        {"name": "Faculty Dashboard", "url": "/faculty/dashboard/", "new_window": True},
+        
+        # Model admin to link to (Alarm.URLs.Alarm.URLs & target can be nested)
+        {"model": "violations.Student"},
+        
+        # App with dropdown menu to all its models pages
+        {"app": "violations"},
+    ],
+
+    #############
+    # User Menu #
+    #############
+    
+    # Additional links to include in the user menu on the top right
+    "usermenu_links": [
+        {"name": "Staff Dashboard", "url": "/staff/dashboard/", "new_window": True, "icon": "fas fa-tachometer-alt"},
+        {"model": "auth.user"},
+    ],
+
+    #############
+    # Side Menu #
+    #############
+    
+    # Whether to display the side menu
+    "show_sidebar": True,
+    
+    # Whether to auto expand the menu
+    "navigation_expanded": True,
+    
+    # Hide these apps when generating side menu
+    "hide_apps": [],
+    
+    # Hide these models when generating side menu
+    "hide_models": [],
+    
+    # List of apps (and/or models) to base side menu ordering off of
+    "order_with_respect_to": [
+        "violations",
+        "violations.User",
+        "violations.Student", 
+        "violations.Staff",
+        "violations.Faculty",
+        "violations.Violation",
+        "violations.ApologyLetter",
+        "violations.IDConfiscation",
+        "violations.ViolationClearance",
+        "violations.Message",
+        "violations.LoginActivity",
+    ],
+
+    # Custom links to append to app groups, keyed on app name
+    "custom_links": {
+        "violations": [{
+            "name": "Go to Staff Dashboard", 
+            "url": "/staff/dashboard/", 
+            "icon": "fas fa-tachometer-alt",
+            "permissions": ["violations.view_student"]
+        }]
+    },
+
+    # Custom icons for side menu apps/models
+    # https://fontawesome.com/icons?d=gallery&m=free&v=5.0.0,5.0.1,5.0.10,5.0.11,5.0.12,5.0.13,5.0.2,5.0.3,5.0.4,5.0.5,5.0.6,5.0.7,5.0.8,5.0.9,5.1.0,5.1.1,5.2.0,5.3.0,5.3.1,5.4.0,5.4.1,5.4.2,5.13.0,5.12.0,5.11.2,5.11.1,5.10.0,5.9.0,5.8.2,5.8.1,5.7.2,5.7.1,5.7.0,5.6.3,5.5.0,5.4.2
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "violations": "fas fa-gavel",
+        "violations.User": "fas fa-user-shield",
+        "violations.Student": "fas fa-user-graduate",
+        "violations.Staff": "fas fa-user-tie",
+        "violations.Faculty": "fas fa-chalkboard-teacher",
+        "violations.Violation": "fas fa-exclamation-triangle",
+        "violations.ApologyLetter": "fas fa-envelope-open-text",
+        "violations.IDConfiscation": "fas fa-id-card",
+        "violations.ViolationClearance": "fas fa-clipboard-check",
+        "violations.ViolationDocument": "fas fa-file-alt",
+        "violations.StaffVerification": "fas fa-check-double",
+        "violations.LoginActivity": "fas fa-history",
+        "violations.Message": "fas fa-comments",
+        "violations.ChatMessage": "fas fa-comment-dots",
+        "violations.TemporaryAccessRequest": "fas fa-key",
+    },
+    
+    # Icons that are used when one is not manually specified
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+
+    #################
+    # Related Modal #
+    #################
+    
+    # Use modals instead of popups for related
+    "related_modal_active": True,
+
+    #############
+    # UI Tweaks #
+    #############
+    
+    # Relative paths to custom CSS/JS scripts (must be present in static files)
+    "custom_css": "violations/css/admin_custom.css",
+    "custom_js": None,
+    
+    # Whether to link font from fonts.googleapis.com
+    "use_google_fonts_cdn": True,
+    
+    # Whether to show the UI customizer on the sidebar
+    "show_ui_builder": True,
+
+    ###############
+    # Change view #
+    ###############
+    
+    # Render out the change view as a single form, or in tabs
+    "changeform_format": "horizontal_tabs",
+    
+    # Override change forms on a per modeladmin basis
+    "changeform_format_overrides": {
+        "violations.User": "collapsible",
+        "violations.Violation": "horizontal_tabs",
+        "violations.Student": "horizontal_tabs",
+    },
+    
+    # Add a language dropdown into the admin
+    "language_chooser": False,
+}
+
+# Jazzmin UI Tweaks - Customize colors and layout
+# Theme based on CHMSU green colors
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-success",
+    "accent": "accent-success",
+    "navbar": "navbar-success navbar-dark",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-success",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+    "actions_sticky_top": True,
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -69,7 +284,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "student_violation_system.wsgi.application"
-ASGI_APPLICATION = "student_violation_system.asgi.application"
+# ASGI_APPLICATION = "student_violation_system.asgi.application"  # Temporarily commented
 
 
 # Database
@@ -130,8 +345,8 @@ AUTH_USER_MODEL = "violations.User"
 
 # These reverse names assume the app is included with namespace 'violations'
 LOGIN_URL = 'violations:auth_login'
-LOGIN_REDIRECT_URL = 'violations:route_dashboard'
-LOGOUT_REDIRECT_URL = 'violations:auth_login'
+LOGIN_REDIRECT_URL = 'violationsauth_loginhboard'
+LOGOUT_REDIRECT_URL = '/admin/login/'  # Redirect to admin login after logout
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -139,8 +354,8 @@ LOGOUT_REDIRECT_URL = 'violations:auth_login'
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Channels (development: in-memory layer; for production use Redis)
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer",
+#     }
+# }

@@ -1,0 +1,21 @@
+/* Custom Admin Login Styles */
+
+/* Login page background image */
+.login-page {
+    background: url('/static/violations/images/admin_login_bg.jpg') center center / cover no-repeat fixed !important;
+    min-height: 100vh !important;
+}
+
+/* Make the login logo smaller */
+.login-logo img,
+.login-box-body .login-logo img {
+    max-width: 120px !important;
+    max-height: 120px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Also control sidebar logo size */
+.brand-image {
+    max-height: 33px !important;
+}

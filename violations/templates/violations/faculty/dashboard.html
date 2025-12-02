@@ -120,7 +120,27 @@
                                 <td>{{ s.user.get_full_name|default:s.user.username }}</td>
                                 <td>{{ s.program|default:'—' }}</td>
                                 <td>{{ s.year_level }}</td>
-                                <td>{{ s.department|default:'—' }}</td>
+                                <td>
+                                  {% with dept=s.department|default:'' %}
+                                    {% if 'CAS' in dept or 'Arts and Science' in dept or 'Arts & Science' in dept %}
+                                      <span class="dept-badge dept-cas" title="College of Arts and Science">CAS</span>
+                                    {% elif 'CBMA' in dept or 'Business' in dept or 'Accountancy' in dept %}
+                                      <span class="dept-badge dept-cbma" title="College of Business Management and Accountancy">CBMA</span>
+                                    {% elif 'CCS' in dept or 'Computer' in dept %}
+                                      <span class="dept-badge dept-ccs" title="College of Computer Studies">CCS</span>
+                                    {% elif 'COEd' in dept or 'Education' in dept %}
+                                      <span class="dept-badge dept-coed" title="College of Education">COEd</span>
+                                    {% elif 'CIT' in dept or 'Industrial' in dept %}
+                                      <span class="dept-badge dept-cit" title="College of Industrial Technology">CIT</span>
+                                    {% elif 'COE' in dept or 'Engineering' in dept %}
+                                      <span class="dept-badge dept-coe" title="College of Engineering">COE</span>
+                                    {% elif dept %}
+                                      <span class="dept-badge" title="{{ dept }}">{{ dept|truncatechars:15 }}</span>
+                                    {% else %}
+                                      <span style="color:#667085;">—</span>
+                                    {% endif %}
+                                  {% endwith %}
+                                </td>
                                 <td>
                                     {% if s.enrollment_status == 'Active' %}
                                         <span class="badge badge-success">Active</span>
@@ -137,9 +157,15 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" style="text-align:center; color:#667085;">No students found.</td>
+                                <td colspan="9" style="text-align:center; color:#667085;">No students found.</td>
                             </tr>
                         {% endif %}
+                        <tr id="noStudentResultsRow" style="display:none;">
+                            <td colspan="9" style="text-align:center; padding:40px 20px;">
+                                <i class="fas fa-search" style="font-size:32px; color:#d0d5dd; margin-bottom:12px; display:block;"></i>
+                                <p style="color:#667085; margin:0;">No students match your search.</p>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -268,5 +294,80 @@
                 if(btn && panel){ btn.addEventListener('click', () => { panel.classList.toggle('show'); }); }
             })();
         </script>
+        <script>
+            // Student search functionality
+            function filterStudentTable(query) {
+                const q = (query || '').toLowerCase();
+                const rows = document.querySelectorAll('#studentsTable tbody tr.student-row');
+                const noResultsRow = document.getElementById('noStudentResultsRow');
+                let visibleCount = 0;
+                
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    const matches = text.includes(q);
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) visibleCount++;
+                });
+                
+                // Show/hide no results message
+                if (noResultsRow) {
+                    noResultsRow.style.display = (visibleCount === 0 && q) ? '' : 'none';
+                }
+            }
+            
+            // Connect search input
+            document.getElementById('studentSearchInput').addEventListener('input', function(e) {
+                filterStudentTable(e.target.value);
+            });
+        </script>
+        <style>
+            /* Department Badge Styles */
+            .dept-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                cursor: default;
+            }
+            /* CAS - College of Arts and Science - Green */
+            .dept-cas {
+                background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+                color: #166534;
+                border: 1px solid #86efac;
+            }
+            /* CBMA - College of Business Management and Accountancy - Yellow */
+            .dept-cbma {
+                background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+                color: #854d0e;
+                border: 1px solid #fde047;
+            }
+            /* CCS - College of Computer Studies - Gray */
+            .dept-ccs {
+                background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                color: #374151;
+                border: 1px solid #d1d5db;
+            }
+            /* COEd - College of Education - Blue */
+            .dept-coed {
+                background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+                color: #1e40af;
+                border: 1px solid #93c5fd;
+            }
+            /* CIT - College of Industrial Technology - Red */
+            .dept-cit {
+                background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                color: #991b1b;
+                border: 1px solid #fca5a5;
+            }
+            /* COE - College of Engineering - Orange */
+            .dept-coe {
+                background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+                color: #c2410c;
+                border: 1px solid #fdba74;
+            }
+        </style>
 </body>
 </html>
