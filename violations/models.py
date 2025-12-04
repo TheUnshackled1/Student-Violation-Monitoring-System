@@ -112,6 +112,9 @@ class Message(models.Model):
 	content = models.TextField()
 	created_at = models.DateTimeField(auto_now_add=True)
 	read_at = models.DateTimeField(null=True, blank=True)
+	# Soft delete fields - each user can delete from their view independently
+	deleted_by_sender = models.DateTimeField(null=True, blank=True)
+	deleted_by_receiver = models.DateTimeField(null=True, blank=True)
 
 	class Meta:
 		ordering = ["-created_at"]
@@ -120,6 +123,24 @@ class Message(models.Model):
 		if not self.read_at:
 			self.read_at = timezone.now()
 			self.save(update_fields=["read_at"])
+
+	def delete_for_user(self, user):
+		"""Soft delete message for a specific user."""
+		if user == self.sender:
+			self.deleted_by_sender = timezone.now()
+			self.save(update_fields=["deleted_by_sender"])
+		elif user == self.receiver:
+			self.deleted_by_receiver = timezone.now()
+			self.save(update_fields=["deleted_by_receiver"])
+
+	def restore_for_user(self, user):
+		"""Restore soft-deleted message for a specific user."""
+		if user == self.sender:
+			self.deleted_by_sender = None
+			self.save(update_fields=["deleted_by_sender"])
+		elif user == self.receiver:
+			self.deleted_by_receiver = None
+			self.save(update_fields=["deleted_by_receiver"])
 
 	def __str__(self) -> str:  # pragma: no cover
 		return f"Msg from {self.sender} to {self.receiver} at {self.created_at:%Y-%m-%d %H:%M}"

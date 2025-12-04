@@ -24,7 +24,7 @@ function announceRoleSelection(role) {
     const messageMap = {
         student: 'Student role selected. Use your student ID to sign in.',
         staff: 'Staff role selected. Enter your email and password.',
-        faculty: 'Faculty role selected. Enter your administrator credentials.'
+        faculty: 'OSA Coordinator selected. Enter your administrator credentials.'
     };
     const utteranceText = messageMap[role] || `${role} role selected.`;
 
@@ -186,8 +186,8 @@ function selectRole(role, options) {
                 welcomeText.textContent = 'Welcome Staff!';
             } else if (role === 'faculty' && imgFaculty) {
                 brandImg.src = imgFaculty;
-                brandImg.alt = 'Faculty Icon';
-                welcomeText.textContent = 'Welcome Faculty!';
+                brandImg.alt = 'OSA Coordinator Icon';
+                welcomeText.textContent = 'Welcome OSA Coordinator!';
             }
             brandImg.classList.remove('swap-anim-out');
             welcomeText.classList.remove('swap-anim-out');

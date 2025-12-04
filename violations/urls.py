@@ -28,12 +28,18 @@ urlpatterns = [
     path('student/dashboard/', views.student_dashboard_view, name='student_dashboard'),
     path('student/message/<int:message_id>/read/', views.student_mark_message_read_view, name='student_mark_message_read'),
     path('student/message/reply/', views.student_reply_message_view, name='student_reply_message'),
+    path('student/message/delete/', views.student_delete_message_view, name='student_delete_message'),
+    path('student/message/restore/', views.student_restore_message_view, name='student_restore_message'),
 
     # Faculty (Reporting Personnel)
     path('faculty/dashboard/', views.faculty_dashboard_view, name='faculty_dashboard'),
     path('faculty/report/', views.faculty_report_view, name='faculty_report'),
     path('faculty/my-reports/', views.faculty_my_reports_view, name='faculty_my_reports'),
     path('faculty/students/<str:student_id>/', views.faculty_student_detail_view, name='faculty_student_detail'),
+    path('faculty/message/<int:message_id>/read/', views.faculty_mark_message_read_view, name='faculty_mark_message_read'),
+    path('faculty/message/delete/', views.faculty_delete_message_view, name='faculty_delete_message'),
+    path('faculty/message/restore/', views.faculty_restore_message_view, name='faculty_restore_message'),
+    path('faculty/message/reply/', views.faculty_reply_message_view, name='faculty_reply_message'),
 
     # OSA Staff - Dashboard and Student Detail
     path('staff/dashboard/', views.staff_dashboard_view, name='staff_dashboard'),
@@ -67,6 +73,9 @@ urlpatterns = [
     
     # OSA Staff - Messaging
     path('staff/send-message/', views.staff_send_message_view, name='staff_send_message'),
+    path('staff/send-faculty-message/', views.staff_send_faculty_message_view, name='staff_send_faculty_message'),
+    path('staff/message/delete/', views.staff_delete_message_view, name='staff_delete_message'),
+    path('staff/message/restore/', views.staff_restore_message_view, name='staff_restore_message'),
     
     # OSA Staff - Add Student
     path('staff/add-student/', views.staff_add_student_view, name='staff_add_student'),

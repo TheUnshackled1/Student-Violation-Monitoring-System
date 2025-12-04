@@ -24,6 +24,10 @@
                 <span class="notif-badge" style="position:absolute; top:2px; right:2px; background:#dc2626; color:#fff; font-size:10px; padding:2px 5px; border-radius:10px; line-height:1;">{{ unread_count }}</span>
                 {% endif %}
             </button>
+            <button class="icon-btn" id="trashBtn" aria-label="Trash" title="Deleted Messages" style="position:relative;">
+                <i class="fas fa-trash-alt"></i>
+                {% if trashed_messages %}<span class="notif-badge" style="position:absolute; top:2px; right:2px; background:#6b7280; color:#fff; font-size:10px; padding:2px 5px; border-radius:10px; line-height:1;">{{ trashed_messages|length }}</span>{% endif %}
+            </button>
             <div class="profile-menu">
                 <button class="profile-btn" id="profileBtn">
                     <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
@@ -182,7 +186,14 @@
                         <strong style="color:var(--chmsu-dark-green);">
                             <i class="fas fa-user-tie"></i> {{ msg.sender.get_full_name|default:msg.sender.username }}
                         </strong>
-                        <small style="color:#667085;">{{ msg.created_at|date:"M d, H:i" }}</small>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <small style="color:#667085;">{{ msg.created_at|date:"M d, H:i" }}</small>
+                            <button class="delete-msg-btn" data-msg-id="{{ msg.id }}" title="Move to Trash" 
+                                    onclick="event.stopPropagation();"
+                                    style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px; font-size:12px;">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     <p style="margin:0; color:#344054; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ msg.content|truncatechars:50 }}</p>
                     {% if not msg.read_at %}
@@ -193,6 +204,51 @@
             {% else %}
                 <li style="padding:12px; color:#667085; text-align:center;">
                     <i class="fas fa-inbox"></i> No messages yet.
+                </li>
+            {% endif %}
+        </ul>
+    </aside>
+
+    <!-- Trash Panel -->
+    <aside class="notif-panel" id="trashPanel" aria-hidden="true">
+        <div class="notif-header">
+            <h3><i class="fas fa-trash-alt"></i> Deleted Messages</h3>
+            <button class="icon-btn" id="trashClose"><i class="fas fa-times"></i></button>
+        </div>
+        <ul class="notif-list" style="max-height:400px; overflow-y:auto; padding:0; margin:0;">
+            {% if trashed_messages %}
+                {% for msg in trashed_messages %}
+                <li class="trash-item" data-message-id="{{ msg.id }}" 
+                    style="padding:12px; border-bottom:1px solid #eee; opacity:0.8;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                        <div>
+                            {% if msg.sender == request.user %}
+                            <span class="badge" style="background:#e5e7eb; color:#374151; font-size:10px; margin-right:4px;">Sent</span>
+                            <strong style="color:#6b7280;">
+                                <i class="fas fa-user-tie"></i> {{ msg.receiver.get_full_name|default:msg.receiver.username }}
+                            </strong>
+                            {% else %}
+                            <span class="badge" style="background:#dbeafe; color:#1e40af; font-size:10px; margin-right:4px;">Received</span>
+                            <strong style="color:#6b7280;">
+                                <i class="fas fa-user-tie"></i> {{ msg.sender.get_full_name|default:msg.sender.username }}
+                            </strong>
+                            {% endif %}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <small style="color:#9ca3af;">{{ msg.created_at|date:"M d, H:i" }}</small>
+                            <button class="restore-msg-btn" data-msg-id="{{ msg.id }}" title="Restore Message" 
+                                    style="background:none; border:none; color:#10b981; cursor:pointer; padding:2px; font-size:12px;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="margin:0; color:#9ca3af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ msg.content|truncatechars:50 }}</p>
+                </li>
+                {% endfor %}
+            {% else %}
+                <li style="padding:20px; color:#667085; text-align:center;">
+                    <i class="fas fa-trash" style="font-size:24px; margin-bottom:8px; display:block; color:#d1d5db;"></i>
+                    No deleted messages.
                 </li>
             {% endif %}
         </ul>
@@ -394,7 +450,7 @@
                     replyCharCount.textContent = '0/10';
                     sendReplyBtn.disabled = true;
                     sendReplyBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reply';
-                    sendReplyBtn.style.background = 'linear-gradient(135deg, var(--chmsu-dark-green) 0%, var(--chmsu-light-green) 100%)';
+                    sendReplyBtn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
                 }
                 
                 modal.classList.add('show');
@@ -482,6 +538,85 @@
                     const senderId = this.dataset.senderId;
                     
                     openModal(msgId, sender, date, content, isUnread, this, senderId);
+                });
+            });
+        })();
+    </script>
+    <script>
+        // Trash panel toggle
+        (function(){
+            const btn = document.getElementById('trashBtn');
+            const panel = document.getElementById('trashPanel');
+            const closeBtn = document.getElementById('trashClose');
+            if(btn && panel){ 
+                btn.addEventListener('click', () => { panel.classList.toggle('show'); }); 
+            }
+            if(closeBtn && panel){
+                closeBtn.addEventListener('click', () => { panel.classList.remove('show'); });
+            }
+        })();
+    </script>
+    <script>
+        // Delete and Restore message functionality
+        (function(){
+            const csrfToken = '{{ csrf_token }}';
+            
+            // Delete message buttons
+            document.querySelectorAll('.delete-msg-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const msgId = btn.dataset.msgId;
+                    
+                    if(!confirm('Move this message to trash?')) return;
+                    
+                    try {
+                        const response = await fetch('{% url "violations:student_delete_message" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ message_id: msgId })
+                        });
+                        
+                        if(response.ok) {
+                            // Remove the item from the list and reload
+                            location.reload();
+                        } else {
+                            alert('Failed to delete message');
+                        }
+                    } catch(err) {
+                        console.error('Error deleting message:', err);
+                        alert('Error deleting message');
+                    }
+                });
+            });
+            
+            // Restore message buttons
+            document.querySelectorAll('.restore-msg-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const msgId = btn.dataset.msgId;
+                    
+                    try {
+                        const response = await fetch('{% url "violations:student_restore_message" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: JSON.stringify({ message_id: msgId })
+                        });
+                        
+                        if(response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Failed to restore message');
+                        }
+                    } catch(err) {
+                        console.error('Error restoring message:', err);
+                        alert('Error restoring message');
+                    }
                 });
             });
         })();

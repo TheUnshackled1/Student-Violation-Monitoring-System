@@ -356,16 +356,25 @@ def student_dashboard_view(request):
 	violations = Violation.objects.select_related("reported_by", "student").filter(student=student).order_by("-created_at") if student else []
 	# Login history for current user
 	login_history = LoginActivity.objects.filter(user=request.user).order_by("-timestamp")[:20]
-	# Messages from staff/faculty
-	messages_qs = Message.objects.select_related("sender").filter(receiver=request.user).order_by("-created_at")
+	# Messages from staff/faculty - exclude deleted by receiver (student)
+	messages_qs = Message.objects.select_related("sender").filter(
+		receiver=request.user,
+		deleted_by_receiver__isnull=True
+	).order_by("-created_at")
 	unread_count = messages_qs.filter(read_at__isnull=True).count()
 	staff_messages = messages_qs[:20]
+	# Trashed messages (deleted received messages)
+	trashed_messages = Message.objects.select_related("sender", "receiver").filter(
+		models.Q(sender=request.user, deleted_by_sender__isnull=False) |
+		models.Q(receiver=request.user, deleted_by_receiver__isnull=False)
+	).order_by("-created_at")[:30]
 	ctx = {
 		"student": student,
 		"violations": violations,
 		"login_history": login_history,
 		"staff_messages": staff_messages,
 		"unread_count": unread_count,
+		"trashed_messages": trashed_messages,
 	}
 	return render(request, "violations/student/dashboard.html", ctx)
 
@@ -435,6 +444,18 @@ def faculty_dashboard_view(request):
 	except EmptyPage:
 		students_page = paginator.page(paginator.num_pages)
 	login_history = LoginActivity.objects.filter(user=request.user).order_by("-timestamp")[:20]
+	# Messages from staff to this faculty - exclude deleted
+	staff_messages_qs = Message.objects.select_related("sender").filter(
+		receiver=request.user,
+		deleted_by_receiver__isnull=True
+	).order_by("-created_at")
+	unread_count = staff_messages_qs.filter(read_at__isnull=True).count()
+	staff_messages = staff_messages_qs[:20]
+	# Trashed messages
+	trashed_messages = Message.objects.select_related("sender", "receiver").filter(
+		receiver=request.user,
+		deleted_by_receiver__isnull=False
+	).order_by("-created_at")[:30]
 	ctx = {
 		"stats": {
 			"total": total_reports,
@@ -447,6 +468,9 @@ def faculty_dashboard_view(request):
 		"login_history": login_history,
 		"students": students_page,  # page object
 		"paginator": paginator,
+		"staff_messages": staff_messages,
+		"unread_count": unread_count,
+		"trashed_messages": trashed_messages,
 	}
 	return render(request, "violations/faculty/dashboard.html", ctx)
 
@@ -599,8 +623,23 @@ def staff_dashboard_view(request):
 	ongoing_sanctions = violation_qs.filter(status=Violation.Status.UNDER_REVIEW).count()
 	# include login history for modal
 	login_history = LoginActivity.objects.filter(user=request.user).order_by("-timestamp")[:20]
-	# Sent messages to students (for tracking read status)
-	sent_messages = Message.objects.select_related("receiver", "receiver__student_profile").filter(sender=request.user).order_by("-created_at")[:30]
+	# Sent messages to students (for tracking read status) - exclude deleted by sender
+	sent_messages = Message.objects.select_related("receiver", "receiver__student_profile").filter(
+		sender=request.user,
+		deleted_by_sender__isnull=True
+	).order_by("-created_at")[:30]
+	# Student replies (messages FROM students TO this staff member) - exclude deleted by receiver
+	student_replies = Message.objects.select_related("sender", "sender__student_profile").filter(
+		receiver=request.user,
+		deleted_by_receiver__isnull=True
+	).order_by("-created_at")[:30]
+	# Trashed messages (deleted sent messages OR deleted received messages)
+	trashed_messages = Message.objects.select_related("sender", "receiver", "sender__student_profile", "receiver__student_profile").filter(
+		models.Q(sender=request.user, deleted_by_sender__isnull=False) |
+		models.Q(receiver=request.user, deleted_by_receiver__isnull=False)
+	).order_by("-created_at")[:50]
+	# Faculty list for messaging
+	faculty_list = User.objects.filter(role=User.Role.FACULTY_ADMIN).order_by("first_name", "last_name")
 	ctx = {
 		"students": students,
 		"total_students": total_students,
@@ -610,6 +649,9 @@ def staff_dashboard_view(request):
 		"ongoing_sanctions": ongoing_sanctions,
 		"login_history": login_history,
 		"sent_messages": sent_messages,
+		"student_replies": student_replies,
+		"trashed_messages": trashed_messages,
+		"faculty_list": faculty_list,
 	}
 	return render(request, "violations/staff/dashboard.html", ctx)
 
@@ -1380,6 +1422,37 @@ def staff_send_message_view(request):
 	return redirect('violations:staff_dashboard')
 
 
+@role_required({User.Role.STAFF})
+def staff_send_faculty_message_view(request):
+	"""Staff: Send a message to a faculty member."""
+	if request.method == 'POST':
+		faculty_id = request.POST.get('faculty_id')
+		message_content = request.POST.get('content', '').strip()
+		
+		if not faculty_id or not message_content:
+			messages.error(request, 'Please select a faculty member and enter a message.')
+			return redirect('violations:staff_dashboard')
+		
+		# Find the faculty user
+		faculty_user = User.objects.filter(id=faculty_id, role=User.Role.FACULTY_ADMIN).first()
+		if not faculty_user:
+			messages.error(request, 'Faculty member not found.')
+			return redirect('violations:staff_dashboard')
+		
+		# Create the message
+		Message.objects.create(
+			sender=request.user,
+			receiver=faculty_user,
+			content=message_content
+		)
+		
+		messages.success(request, f'Message sent to {faculty_user.get_full_name() or faculty_user.username}.')
+		return redirect('violations:staff_dashboard')
+	
+	messages.error(request, 'Invalid request method.')
+	return redirect('violations:staff_dashboard')
+
+
 @role_required({User.Role.STUDENT})
 def student_mark_message_read_view(request, message_id):
 	"""Student: Mark a message as read."""
@@ -1493,3 +1566,206 @@ def staff_add_student_view(request):
 		return redirect('violations:staff_dashboard')
 	
 	return redirect('violations:staff_dashboard')
+
+
+@role_required({User.Role.STAFF})
+def staff_delete_message_view(request):
+	"""Staff: Move a message to trash (soft delete)."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		message_type = data.get('type', 'sent')  # 'sent' or 'received'
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		if message_type == 'sent':
+			msg = get_object_or_404(Message, id=message_id, sender=request.user)
+		else:
+			msg = get_object_or_404(Message, id=message_id, receiver=request.user)
+		
+		msg.delete_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.STAFF})
+def staff_restore_message_view(request):
+	"""Staff: Restore a message from trash."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		# Find message where user is sender or receiver
+		msg = Message.objects.filter(id=message_id).filter(
+			models.Q(sender=request.user) | models.Q(receiver=request.user)
+		).first()
+		
+		if not msg:
+			return JsonResponse({'status': 'error', 'error': 'Message not found'}, status=404)
+		
+		msg.restore_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.STUDENT})
+def student_delete_message_view(request):
+	"""Student: Move a message to trash (soft delete)."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		# Student can delete received messages (from staff) or sent messages (replies)
+		msg = Message.objects.filter(id=message_id).filter(
+			models.Q(sender=request.user) | models.Q(receiver=request.user)
+		).first()
+		
+		if not msg:
+			return JsonResponse({'status': 'error', 'error': 'Message not found'}, status=404)
+		
+		msg.delete_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.STUDENT})
+def student_restore_message_view(request):
+	"""Student: Restore a message from trash."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		msg = Message.objects.filter(id=message_id).filter(
+			models.Q(sender=request.user) | models.Q(receiver=request.user)
+		).first()
+		
+		if not msg:
+			return JsonResponse({'status': 'error', 'error': 'Message not found'}, status=404)
+		
+		msg.restore_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.FACULTY_ADMIN})
+def faculty_mark_message_read_view(request, message_id: int):
+	"""Faculty: Mark a message as read."""
+	message_obj = get_object_or_404(Message, id=message_id, receiver=request.user)
+	message_obj.mark_read()
+	return JsonResponse({'status': 'ok'})
+
+
+@role_required({User.Role.FACULTY_ADMIN})
+def faculty_delete_message_view(request):
+	"""Faculty: Move a message to trash (soft delete)."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		msg = get_object_or_404(Message, id=message_id, receiver=request.user)
+		msg.delete_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.FACULTY_ADMIN})
+def faculty_restore_message_view(request):
+	"""Faculty: Restore a message from trash."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		
+		if not message_id:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
+		
+		msg = get_object_or_404(Message, id=message_id, receiver=request.user)
+		msg.restore_for_user(request.user)
+		return JsonResponse({'status': 'ok'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
+
+
+@role_required({User.Role.FACULTY_ADMIN})
+def faculty_reply_message_view(request):
+	"""Faculty: Reply to a staff message."""
+	if request.method != 'POST':
+		return JsonResponse({'status': 'error', 'error': 'POST required'}, status=405)
+	
+	try:
+		import json
+		data = json.loads(request.body)
+		message_id = data.get('message_id')
+		reply_text = data.get('reply', '').strip()
+		
+		if not message_id or not reply_text:
+			return JsonResponse({'status': 'error', 'error': 'Missing message_id or reply'}, status=400)
+		
+		# Get the original message to find the sender (staff)
+		original_message = get_object_or_404(Message, id=message_id, receiver=request.user)
+		
+		# Create a reply message from faculty to staff
+		Message.objects.create(
+			sender=request.user,
+			receiver=original_message.sender,
+			content=reply_text
+		)
+		
+		return JsonResponse({'status': 'ok', 'message': 'Reply sent successfully!'})
+	except json.JSONDecodeError:
+		return JsonResponse({'status': 'error', 'error': 'Invalid JSON'}, status=400)
+	except Exception as e:
+		return JsonResponse({'status': 'error', 'error': str(e)}, status=500)
