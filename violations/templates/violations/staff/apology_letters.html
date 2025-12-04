@@ -96,7 +96,7 @@
                   Violation #{{ letter.violation.id }}
                 </a>
               </td>
-              <td>{{ letter.submitted_at|date:"M d, Y H:i" }}</td>
+              <td>{{ letter.submitted_at|date:"M d, Y g:i A" }}</td>
               <td>
                 <span class="badge 
                   {% if letter.status == 'verified' %}badge-success

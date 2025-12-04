@@ -99,7 +99,7 @@
       <div class="dash-card">
         <div class="card-icon"><i class="fas fa-clock-rotate-left"></i></div>
         <div class="card-title">Latest Incident</div>
-        <div class="card-desc">{% if vstats.latest_incident %}{{ vstats.latest_incident|date:"M d, Y H:i" }}{% else %}—{% endif %}</div>
+        <div class="card-desc">{% if vstats.latest_incident %}{{ vstats.latest_incident|date:"M d, Y g:i A" }}{% else %}—{% endif %}</div>
       </div>
     </section>
 

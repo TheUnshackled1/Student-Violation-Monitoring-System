@@ -73,7 +73,7 @@
             <div class="dash-card clickable" id="loginHistoryCard" role="button" tabindex="0" title="View login history">
                 <div class="card-icon"><i class="fas fa-right-to-bracket"></i></div>
                 <div class="card-title">Logged in History</div>
-                <div class="card-desc">{% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}—{% endif %}</div>
+                <div class="card-desc">{% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y g:i A" }}{% else %}—{% endif %}</div>
             </div>
             <div class="dash-card">
                 <div class="card-icon"><i class="fas fa-scale-balanced"></i></div>
@@ -187,7 +187,7 @@
                             <i class="fas fa-user-tie"></i> {{ msg.sender.get_full_name|default:msg.sender.username }}
                         </strong>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <small style="color:#667085;">{{ msg.created_at|date:"M d, H:i" }}</small>
+                            <small style="color:#667085;">{{ msg.created_at|date:"M d, g:i A" }}</small>
                             <button class="delete-msg-btn" data-msg-id="{{ msg.id }}" title="Move to Trash" 
                                     onclick="event.stopPropagation();"
                                     style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px; font-size:12px;">
@@ -235,7 +235,7 @@
                             {% endif %}
                         </div>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <small style="color:#9ca3af;">{{ msg.created_at|date:"M d, H:i" }}</small>
+                            <small style="color:#9ca3af;">{{ msg.created_at|date:"M d, g:i A" }}</small>
                             <button class="restore-msg-btn" data-msg-id="{{ msg.id }}" title="Restore Message" 
                                     style="background:none; border:none; color:#10b981; cursor:pointer; padding:2px; font-size:12px;">
                                 <i class="fas fa-undo"></i>
@@ -309,8 +309,8 @@
                 <button class="icon-btn" id="loginHistClose"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <p><strong>Last login:</strong> {% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y H:i" }}{% else %}—{% endif %}</p>
-                <p><strong>Account created:</strong> {{ request.user.date_joined|date:"M d, Y H:i" }}</p>
+                <p><strong>Last login:</strong> {% if request.user.last_login %}{{ request.user.last_login|date:"M d, Y g:i A" }}{% else %}—{% endif %}</p>
+                <p><strong>Account created:</strong> {{ request.user.date_joined|date:"M d, Y g:i A" }}</p>
                 <div style="margin-top:10px;">
                     <h4 style="margin:6px 0 8px;">Your Login History</h4>
                     {% if login_history %}
@@ -327,7 +327,7 @@
                                 <tbody>
                                     {% for entry in login_history %}
                                     <tr>
-                                        <td>{{ entry.timestamp|date:"M d, Y H:i" }}</td>
+                                        <td>{{ entry.timestamp|date:"M d, Y g:i A" }}</td>
                                         <td>{{ entry.get_event_type_display }}</td>
                                         <td>{{ entry.ip_address|default:'—' }}</td>
                                         <td style="max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ entry.user_agent|default:'—' }}</td>

@@ -61,7 +61,7 @@
                 <td>{{ v.student.user.get_full_name|default:v.student.user.username }}</td>
                 <td>{{ v.get_type_display }}</td>
                 <td>{{ v.get_status_display }}</td>
-                <td>{{ v.incident_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ v.incident_at|date:"Y-m-d g:i A" }}</td>
                 <td>{{ v.created_at|date:"Y-m-d" }}</td>
               </tr>
               {% endfor %}

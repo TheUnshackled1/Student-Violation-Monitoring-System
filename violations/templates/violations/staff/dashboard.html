@@ -245,7 +245,7 @@
         <button class="icon-btn" id="loginHistClose"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
-        <p><strong>Account created:</strong> {{ request.user.date_joined|date:"M d, Y H:i" }}</p>
+        <p><strong>Account created:</strong> {{ request.user.date_joined|date:"M d, Y g:i A" }}</p>
         <div style="margin-top:10px;">
           {% if login_history %}
           <div class="table-responsive" style="max-height:360px; overflow:auto;">
@@ -261,7 +261,7 @@
               <tbody>
                 {% for entry in login_history %}
                 <tr>
-                  <td>{{ entry.timestamp|date:"M d, Y H:i" }}</td>
+                  <td>{{ entry.timestamp|date:"M d, Y g:i A" }}</td>
                   <td>{{ entry.get_event_type_display }}</td>
                   <td>{{ entry.ip_address|default:'—' }}</td>
                   <td style="max-width:360px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ entry.user_agent|default:'—' }}</td>
@@ -382,7 +382,7 @@
               {% endif %}
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <small style="color:#667085;">{{ msg.created_at|date:"M d, H:i" }}</small>
+              <small style="color:#667085;">{{ msg.created_at|date:"M d, g:i A" }}</small>
               <button class="delete-msg-btn" data-msg-id="{{ msg.id }}" data-type="sent" title="Move to Trash" 
                       style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px;">
                 <i class="fas fa-trash-alt"></i>
@@ -393,7 +393,7 @@
           <div style="display:flex; align-items:center; gap:6px;">
             {% if msg.read_at %}
               <span class="badge" style="background:#dcfce7; color:#166534; font-size:11px;">
-                <i class="fas fa-check-double"></i> Seen {{ msg.read_at|date:"M d, H:i" }}
+                <i class="fas fa-check-double"></i> Seen {{ msg.read_at|date:"M d, g:i A" }}
               </span>
             {% else %}
               <span class="badge" style="background:#fef3c7; color:#92400e; font-size:11px;">
@@ -433,7 +433,7 @@
               {% endif %}
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <small style="color:#667085;">{{ reply.created_at|date:"M d, H:i" }}</small>
+              <small style="color:#667085;">{{ reply.created_at|date:"M d, g:i A" }}</small>
               <button class="delete-msg-btn" data-msg-id="{{ reply.id }}" data-type="received" title="Move to Trash" 
                       style="background:none; border:none; color:#ef4444; cursor:pointer; padding:2px;">
                 <i class="fas fa-trash-alt"></i>
@@ -492,7 +492,7 @@
               {% endif %}
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-              <small style="color:#9ca3af;">{{ msg.created_at|date:"M d, H:i" }}</small>
+              <small style="color:#9ca3af;">{{ msg.created_at|date:"M d, g:i A" }}</small>
               <button class="restore-msg-btn" data-msg-id="{{ msg.id }}" title="Restore Message" 
                       style="background:none; border:none; color:#10b981; cursor:pointer; padding:2px;">
                 <i class="fas fa-undo"></i>
