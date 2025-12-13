@@ -2,6 +2,9 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
 
 
 class User(AbstractUser):
@@ -43,6 +46,29 @@ class Student(models.Model):
 
 	def __str__(self) -> str:  # pragma: no cover
 		return f"{self.student_id} - {self.user.get_full_name() or self.user.username}"
+
+	@property
+	def major_violation_count(self):
+		"""Count of major violations for this student (type == 'major')."""
+		return self.violations.filter(type="major").count()
+
+	@property
+	def minor_violation_count(self):
+		"""Count of minor violations for this student (type == 'minor')."""
+		return self.violations.filter(type="minor").count()
+
+	@property
+	def effective_major_violations(self):
+		"""Calculate effective major violations where 3 minors == 1 major.
+
+		Returns: int
+		"""
+		return self.major_violation_count + (self.minor_violation_count // 3)
+
+	@property
+	def should_alert_staff(self):
+		"""True when effective major violations >= 3 (trigger staff alert)."""
+		return self.effective_major_violations >= 3
 
 
 class OSACoordinator(models.Model):
@@ -166,6 +192,32 @@ class ChatMessage(models.Model):
 
 	def __str__(self) -> str:  # pragma: no cover
 		return f"ChatMessage({self.sender.username}@{self.room} {self.created_at:%Y-%m-%d %H:%M})"
+
+
+class StaffAlert(models.Model):
+	"""Record alerts when a student reaches the threshold of effective major violations.
+
+	Use this to notify staff and avoid duplicate alerts while an alert remains unresolved.
+	"""
+	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="alerts")
+	triggered_violation = models.ForeignKey("Violation", on_delete=models.SET_NULL, null=True, blank=True)
+	effective_major_count = models.PositiveIntegerField()
+	created_at = models.DateTimeField(auto_now_add=True)
+	resolved = models.BooleanField(default=False)
+	resolved_at = models.DateTimeField(null=True, blank=True)
+	scheduled_meeting = models.DateTimeField(null=True, blank=True, help_text="Scheduled meeting time with OSA Coordinator")
+	meeting_notes = models.TextField(blank=True, help_text="Additional notes for the meeting")
+
+	class Meta:
+		ordering = ["-created_at"]
+
+	def mark_resolved(self):
+		self.resolved = True
+		self.resolved_at = timezone.now()
+		self.save(update_fields=["resolved", "resolved_at"])
+
+	def __str__(self):
+		return f"StaffAlert({self.student.student_id} = {self.effective_major_count} @ {self.created_at:%Y-%m-%d %H:%M})"
 
 
 class Violation(models.Model):
@@ -353,4 +405,64 @@ class StaffVerification(models.Model):
 
 	def __str__(self):
 		return f"{self.get_action_display()} by {self.staff.username} on Violation #{self.violation.id}"
+
+
+# Signal: create a StaffAlert when a Violation is created and the student's
+# effective major violations (3 minors = 1 major) reach the alert threshold.
+@receiver(post_save, sender='violations.Violation')
+def violation_post_save_alert(sender, instance, created, **kwargs):
+	try:
+		if not created:
+			return
+
+		student = instance.student
+
+		# Compute effective majors: majors + floor(minors / 3)
+		major_count = student.violations.filter(type='major').count()
+		minor_count = student.violations.filter(type='minor').count()
+		effective = major_count + (minor_count // 3)
+
+		# Threshold is 3 effective major violations
+		if effective >= 3:
+			# Only create an alert if there is no unresolved alert already
+			unresolved_exists = student.alerts.filter(resolved=False).exists()
+			if not unresolved_exists:
+				alert = StaffAlert.objects.create(
+					student=student,
+					triggered_violation=instance,
+					effective_major_count=effective,
+				)
+				
+				# Notify all staff via email
+				staff_emails = list(User.objects.filter(role=User.Role.STAFF).values_list('email', flat=True))
+				if staff_emails:
+					subject = f"Student Alert: {student.student_id} Reached Violation Threshold"
+					message = f"""
+Dear Staff,
+
+A student has reached the violation threshold requiring immediate attention.
+
+Student Details:
+- Student ID: {student.student_id}
+- Name: {student.user.get_full_name() or student.user.username}
+- Effective Major Violations: {effective} (Majors: {major_count}, Minors: {minor_count})
+- Latest Violation: {instance.description} (Type: {instance.get_type_display()})
+
+Please schedule a meeting with the student and the OSA Coordinator as soon as possible.
+
+This is an automated notification from the CHMSU Violation System.
+
+Regards,
+CHMSU Violation Monitoring System
+					""".strip()
+					send_mail(
+						subject,
+						message,
+						settings.DEFAULT_FROM_EMAIL,
+						staff_emails,
+						fail_silently=True,
+					)
+	except Exception:
+		# Avoid raising errors during model save; log externally if available
+		pass
 

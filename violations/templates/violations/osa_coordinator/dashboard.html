@@ -27,6 +27,10 @@
                 <i class="fas fa-trash-alt"></i>
                 {% if trashed_messages %}<span class="notif-badge" style="position:absolute; top:-4px; right:-4px; background:#6b7280; color:#fff; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ trashed_messages|length }}</span>{% endif %}
             </button>
+            <button class="icon-btn" id="staffAlertsBtn" aria-label="Staff Alerts" title="View Staff Alerts" style="position:relative;">
+                <i class="fas fa-exclamation-triangle"></i>
+                {% if staff_alerts %}<span class="notif-badge" style="position:absolute; top:-4px; right:-4px; background:#dc2626; color:#fff; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ staff_alerts|length }}</span>{% endif %}
+            </button>
             <div class="profile-menu">
                 <button class="profile-btn" id="profileBtn">
                     <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
@@ -216,6 +220,54 @@
         </div>
     </aside>
 
+    <!-- Staff Alerts Panel -->
+    <aside class="notif-panel" id="staffAlertsPanel" aria-hidden="true">
+        <div class="notif-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Staff Alerts {% if staff_alerts %}<span class="badge badge-danger" style="font-size:12px; margin-left:6px;">{{ staff_alerts|length }} pending</span>{% endif %}</h3>
+            <button class="icon-btn" id="staffAlertsClose"><i class="fas fa-times"></i></button>
+        </div>
+        <ul class="notif-list" style="max-height:400px; overflow-y:auto; padding:0; margin:0;">
+            {% if staff_alerts %}
+                {% for alert in staff_alerts %}
+                <li class="alert-item" data-alert-id="{{ alert.id }}" data-student-id="{{ alert.student.student_id }}" style="padding:16px; border-bottom:1px solid #eee; cursor:pointer; background:#fef2f2;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i>
+                            <strong style="color:#b91c1c;">{{ alert.student.user.get_full_name }}</strong>
+                        </div>
+                        <small style="color:#667085;">{{ alert.created_at|date:"M d, Y g:i A" }}</small>
+                    </div>
+                    <p style="margin:4px 0; color:#374151;">
+                        <strong>Effective Violations:</strong> {{ alert.effective_major_count }}
+                    </p>
+                    <p style="margin:4px 0; color:#374151;">
+                        <strong>Triggered by:</strong> {{ alert.triggered_violation.get_type_display }} violation
+                    </p>
+                    {% if alert.scheduled_meeting %}
+                    <p style="margin:4px 0; color:#059669;">
+                        <i class="fas fa-calendar-check"></i> Meeting scheduled: {{ alert.scheduled_meeting|date:"M d, Y g:i A" }}
+                    </p>
+                    {% else %}
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="action-btn schedule-meeting-btn" data-alert-id="{{ alert.id }}" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px;">
+                            <i class="fas fa-calendar-plus"></i> Schedule Meeting at OSA Office
+                        </button>
+                        <button class="action-btn resolve-alert-btn" data-alert-id="{{ alert.id }}" style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px;">
+                            <i class="fas fa-check"></i> Mark Resolved
+                        </button>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            {% else %}
+                <li style="padding:20px; color:#667085; text-align:center;">
+                    <i class="fas fa-check-circle" style="font-size:24px; margin-bottom:8px; display:block; color:#10b981;"></i>
+                    No pending alerts.
+                </li>
+            {% endif %}
+        </ul>
+    </aside>
+
     <!-- Login History Modal -->
     <div class="modal" id="loginHistoryModal" aria-hidden="true">
         <div class="modal-card" style="max-width:800px;">
@@ -376,6 +428,56 @@
                 </button>
                 <button class="login-button" id="msgViewCloseBtn" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
                     <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Scheduling Modal -->
+    <div class="modal" id="meetingModal" aria-hidden="true">
+        <div class="modal-card" style="max-width:500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-plus"></i> Schedule Meeting at OSA Office</h3>
+                <button class="icon-btn" id="meetingModalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:16px;">
+                    <strong>Student:</strong> <span id="meetingStudentName">—</span><br>
+                    <strong>Student ID:</strong> <span id="meetingStudentId">—</span>
+                </div>
+                
+                <div style="margin-bottom:16px;">
+                    <label for="meetingDate" style="font-weight:500; display:block; margin-bottom:6px;">
+                        <i class="fas fa-calendar-alt"></i> Meeting Date & Time (Philippine Time) *
+                    </label>
+                    <input type="datetime-local" id="meetingDate" required 
+                           style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px; font-family:inherit;">
+                </div>
+                
+                <div style="margin-bottom:16px;">
+                    <label for="meetingNotes" style="font-weight:500; display:block; margin-bottom:6px;">
+                        <i class="fas fa-sticky-note"></i> Additional Notes (Optional)
+                    </label>
+                    <textarea id="meetingNotes" rows="3" placeholder="Any special instructions or notes for the meeting..." 
+                              style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px; resize:none; font-family:inherit;"></textarea>
+                </div>
+                
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:16px;">
+                    <strong style="color:#166534;"><i class="fas fa-info-circle"></i> Meeting Details:</strong>
+                    <ul style="margin:8px 0 0 0; padding-left:20px; color:#166534; font-size:14px;">
+                        <li>Location: OSA Office, Carlos Hilado Memorial State University</li>
+                        <li>Both student and OSA Coordinator will be notified</li>
+                        <li>Meeting is mandatory for the student</li>
+                        <li>All times are in Philippine Time (PHT)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-actions" style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="login-button" id="meetingModalCancel" style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="login-button" id="meetingModalConfirm" style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);">
+                    <i class="fas fa-calendar-check"></i> Schedule Meeting
                 </button>
             </div>
         </div>
@@ -629,6 +731,139 @@
             document.getElementById('studentSearchInput').addEventListener('input', function(e) {
                 filterStudentTable(e.target.value);
             });
+        </script>
+        <script>
+            // Staff Alerts Panel Logic
+            (function(){
+                const panel = document.getElementById('staffAlertsPanel');
+                const btnOpen = document.getElementById('staffAlertsBtn');
+                const btnClose = document.getElementById('staffAlertsClose');
+
+                function openPanel(){
+                    if(panel) panel.classList.add('show');
+                }
+                function closePanel(){
+                    if(panel) panel.classList.remove('show');
+                }
+
+                if(btnOpen) btnOpen.addEventListener('click', () => {
+                    if(panel) panel.classList.toggle('show');
+                });
+                if(btnClose) btnClose.addEventListener('click', closePanel);
+
+                // Schedule Meeting functionality
+                document.querySelectorAll('.schedule-meeting-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const alertId = btn.dataset.alertId;
+                        const alertItem = btn.closest('.alert-item');
+                        
+                        // Get student info from the alert item
+                        const studentName = alertItem.querySelector('strong').textContent;
+                        const studentId = alertItem.dataset.studentId;
+                        
+                        // Populate modal
+                        document.getElementById('meetingStudentName').textContent = studentName;
+                        document.getElementById('meetingStudentId').textContent = studentId;
+                        
+                        // Set minimum date to tomorrow
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        const minDateTime = tomorrow.toISOString().slice(0, 16);
+                        document.getElementById('meetingDate').min = minDateTime;
+                        
+                        // Store alert ID for later use
+                        document.getElementById('meetingModalConfirm').dataset.alertId = alertId;
+                        
+                        // Show modal
+                        document.getElementById('meetingModal').classList.add('show');
+                    });
+                });
+
+                // Resolve Alert functionality
+                document.querySelectorAll('.resolve-alert-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const alertId = btn.dataset.alertId;
+                        
+                        if (!confirm('Mark this alert as resolved?')) return;
+                        
+                        try {
+                            const response = await fetch(`/violations/staff/resolve-alert/${alertId}/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                alert('Alert resolved successfully!');
+                                location.reload();
+                            } else {
+                                alert('Failed to resolve alert.');
+                            }
+                        } catch (error) {
+                            console.error('Error resolving alert:', error);
+                            alert('Error resolving alert.');
+                        }
+                    });
+                });
+
+                // Modal functionality
+                document.getElementById('meetingModalConfirm').addEventListener('click', async () => {
+                    const alertId = document.getElementById('meetingModalConfirm').dataset.alertId;
+                    const meetingDate = document.getElementById('meetingDate').value;
+                    const meetingNotes = document.getElementById('meetingNotes').value;
+                    
+                    if (!meetingDate) {
+                        alert('Please select a meeting date and time.');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`/staff/schedule-meeting/${alertId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ 
+                                scheduled_meeting: meetingDate,
+                                meeting_notes: meetingNotes 
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            alert('Meeting scheduled successfully!');
+                            document.getElementById('meetingModal').classList.remove('show');
+                            location.reload();
+                        } else {
+                            alert('Failed to schedule meeting.');
+                        }
+                    } catch (error) {
+                        console.error('Error scheduling meeting:', error);
+                        alert('Error scheduling meeting.');
+                    }
+                });
+                
+                // Close modal functionality
+                document.getElementById('meetingModalClose').addEventListener('click', () => {
+                    document.getElementById('meetingModal').classList.remove('show');
+                });
+                
+                // Cancel button functionality
+                document.getElementById('meetingModalCancel').addEventListener('click', () => {
+                    document.getElementById('meetingModal').classList.remove('show');
+                });
+                
+                // Close modal when clicking outside
+                document.getElementById('meetingModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'meetingModal') {
+                        document.getElementById('meetingModal').classList.remove('show');
+                    }
+                });
+            })();
         </script>
         <style>
             /* Department Badge Styles */

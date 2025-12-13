@@ -84,6 +84,10 @@ urlpatterns = [
     
     # OSA Staff - Add Student
     path('staff/add-student/', views.staff_add_student_view, name='staff_add_student'),
+    
+    # OSA Staff - Alert Management
+    path('staff/schedule-meeting/<int:alert_id>/', views.staff_schedule_meeting_view, name='staff_schedule_meeting'),
+    path('staff/resolve-alert/<int:alert_id>/', views.staff_resolve_alert_view, name='staff_resolve_alert'),
 
     # Authentication (Django built-ins for testing/demo)
     path('auth/login/', auth_views.LoginView.as_view(template_name='violations/auth/login.html'), name='auth_login'),

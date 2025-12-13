@@ -20,7 +20,7 @@ from .models import (
 	User, Student as StudentModel, Staff as StaffModel, OSACoordinator as OSACoordinatorModel,
 	TemporaryAccessRequest, Violation, LoginActivity,
 	ViolationDocument, ApologyLetter, IDConfiscation, ViolationClearance, StaffVerification,
-	Message
+	Message, StaffAlert
 )
 from .decorators import login_required, role_required
 
@@ -579,6 +579,10 @@ def faculty_dashboard_view(request):
 		receiver=request.user,
 		deleted_by_receiver__isnull=False
 	).order_by("-created_at")[:30]
+	# Staff alerts for students who reached violation threshold
+	staff_alerts = StaffAlert.objects.select_related("student__user", "triggered_violation").filter(
+		resolved=False
+	).order_by("-created_at")
 	ctx = {
 		"stats": {
 			"total": total_reports,
@@ -594,6 +598,7 @@ def faculty_dashboard_view(request):
 		"staff_messages": staff_messages,
 		"unread_count": unread_count,
 		"trashed_messages": trashed_messages,
+		"staff_alerts": staff_alerts,
 	}
 	return render(request, "violations/osa_coordinator/dashboard.html", ctx)
 
@@ -763,6 +768,10 @@ def staff_dashboard_view(request):
 	).order_by("-created_at")[:50]
 	# OSA Coordinator list for messaging
 	faculty_list = User.objects.filter(role=User.Role.OSA_COORDINATOR).order_by("first_name", "last_name")
+	# Staff alerts for students who reached violation threshold
+	staff_alerts = StaffAlert.objects.select_related("student__user", "triggered_violation").filter(
+		resolved=False
+	).order_by("-created_at")
 	ctx = {
 		"students": students,
 		"total_students": total_students,
@@ -775,6 +784,7 @@ def staff_dashboard_view(request):
 		"student_replies": student_replies,
 		"trashed_messages": trashed_messages,
 		"faculty_list": faculty_list,
+		"staff_alerts": staff_alerts,
 	}
 	return render(request, "violations/staff/dashboard.html", ctx)
 
@@ -2051,3 +2061,121 @@ def student_apology_view(request):
 		"all_apologies": all_apologies,
 	}
 	return render(request, "violations/student/apology.html", ctx)
+
+
+############################################
+# Staff Alert Management Views
+############################################
+
+@role_required({User.Role.STAFF})
+def staff_schedule_meeting_view(request, alert_id):
+	"""Staff: Schedule a meeting for a staff alert."""
+	if request.method != "POST":
+		return JsonResponse({"error": "Method not allowed"}, status=405)
+	
+	try:
+		alert = StaffAlert.objects.get(id=alert_id, resolved=False)
+	except StaffAlert.DoesNotExist:
+		return JsonResponse({"error": "Alert not found"}, status=404)
+	
+	# Parse JSON data from request body
+	try:
+		data = json.loads(request.body)
+		scheduled_meeting_str = data.get("scheduled_meeting")
+		meeting_notes = data.get("meeting_notes", "")
+	except json.JSONDecodeError:
+		return JsonResponse({"error": "Invalid JSON data"}, status=400)
+	
+	if not scheduled_meeting_str:
+		return JsonResponse({"error": "Meeting date/time required"}, status=400)
+	
+	try:
+		from datetime import datetime
+		# Parse datetime string from datetime-local input (format: YYYY-MM-DDTHH:MM)
+		scheduled_meeting = datetime.strptime(scheduled_meeting_str, '%Y-%m-%dT%H:%M')
+		alert.scheduled_meeting = scheduled_meeting
+		alert.meeting_notes = meeting_notes
+		alert.save()
+		
+		# Send notification to OSA Coordinator
+		faculty_users = User.objects.filter(role=User.Role.OSA_COORDINATOR)
+		for faculty in faculty_users:
+			Message.objects.create(
+				sender=request.user,
+				receiver=faculty,
+				content=f"""URGENT: Meeting Scheduled with Student
+
+A mandatory meeting has been scheduled regarding a student who has reached the violation threshold.
+
+Student Details:
+- Student ID: {alert.student.student_id}
+- Name: {alert.student.user.get_full_name() or alert.student.user.username}
+- Effective Major Violations: {alert.effective_major_count}
+
+Meeting Details:
+- Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
+- Location: OSA Office
+- Purpose: Review violation record and determine next steps
+{f"- Additional Notes: {meeting_notes}" if meeting_notes else ""}
+
+Please be prepared to discuss the student's violation history and appropriate disciplinary actions.
+
+This meeting was scheduled by: {request.user.get_full_name() or request.user.username}
+""".strip()
+			)
+		
+		# Send notification to the student
+		Message.objects.create(
+			sender=request.user,
+			receiver=alert.student.user,
+			content=f"""MANDATORY MEETING NOTICE
+
+You have been scheduled for a mandatory meeting with the OSA Coordinator due to reaching the violation threshold.
+
+Meeting Details:
+- Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
+- Location: OSA Office
+- Purpose: Review your violation record and discuss next steps
+{f"- Additional Notes: {meeting_notes}" if meeting_notes else ""}
+
+Important Notes:
+- This meeting is mandatory and your attendance is required
+- Please arrive 10 minutes early
+- Bring your Student ID
+- Come prepared to discuss your recent violations
+
+If you are unable to attend this scheduled time, please contact the OSA Office immediately to reschedule.
+
+Violation Summary:
+- Effective Major Violations: {alert.effective_major_count}
+- Latest Violation: {alert.triggered_violation.description if alert.triggered_violation else 'N/A'}
+
+For questions, contact the OSA Office.
+
+Regards,
+OSA Staff
+{request.user.get_full_name() or request.user.username}
+""".strip()
+		)
+		
+		return JsonResponse({"status": "success", "message": "Meeting scheduled successfully. Notifications sent to student and OSA Coordinator."})
+	except Exception as e:
+		return JsonResponse({"error": str(e)}, status=400)
+
+
+@role_required({User.Role.STAFF})
+def staff_resolve_alert_view(request, alert_id):
+	"""Staff: Mark a staff alert as resolved."""
+	if request.method != "POST":
+		return JsonResponse({"error": "Method not allowed"}, status=405)
+	
+	try:
+		alert = StaffAlert.objects.get(id=alert_id, resolved=False)
+		alert.resolved = True
+		alert.resolved_at = timezone.now()
+		alert.save()
+		return JsonResponse({"status": "success", "message": "Alert resolved successfully"})
+	except StaffAlert.DoesNotExist:
+		return JsonResponse({"error": "Alert not found"}, status=404)
+	except Exception as e:
+		return JsonResponse({"error": str(e)}, status=400)
