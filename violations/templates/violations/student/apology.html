@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{% static 'violations/css/main.css' %}" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Cloudflare Turnstile CAPTCHA -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         .apology-container {
             max-width: 900px;
@@ -486,7 +488,8 @@
                 
                 <div class="letter-body">
                     <p style="margin-bottom: 24px;">
-                        Date: <input type="text" class="letter-field" id="letterDate" placeholder="Enter date" style="min-width: 120px; width: 120px;" />
+                        Date: <input type="text" class="letter-field" id="letterDate" placeholder="e.g. December 13, 2025" style="min-width: 180px; width: 180px;" />
+                        <span style="font-size: 11px; color: #666; margin-left: 8px;">Format: Month Day, Year</span>
                     </p>
                     
                     <p style="margin-bottom: 4px;"><strong>The Student Formator</strong></p>
@@ -506,8 +509,8 @@
                     
                     <div style="margin-bottom: 16px;">
                         <p style="margin-bottom: 8px;">Specific Violation/s:</p>
-                        <textarea class="letter-field" id="letterViolation" placeholder="Enter specific violation/s (minimum 300 words)" rows="8" style="width: 100%; min-height: 150px; resize: vertical; box-sizing: border-box;"></textarea>
-                        <p style="font-size: 11px; color: #666; margin-top: 4px;">Minimum 300 words required. <span id="wordCount">0</span> words</p>
+                        <textarea class="letter-field" id="letterViolation" placeholder="Enter specific violation/s (maximum 300 words)" rows="8" style="width: 100%; min-height: 150px; resize: vertical; box-sizing: border-box;"></textarea>
+                        <p style="font-size: 11px; color: #666; margin-top: 4px;">Maximum 300 words. <span id="wordCount">0</span>/300 words</p>
                     </div>
                     
                     <p class="letter-paragraph">
@@ -683,6 +686,35 @@
                     </div>
                 </div>
                 
+                <!-- CAPTCHA Verification Modal -->
+                <div id="captchaModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: white; padding: 32px; border-radius: 16px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+                        <div style="margin-bottom: 20px;">
+                            <i class="fas fa-shield-alt" style="font-size: 3rem; color: #10b981;"></i>
+                        </div>
+                        <h3 style="margin-bottom: 8px; color: #111827; font-size: 1.25rem;">Security Verification</h3>
+                        <p style="color: #6b7280; margin-bottom: 24px; font-size: 0.9rem;">Please complete the CAPTCHA to submit your apology letter.</p>
+                        
+                        <div id="turnstileContainer" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                            <div class="cf-turnstile" 
+                                 data-sitekey="{{ turnstile_site_key|default:'1x00000000000000000000AA' }}"
+                                 data-callback="onTurnstileSuccess"
+                                 data-error-callback="onTurnstileError"
+                                 data-theme="light"></div>
+                        </div>
+                        
+                        <p id="captchaError" style="color: #dc2626; font-size: 0.875rem; margin-bottom: 16px; display: none;">
+                            <i class="fas fa-exclamation-circle"></i> Verification failed. Please try again.
+                        </p>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <button type="button" onclick="closeCaptchaModal()" class="ghost-btn" style="padding: 10px 24px;">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Submit Button -->
                 <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
                     <a href="{% url 'violations:student_dashboard' %}" class="ghost-btn">
@@ -855,6 +887,46 @@
     </main>
 
     <script>
+        // ===== CLOUDFLARE TURNSTILE CAPTCHA =====
+        let turnstileVerified = false;
+        let pendingFormSubmit = false;
+        
+        function onTurnstileSuccess(token) {
+            turnstileVerified = true;
+            document.getElementById('captchaError').style.display = 'none';
+            
+            // If form submission was pending, now submit the form
+            if (pendingFormSubmit) {
+                pendingFormSubmit = false;
+                closeCaptchaModal();
+                // Actually submit the form now
+                document.getElementById('apologyForm').submit();
+            }
+        }
+        
+        function onTurnstileError() {
+            turnstileVerified = false;
+            document.getElementById('captchaError').style.display = 'block';
+        }
+        
+        function showCaptchaModal() {
+            const modal = document.getElementById('captchaModal');
+            modal.style.display = 'flex';
+            pendingFormSubmit = true;
+            
+            // Reset Turnstile if it was already completed before
+            if (typeof turnstile !== 'undefined') {
+                turnstile.reset();
+            }
+            turnstileVerified = false;
+        }
+        
+        function closeCaptchaModal() {
+            const modal = document.getElementById('captchaModal');
+            modal.style.display = 'none';
+            pendingFormSubmit = false;
+        }
+        
         // Profile dropdown
         const profileBtn = document.getElementById('profileBtn');
         const profileDropdown = document.getElementById('profileDropdown');
@@ -1357,28 +1429,21 @@
 
         function updateSubmitButton() {
             if (submitBtn) {
-                // Only require violation selection, file upload is optional
+                // Only require violation selection - CAPTCHA is checked on submit
                 submitBtn.disabled = !selectedViolation;
             }
         }
 
         // Form submission - capture letter form data before submitting
         document.getElementById('apologyForm')?.addEventListener('submit', (e) => {
+            // Step 1: Validate violation selection
             if (!selectedViolation) {
                 e.preventDefault();
                 alert('Please select a violation first.');
                 return;
             }
             
-            // Validate that a photo is uploaded (required)
-            if (!selectedFile) {
-                e.preventDefault();
-                alert('Please upload a photo of your signed letter. This is required.');
-                uploadArea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-            
-            // Capture letter form data from Step 2 fields
+            // Step 2: Capture letter form data from Step 2 fields
             const letterDate = document.getElementById('letterDate');
             const letterCampus = document.getElementById('letterCampus');
             const letterName = document.getElementById('letterName');
@@ -1386,6 +1451,40 @@
             const letterProgram = document.getElementById('letterProgram');
             const letterViolation = document.getElementById('letterViolation');
             const letterPrintedName = document.getElementById('letterPrintedName');
+            
+            // Validate that at least the name is filled
+            if (!letterName?.value?.trim()) {
+                e.preventDefault();
+                alert('Please fill out the letter form with your full name in Step 2.');
+                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            
+            // Validate violation description - required field with max 300 words
+            const violationText = letterViolation?.value?.trim() || '';
+            const wordCount = violationText ? violationText.split(/\s+/).filter(word => word.length > 0).length : 0;
+            if (!violationText) {
+                e.preventDefault();
+                alert('Please enter the specific violation/s in Step 2.');
+                letterViolation?.focus();
+                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (wordCount > 300) {
+                e.preventDefault();
+                alert('The Specific Violation/s field has a maximum of 300 words. You have ' + wordCount + ' words.');
+                letterViolation?.focus();
+                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            
+            // Step 3: Validate that a photo is uploaded (required)
+            if (!selectedFile) {
+                e.preventDefault();
+                alert('Please upload a photo of your signed letter. This is required.');
+                uploadArea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
             
             // Populate hidden fields
             document.getElementById('hiddenLetterDate').value = letterDate?.value || '';
@@ -1402,22 +1501,11 @@
                 document.getElementById('hiddenSignatureData').value = signatureData;
             }
             
-            // Validate that at least the name is filled
-            if (!letterName?.value?.trim()) {
-                e.preventDefault();
-                alert('Please fill out the letter form with your full name in Step 2.');
-                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
-            }
             
-            // Validate minimum 300 words for violation description
-            const violationText = letterViolation?.value?.trim() || '';
-            const wordCount = violationText ? violationText.split(/\s+/).filter(word => word.length > 0).length : 0;
-            if (wordCount < 300) {
+            // Step 4: Show CAPTCHA modal if not yet verified (AFTER all validations pass)
+            if (!turnstileVerified) {
                 e.preventDefault();
-                alert('The Specific Violation/s field requires a minimum of 300 words. You have ' + wordCount + ' words.');
-                letterViolation?.focus();
-                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showCaptchaModal();
                 return;
             }
         });
@@ -1431,7 +1519,8 @@
                 const text = violationTextarea.value.trim();
                 const words = text ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
                 wordCountSpan.textContent = words;
-                wordCountSpan.style.color = words >= 300 ? '#059669' : '#dc2626';
+                // Green if within limit, red if over 300
+                wordCountSpan.style.color = words <= 300 ? '#059669' : '#dc2626';
             }
         }
         
