@@ -18,8 +18,8 @@ import json
 
 from .models import (
 	User, Student as StudentModel, Staff as StaffModel, OSACoordinator as OSACoordinatorModel,
-	TemporaryAccessRequest, Violation, LoginActivity,
-	ViolationDocument, ApologyLetter, IDConfiscation, ViolationClearance, StaffVerification,
+	TemporaryAccessRequest, Violation, ViolationType, LoginActivity,
+	ViolationDocument, ApologyLetter, StaffVerification,
 	Message, StaffAlert
 )
 from .decorators import login_required, role_required
@@ -912,7 +912,10 @@ def staff_violation_create_view(request):
 	if request.method == 'POST':
 		student_id = request.POST.get('student_id', '').strip()
 		description = request.POST.get('description', '').strip()
-		violation_type = request.POST.get('type', Violation.Severity.MINOR)
+		violation_type = request.POST.get('type', '')
+		violation_type_id = request.POST.get('violation_type_id', '')
+		other_violation = request.POST.get('other_violation', '').strip()
+		other_category = request.POST.get('other_category', '')
 		location = request.POST.get('location', '').strip()
 		incident_date = request.POST.get('incident_date', '')
 		incident_time = request.POST.get('incident_time', '')
@@ -935,26 +938,33 @@ def staff_violation_create_view(request):
 			except ValueError:
 				pass
 		
+		# Get violation type from catalog OR use other violation
+		catalog_violation_type = None
+		if violation_type_id:
+			catalog_violation_type = ViolationType.objects.filter(id=violation_type_id, is_active=True).first()
+			# Auto-set the severity based on violation type category
+			if catalog_violation_type:
+				violation_type = catalog_violation_type.category
+		elif other_violation:
+			# Using "Other Violation" - prepend to description
+			description = f"[Other Violation: {other_violation}]\n\n{description}" if description else f"[Other Violation: {other_violation}]"
+			violation_type = other_category or Violation.Severity.MINOR
+		
+		# Default to minor if no type selected
+		if not violation_type:
+			violation_type = Violation.Severity.MINOR
+		
 		# Create violation
 		violation = Violation.objects.create(
 			student=student,
 			reported_by=request.user,
 			description=description,
 			type=violation_type,
+			violation_type=catalog_violation_type,
 			location=location or 'Not specified',
 			incident_at=incident_at,
 			status=Violation.Status.REPORTED,
 		)
-		
-		# Handle document uploads
-		documents = request.FILES.getlist('documents')
-		for doc in documents:
-			ViolationDocument.objects.create(
-				violation=violation,
-				document=doc,
-				document_type='evidence',
-				uploaded_by=request.user,
-			)
 		
 		# Track offense frequency for this student
 		offense_count = Violation.objects.filter(student=student).count()
@@ -964,9 +974,11 @@ def staff_violation_create_view(request):
 	
 	# GET request
 	students = StudentModel.objects.select_related('user').all().order_by('student_id')
+	violation_types = ViolationType.objects.filter(is_active=True).order_by('category', 'name')
 	ctx = {
 		'students': students,
 		'type_choices': Violation.Severity.choices,
+		'violation_types': violation_types,
 	}
 	return render(request, 'violations/staff/violation_form.html', ctx)
 
@@ -979,15 +991,33 @@ def staff_violation_edit_view(request, violation_id):
 	if request.method == 'POST':
 		description = request.POST.get('description', '').strip()
 		violation_type = request.POST.get('type', violation.type)
+		violation_type_id = request.POST.get('violation_type_id', '')
+		other_violation = request.POST.get('other_violation', '').strip()
+		other_category = request.POST.get('other_category', '')
 		status = request.POST.get('status', violation.status)
 		location = request.POST.get('location', violation.location)
 		incident_date = request.POST.get('incident_date', '')
 		incident_time = request.POST.get('incident_time', '')
 		
 		violation.description = description
-		violation.type = violation_type
 		violation.location = location
 		violation.status = status
+		
+		# Get violation type from catalog OR use other violation
+		if violation_type_id:
+			catalog_violation_type = ViolationType.objects.filter(id=violation_type_id, is_active=True).first()
+			if catalog_violation_type:
+				violation.violation_type = catalog_violation_type
+				violation.type = catalog_violation_type.category
+		elif other_violation:
+			# Using "Other Violation" - prepend to description if not already there
+			if not description.startswith('[Other Violation:'):
+				violation.description = f"[Other Violation: {other_violation}]\n\n{description}" if description else f"[Other Violation: {other_violation}]"
+			violation.violation_type = None
+			violation.type = other_category or violation.type
+		else:
+			violation.violation_type = None
+			violation.type = violation_type
 		
 		# Parse incident datetime
 		if incident_date:
@@ -1002,26 +1032,18 @@ def staff_violation_edit_view(request, violation_id):
 		
 		violation.save()
 		
-		# Handle new document uploads
-		documents = request.FILES.getlist('documents')
-		for doc in documents:
-			ViolationDocument.objects.create(
-				violation=violation,
-				document=doc,
-				document_type='evidence',
-				uploaded_by=request.user,
-			)
-		
 		messages.success(request, f"Violation #{violation.id} updated successfully.")
 		return redirect('violations:staff_violations_list')
 	
 	# GET request
 	existing_docs = ViolationDocument.objects.filter(violation=violation)
+	violation_types = ViolationType.objects.filter(is_active=True).order_by('category', 'name')
 	ctx = {
 		'violation': violation,
 		'existing_docs': existing_docs,
 		'type_choices': Violation.Severity.choices,
 		'status_choices': Violation.Status.choices,
+		'violation_types': violation_types,
 		'edit_mode': True,
 	}
 	return render(request, 'violations/staff/violation_form.html', ctx)
@@ -1068,7 +1090,6 @@ def staff_violation_detail_view(request, violation_id):
 	documents = ViolationDocument.objects.filter(violation=violation)
 	apology_letters = ApologyLetter.objects.filter(violation=violation)
 	verifications = StaffVerification.objects.filter(violation=violation).select_related('verified_by')
-	id_confiscation = IDConfiscation.objects.filter(violation=violation).first()
 	
 	# Get offense history for the student
 	student_violations = Violation.objects.filter(student=violation.student).order_by('-created_at')
@@ -1080,7 +1101,6 @@ def staff_violation_detail_view(request, violation_id):
 		'documents': documents,
 		'apology_letters': apology_letters,
 		'verifications': verifications,
-		'id_confiscation': id_confiscation,
 		'offense_number': offense_number,
 		'total_offenses': total_offenses,
 		'student_violations': student_violations[:5],
@@ -1194,251 +1214,6 @@ def staff_verify_apology_view(request, letter_id):
 	
 	ctx = {'letter': letter}
 	return render(request, 'violations/staff/verify_apology.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_id_confiscation_view(request):
-	"""Staff: Manage student ID confiscation and releases."""
-	confiscations = IDConfiscation.objects.select_related(
-		'student', 'student__user', 'violation', 'confiscated_by', 'released_by'
-	).order_by('-confiscated_at')
-	
-	# Filter by status
-	status_filter = request.GET.get('status', '')
-	if status_filter:
-		confiscations = confiscations.filter(status=status_filter)
-	
-	# Search
-	search_query = request.GET.get('search', '')
-	if search_query:
-		confiscations = confiscations.filter(
-			Q(student__student_id__icontains=search_query) |
-			Q(student__user__first_name__icontains=search_query) |
-			Q(student__user__last_name__icontains=search_query)
-		)
-	
-	# Pagination
-	paginator = Paginator(confiscations, 20)
-	page = request.GET.get('page', 1)
-	try:
-		confiscations = paginator.page(page)
-	except (PageNotAnInteger, EmptyPage):
-		confiscations = paginator.page(1)
-	
-	# Stats
-	confiscated_count = IDConfiscation.objects.filter(status='confiscated').count()
-	released_count = IDConfiscation.objects.filter(status='released').count()
-	
-	ctx = {
-		'confiscations': confiscations,
-		'status_filter': status_filter,
-		'search_query': search_query,
-		'confiscated_count': confiscated_count,
-		'released_count': released_count,
-	}
-	return render(request, 'violations/staff/id_confiscation.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_confiscate_id_view(request):
-	"""Staff: Record a new ID confiscation."""
-	if request.method == 'POST':
-		student_id = request.POST.get('student_id', '').strip()
-		violation_id = request.POST.get('violation_id', '')
-		reason = request.POST.get('reason', '').strip()
-		
-		student = StudentModel.objects.filter(student_id__iexact=student_id).first()
-		if not student:
-			messages.error(request, f"Student with ID '{student_id}' not found.")
-			return redirect('violations:staff_confiscate_id')
-		
-		# Check if already confiscated
-		existing = IDConfiscation.objects.filter(student=student, status='confiscated').first()
-		if existing:
-			messages.warning(request, f"ID for {student.user.get_full_name() or student.student_id} is already confiscated.")
-			return redirect('violations:staff_id_confiscation')
-		
-		violation = None
-		if violation_id:
-			violation = Violation.objects.filter(id=violation_id).first()
-		
-		IDConfiscation.objects.create(
-			student=student,
-			violation=violation,
-			confiscated_by=request.user,
-			reason=reason,
-			status='confiscated',
-		)
-		
-		messages.success(request, f"ID for {student.user.get_full_name() or student.student_id} has been confiscated.")
-		return redirect('violations:staff_id_confiscation')
-	
-	# GET request
-	students = StudentModel.objects.select_related('user').all().order_by('student_id')
-	violations = Violation.objects.filter(status__in=[Violation.Status.REPORTED, Violation.Status.UNDER_REVIEW])
-	ctx = {
-		'students': students,
-		'violations': violations,
-	}
-	return render(request, 'violations/staff/confiscate_id.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_release_id_view(request, confiscation_id):
-	"""Staff: Release a confiscated student ID."""
-	confiscation = get_object_or_404(IDConfiscation, id=confiscation_id)
-	
-	if request.method == 'POST':
-		release_notes = request.POST.get('release_notes', '').strip()
-		
-		confiscation.status = 'released'
-		confiscation.released_by = request.user
-		confiscation.released_at = timezone.now()
-		confiscation.release_notes = release_notes
-		confiscation.save()
-		
-		messages.success(request, f"ID for {confiscation.student.user.get_full_name() or confiscation.student.student_id} has been released.")
-		return redirect('violations:staff_id_confiscation')
-	
-	ctx = {'confiscation': confiscation}
-	return render(request, 'violations/staff/release_id.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_clearances_view(request):
-	"""Staff: View and manage student violation clearances."""
-	clearances = ViolationClearance.objects.select_related(
-		'student', 'student__user', 'cleared_by'
-	).order_by('-created_at')
-	
-	# Filter by status
-	status_filter = request.GET.get('status', '')
-	if status_filter:
-		clearances = clearances.filter(status=status_filter)
-	
-	# Search
-	search_query = request.GET.get('search', '')
-	if search_query:
-		clearances = clearances.filter(
-			Q(student__student_id__icontains=search_query) |
-			Q(student__user__first_name__icontains=search_query) |
-			Q(student__user__last_name__icontains=search_query)
-		)
-	
-	# Pagination
-	paginator = Paginator(clearances, 20)
-	page = request.GET.get('page', 1)
-	try:
-		clearances = paginator.page(page)
-	except (PageNotAnInteger, EmptyPage):
-		clearances = paginator.page(1)
-	
-	# Stats
-	pending_count = ViolationClearance.objects.filter(status='pending').count()
-	cleared_count = ViolationClearance.objects.filter(status='cleared').count()
-	withheld_count = ViolationClearance.objects.filter(status='withheld').count()
-	
-	ctx = {
-		'clearances': clearances,
-		'status_filter': status_filter,
-		'search_query': search_query,
-		'pending_count': pending_count,
-		'cleared_count': cleared_count,
-		'withheld_count': withheld_count,
-	}
-	return render(request, 'violations/staff/clearances.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_create_clearance_view(request):
-	"""Staff: Create a clearance request for a student."""
-	if request.method == 'POST':
-		student_id = request.POST.get('student_id', '').strip()
-		academic_year = request.POST.get('academic_year', '').strip()
-		semester = request.POST.get('semester', '').strip()
-		notes = request.POST.get('notes', '').strip()
-		
-		student = StudentModel.objects.filter(student_id__iexact=student_id).first()
-		if not student:
-			messages.error(request, f"Student with ID '{student_id}' not found.")
-			return redirect('violations:staff_create_clearance')
-		
-		# Check if clearance already exists for this period
-		existing = ViolationClearance.objects.filter(
-			student=student,
-			academic_year=academic_year,
-			semester=semester,
-		).first()
-		if existing:
-			messages.warning(request, f"Clearance for {student.student_id} in {academic_year} {semester} already exists.")
-			return redirect('violations:staff_clearances')
-		
-		# Check if student has unresolved violations
-		unresolved = Violation.objects.filter(
-			student=student,
-			status__in=[Violation.Status.REPORTED, Violation.Status.UNDER_REVIEW]
-		).count()
-		
-		requirements_met = unresolved == 0
-		status = 'pending' if unresolved > 0 else 'cleared'
-		
-		clearance = ViolationClearance.objects.create(
-			student=student,
-			academic_year=academic_year,
-			semester=semester,
-			status=status,
-			requirements_met=requirements_met,
-			notes=notes,
-		)
-		
-		if status == 'cleared':
-			clearance.cleared_by = request.user
-			clearance.cleared_at = timezone.now()
-			clearance.save()
-			messages.success(request, f"Clearance for {student.student_id} has been granted (no violations found).")
-		else:
-			messages.info(request, f"Clearance for {student.student_id} is pending ({unresolved} unresolved violations).")
-		
-		return redirect('violations:staff_clearances')
-	
-	# GET request
-	students = StudentModel.objects.select_related('user').all().order_by('student_id')
-	current_year = timezone.now().year
-	academic_years = [f"{y}-{y+1}" for y in range(current_year-2, current_year+1)]
-	semesters = ['First Semester', 'Second Semester', 'Summer']
-	
-	ctx = {
-		'students': students,
-		'academic_years': academic_years,
-		'semesters': semesters,
-	}
-	return render(request, 'violations/staff/create_clearance.html', ctx)
-
-
-@role_required({User.Role.STAFF})
-def staff_update_clearance_view(request, clearance_id):
-	"""Staff: Update clearance status."""
-	clearance = get_object_or_404(ViolationClearance, id=clearance_id)
-	
-	if request.method == 'POST':
-		status = request.POST.get('status', clearance.status)
-		notes = request.POST.get('notes', '').strip()
-		
-		clearance.status = status
-		clearance.notes = notes
-		
-		if status == 'cleared':
-			clearance.cleared_by = request.user
-			clearance.cleared_at = timezone.now()
-			clearance.requirements_met = True
-		
-		clearance.save()
-		
-		messages.success(request, f"Clearance for {clearance.student.student_id} updated to {status}.")
-		return redirect('violations:staff_clearances')
-	
-	ctx = {'clearance': clearance}
-	return render(request, 'violations/staff/update_clearance.html', ctx)
 
 
 @role_required({User.Role.STAFF})

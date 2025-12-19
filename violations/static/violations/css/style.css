@@ -186,6 +186,7 @@ body.role-staff .dashboard-grid .dash-card {
     background-position: center;
     filter: blur(0px); /* Abstract is already soft */
     z-index: 1; /* Below the content */
+    pointer-events: none; /* Allow clicks to pass through */
 }
 
 /* Role-specific dashboard backgrounds */
@@ -201,6 +202,7 @@ body.role-staff .background-image { background-image: url('../images/bg_staff.sv
     height: 100%;
     background-color: rgba(0, 0, 0, 0.4); /* Darker overlay for readability */
     z-index: 2; /* Between image and content */
+    pointer-events: none; /* Allow clicks to pass through */
 }
 
 /* Main Login Container */

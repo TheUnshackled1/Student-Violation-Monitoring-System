@@ -10,10 +10,9 @@ from .models import (
 	TemporaryAccessRequest,
 	Message,
 	Violation,
+	ViolationType,
 	ViolationDocument,
 	ApologyLetter,
-	IDConfiscation,
-	ViolationClearance,
 	StaffVerification,
 	LoginActivity,
 	ChatMessage,
@@ -150,6 +149,56 @@ class StaffAdmin(admin.ModelAdmin):
 		return obj.user.get_full_name() or obj.user.username
 
 
+@admin.register(ViolationType)
+class ViolationTypeAdmin(admin.ModelAdmin):
+	list_display = ("display_name_formatted", "category_badge", "code", "is_active_badge", "created_at")
+	list_filter = ("category", "is_active")
+	search_fields = ("name", "code", "description")
+	list_per_page = 25
+	ordering = ("category", "name")
+	list_editable = ("code",)
+	
+	fieldsets = (
+		("Violation Information", {
+			"fields": ("name", "category", "code", "is_active")
+		}),
+		("Details", {
+			"fields": ("description", "penalty"),
+			"classes": ("collapse",),
+		}),
+	)
+	
+	@admin.display(description="Violation")
+	def display_name_formatted(self, obj):
+		prefix = "MO" if obj.category == "major" else "MiO"
+		prefix_color = "#ef4444" if obj.category == "major" else "#f59e0b"
+		return format_html(
+			'<span style="color:{}; font-weight:600;">{}</span>: {}',
+			prefix_color, prefix, obj.name
+		)
+	
+	@admin.display(description="Category")
+	def category_badge(self, obj):
+		colors = {"minor": "#f59e0b", "major": "#ef4444"}
+		labels = {"minor": "Minor Offense", "major": "Major Offense"}
+		color = colors.get(obj.category, "#6b7280")
+		label = labels.get(obj.category, obj.category)
+		return format_html(
+			'<span style="background-color:{}; color:white; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600;">{}</span>',
+			color, label
+		)
+	
+	@admin.display(description="Status")
+	def is_active_badge(self, obj):
+		if obj.is_active:
+			return format_html(
+				'<span style="background-color:#22c55e; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">Active</span>'
+			)
+		return format_html(
+			'<span style="background-color:#6b7280; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">Inactive</span>'
+		)
+
+
 @admin.register(Violation)
 class ViolationAdmin(admin.ModelAdmin):
 	list_display = ("id", "get_student_name", "type_badge", "status_badge", "incident_at", "reported_by", "created_at")
@@ -231,64 +280,6 @@ class ApologyLetterAdmin(admin.ModelAdmin):
 		return format_html(
 			'<span style="background-color:{}; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">{}</span>',
 			color, obj.status.title()
-		)
-
-
-@admin.register(IDConfiscation)
-class IDConfiscationAdmin(admin.ModelAdmin):
-	list_display = ("id", "get_student_name", "status_badge", "confiscated_at", "confiscated_by", "released_at")
-	list_filter = ("status", "confiscated_at")
-	search_fields = ("student__student_id", "student__user__first_name", "reason")
-	list_per_page = 25
-	date_hierarchy = "confiscated_at"
-	
-	@admin.display(description="Student")
-	def get_student_name(self, obj):
-		if obj.student:
-			return f"{obj.student.user.get_full_name()} ({obj.student.student_id})"
-		return "—"
-	
-	@admin.display(description="Status")
-	def status_badge(self, obj):
-		colors = {"confiscated": "#ef4444", "released": "#22c55e"}
-		color = colors.get(obj.status, "#6b7280")
-		return format_html(
-			'<span style="background-color:{}; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">{}</span>',
-			color, obj.status.title()
-		)
-
-
-@admin.register(ViolationClearance)
-class ViolationClearanceAdmin(admin.ModelAdmin):
-	list_display = ("id", "get_student_name", "violation", "status_badge", "requirements_badge", "cleared_by", "created_at")
-	list_filter = ("status", "requirements_met", "apology_submitted", "sanction_completed")
-	search_fields = ("student__student_id", "student__user__first_name", "notes")
-	list_per_page = 25
-	date_hierarchy = "created_at"
-	
-	@admin.display(description="Student")
-	def get_student_name(self, obj):
-		if obj.student:
-			return f"{obj.student.user.get_full_name()} ({obj.student.student_id})"
-		return "—"
-	
-	@admin.display(description="Status")
-	def status_badge(self, obj):
-		colors = {"pending": "#f59e0b", "in_progress": "#3b82f6", "cleared": "#22c55e", "denied": "#ef4444"}
-		color = colors.get(obj.status, "#6b7280")
-		return format_html(
-			'<span style="background-color:{}; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">{}</span>',
-			color, obj.get_status_display()
-		)
-	
-	@admin.display(description="Requirements")
-	def requirements_badge(self, obj):
-		completed = sum([obj.requirements_met, obj.apology_submitted, obj.sanction_completed])
-		colors = {0: "#ef4444", 1: "#f59e0b", 2: "#3b82f6", 3: "#22c55e"}
-		color = colors.get(completed, "#6b7280")
-		return format_html(
-			'<span style="background-color:{}; color:white; padding:3px 10px; border-radius:12px; font-size:11px;">{}/3</span>',
-			color, completed
 		)
 
 

@@ -62,16 +62,6 @@ urlpatterns = [
     path('staff/apology-letters/', views.staff_apology_letters_view, name='staff_apology_letters'),
     path('staff/apology-letters/<int:letter_id>/verify/', views.staff_verify_apology_view, name='staff_verify_apology'),
     
-    # OSA Staff - ID Confiscation
-    path('staff/id-confiscation/', views.staff_id_confiscation_view, name='staff_id_confiscation'),
-    path('staff/id-confiscation/confiscate/', views.staff_confiscate_id_view, name='staff_confiscate_id'),
-    path('staff/id-confiscation/<int:confiscation_id>/release/', views.staff_release_id_view, name='staff_release_id'),
-    
-    # OSA Staff - Clearances
-    path('staff/clearances/', views.staff_clearances_view, name='staff_clearances'),
-    path('staff/clearances/create/', views.staff_create_clearance_view, name='staff_create_clearance'),
-    path('staff/clearances/<int:clearance_id>/update/', views.staff_update_clearance_view, name='staff_update_clearance'),
-    
     # OSA Staff - Reports
     path('staff/reports/', views.staff_reports_view, name='staff_reports'),
     path('staff/reports/export/', views.staff_export_report_view, name='staff_export_report'),

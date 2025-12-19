@@ -26,136 +26,390 @@
   <div class="background-overlay"></div>
   <div class="background-image"></div>
 
-  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
-    <section class="card" style="max-width:800px; margin:0 auto;">
-      <h2 style="margin-bottom:20px;">
-        <i class="fas fa-{% if edit_mode %}edit{% else %}plus-circle{% endif %}"></i>
-        {% if edit_mode %}Edit Violation #{{ violation.id }}{% else %}Encode New Violation Record{% endif %}
-      </h2>
+  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px); padding-bottom: 40px;">
+    <section class="official-form-card">
+      <!-- Form Header -->
+      <div class="form-header">
+        <div class="form-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+        <div class="form-header-text">
+          <h1>Carlos Hilado Memorial State University</h1>
+          <h2>Office of Student Affairs</h2>
+          <h3>{% if edit_mode %}Violation Record Amendment Form{% else %}Student Violation Report Form{% endif %}</h3>
+        </div>
+        <div class="form-header-meta">
+          {% if edit_mode %}
+          <span class="form-ref">Record No: <strong>{{ violation.id }}</strong></span>
+          {% endif %}
+          <span class="form-date">Date Filed: <strong>{% now "F d, Y" %}</strong></span>
+        </div>
+      </div>
 
-      <form method="post" enctype="multipart/form-data">
+      <form method="post" enctype="multipart/form-data" class="official-form">
         {% csrf_token %}
 
-        {% if not edit_mode %}
-        <!-- Student Selection -->
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Student ID <span style="color:red;">*</span></label>
-          <input type="text" name="student_id" list="studentList" required 
-                 placeholder="Enter or select student ID" 
-                 style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
-          <datalist id="studentList">
-            {% for s in students %}
-            <option value="{{ s.student_id }}">{{ s.user.get_full_name|default:s.student_id }} - {{ s.program|default:'N/A' }}</option>
-            {% endfor %}
-          </datalist>
-          <small style="color:#667085;">Type or select from the dropdown</small>
-        </div>
-        {% else %}
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Student</label>
-          <input type="text" disabled value="{{ violation.student.user.get_full_name|default:violation.student.student_id }} ({{ violation.student.student_id }})" 
-                 style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; background:#f9f9f9;">
-        </div>
-        {% endif %}
-
-        <!-- Incident Date & Time -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-          <div class="form-group">
-            <label style="display:block; margin-bottom:6px; font-weight:600;">Incident Date <span style="color:red;">*</span></label>
-            <input type="date" name="incident_date" required
-                   value="{% if edit_mode %}{{ violation.incident_at|date:'Y-m-d' }}{% endif %}"
-                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
+        <!-- Section A: Student Information -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-user-graduate"></i> Section A: Student Information</legend>
+          
+          {% if not edit_mode %}
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Student ID Number <span class="required">*</span></label>
+              <input type="text" name="student_id" list="studentList" required 
+                     placeholder="Enter Student ID (e.g., 2024-00001)" 
+                     class="form-input">
+              <datalist id="studentList">
+                {% for s in students %}
+                <option value="{{ s.student_id }}">{{ s.user.get_full_name|default:s.student_id }} - {{ s.program|default:'N/A' }}</option>
+                {% endfor %}
+              </datalist>
+              <span class="field-hint"><i class="fas fa-info-circle"></i> Type to search or select from registered students</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label style="display:block; margin-bottom:6px; font-weight:600;">Incident Time</label>
-            <input type="time" name="incident_time"
-                   value="{% if edit_mode %}{{ violation.incident_at|time:'H:i' }}{% endif %}"
-                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
+          {% else %}
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Student ID Number</label>
+              <div class="readonly-field">{{ violation.student.student_id }}</div>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Student Name</label>
+              <div class="readonly-field">{{ violation.student.user.get_full_name|default:"—" }}</div>
+            </div>
           </div>
-        </div>
+          {% endif %}
+        </fieldset>
 
-        <!-- Type (Minor/Major) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-          <div class="form-group">
-            <label style="display:block; margin-bottom:6px; font-weight:600;">Type <span style="color:red;">*</span></label>
-            <select name="type" required style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
-              {% for val, label in type_choices %}
-              <option value="{{ val }}" {% if edit_mode and violation.type == val %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
+        <!-- Section B: Incident Details -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-clipboard-list"></i> Section B: Incident Details</legend>
+          
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Date of Incident <span class="required">*</span></label>
+              <input type="date" name="incident_date" required
+                     value="{% if edit_mode %}{{ violation.incident_at|date:'Y-m-d' }}{% endif %}"
+                     class="form-input">
+            </div>
+            <div class="form-field">
+              <label class="field-label">Time of Incident</label>
+              <input type="time" name="incident_time"
+                     value="{% if edit_mode %}{{ violation.incident_at|time:'H:i' }}{% endif %}"
+                     class="form-input">
+              <span class="field-hint">Optional - specify if known</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label style="display:block; margin-bottom:6px; font-weight:600;">Location <span style="color:red;">*</span></label>
-            <input type="text" name="location" required
-                   value="{% if edit_mode %}{{ violation.location }}{% endif %}"
-                   placeholder="Where did the incident occur?"
-                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Violation Category <span class="required">*</span></label>
+              <select name="type" id="violation-category" class="form-input form-select">
+                <option value="" disabled {% if not edit_mode %}selected{% endif %}>— Select Category —</option>
+                {% for val, label in type_choices %}
+                <option value="{{ val }}" 
+                        style="color: {% if val == 'major' %}#dc2626{% else %}#d97706{% endif %}; font-weight: 600;"
+                        {% if edit_mode and violation.type == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Specific Violation <span class="required">*</span></label>
+              <select name="violation_type_id" id="violation-type" class="form-input form-select">
+                <option value="" disabled {% if not edit_mode or not violation.violation_type %}selected{% endif %}>— Select Violation —</option>
+                {% for vt in violation_types %}
+                <option value="{{ vt.id }}" 
+                        data-category="{{ vt.category }}"
+                        style="color: {% if vt.category == 'major' %}#dc2626{% else %}#d97706{% endif %}; font-weight: 500;"
+                        {% if edit_mode and violation.violation_type and violation.violation_type.id == vt.id %}selected{% endif %}>
+                  {{ vt.display_name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-        </div>
 
-        {% if edit_mode %}
-        <!-- Status (only for edit) -->
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Status</label>
-          <select name="status" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
-            {% for val, label in status_choices %}
-            <option value="{{ val }}" {% if violation.status == val %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        {% endif %}
+          <!-- Other Violation (if not in list) -->
+          <div class="form-row other-violation-section">
+            <div class="form-field full-width">
+              <label class="field-label">
+                <i class="fas fa-edit"></i> Other Violation - Please Specify The Nature of Violation
+                <span class="field-hint-inline">(Fill this if violation is not in the list above)</span>
+              </label>
+              <input type="text" name="other_violation" id="other-violation"
+                     value="{% if edit_mode and not violation.violation_type %}{{ violation.description }}{% endif %}"
+                     placeholder="Describe the specific nature of the violation..."
+                     class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-row other-violation-category" id="other-category-row" style="display: none;">
+            <div class="form-field full-width">
+              <label class="field-label">Category for Other Violation <span class="required">*</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-label major-checkbox">
+                  <input type="radio" name="other_category" value="major" id="other-major">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text" style="color: #dc2626; font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle"></i> Major Offense
+                  </span>
+                </label>
+                <label class="checkbox-label minor-checkbox">
+                  <input type="radio" name="other_category" value="minor" id="other-minor">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text" style="color: #d97706; font-weight: 600;">
+                    <i class="fas fa-exclamation-circle"></i> Minor Offense
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-        <!-- Description -->
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Description / Details <span style="color:red;">*</span></label>
-          <textarea name="description" required rows="5" 
-                    placeholder="Describe the violation incident in detail..."
-                    style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; resize:vertical;">{% if edit_mode %}{{ violation.description }}{% endif %}</textarea>
-        </div>
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Location of Incident <span class="required">*</span></label>
+              <input type="text" name="location" required
+                     value="{% if edit_mode %}{{ violation.location }}{% endif %}"
+                     placeholder="e.g., CHMSU, LSAB Room 310"
+                     class="form-input">
+            </div>
+          </div>
 
-        <!-- Document Upload -->
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">
-            <i class="fas fa-paperclip"></i> Attach Evidence / Documents
-          </label>
-          <input type="file" name="documents" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                 style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">
-          <small style="color:#667085;">Accepted: PDF, Images (JPG, PNG), Word Documents. Max 5MB each.</small>
-        </div>
+          {% if edit_mode %}
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Case Status</label>
+              <select name="status" class="form-input form-select">
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if violation.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Originally Reported By</label>
+              <div class="readonly-field">{{ violation.reported_by.get_full_name|default:violation.reported_by.username }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </fieldset>
+
+        <!-- Section C: Violation Description -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-file-alt"></i> Section C: Detailed Description</legend>
+          
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Nature of Violation / Incident Narrative <span class="required">*</span></label>
+              <textarea name="description" required rows="6" 
+                        placeholder="Provide a detailed and objective account of the incident. Include:&#10;• Specific behavior or action observed&#10;• Persons involved or witnesses present&#10;• Circumstances leading to the incident&#10;• Any immediate actions taken"
+                        class="form-input form-textarea">{% if edit_mode %}{{ violation.description }}{% endif %}</textarea>
+              <span class="field-hint"><i class="fas fa-info-circle"></i> Please provide complete and accurate information for proper assessment</span>
+            </div>
+          </div>
+        </fieldset>
 
         {% if edit_mode and existing_docs %}
-        <!-- Existing Documents -->
-        <div class="form-group" style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Existing Documents</label>
-          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <!-- Section D: Attached Documents -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-folder-open"></i> Section D: Supporting Documents</legend>
+          
+          <div class="documents-grid">
             {% for doc in existing_docs %}
-            <div style="padding:8px 12px; background:#f3f4f6; border-radius:6px; display:flex; align-items:center; gap:8px;">
-              <i class="fas fa-file"></i>
-              <a href="{{ doc.document.url }}" target="_blank" style="color:var(--chmsu-dark-green);">{{ doc.document.name|slice:"-30:" }}</a>
-              <span class="badge {% if doc.is_verified %}badge-success{% else %}badge-warning{% endif %}">
-                {{ doc.is_verified|yesno:'Verified,Pending' }}
-              </span>
+            <div class="document-item">
+              <div class="document-icon">
+                <i class="fas fa-file-{% if '.pdf' in doc.document.name %}pdf{% elif '.doc' in doc.document.name %}word{% elif '.jpg' in doc.document.name or '.png' in doc.document.name or '.jpeg' in doc.document.name %}image{% else %}alt{% endif %}"></i>
+              </div>
+              <div class="document-info">
+                <a href="{{ doc.document.url }}" target="_blank" class="document-name">{{ doc.document.name|slice:"-25:" }}</a>
+                <span class="document-status {% if doc.is_verified %}verified{% else %}pending{% endif %}">
+                  <i class="fas fa-{% if doc.is_verified %}check-circle{% else %}clock{% endif %}"></i>
+                  {{ doc.is_verified|yesno:'Verified,Pending Review' }}
+                </span>
+              </div>
             </div>
             {% endfor %}
           </div>
-        </div>
+        </fieldset>
         {% endif %}
 
-        <div style="display:flex; gap:12px; margin-top:24px;">
-          <button type="submit" class="login-button">
-            <i class="fas fa-save"></i> {% if edit_mode %}Update{% else %}Save{% endif %} Violation
-          </button>
-          <a href="{% url 'violations:staff_violations_list' %}" class="ghost-btn">Cancel</a>
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <div class="form-notice">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Fields marked with <span class="required">*</span> are mandatory. Please ensure all information provided is accurate and complete.</span>
+          </div>
+          <div class="action-buttons">
+            <a href="{% url 'violations:staff_violations_list' %}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-{% if edit_mode %}check{% else %}paper-plane{% endif %}"></i> 
+              {% if edit_mode %}Update Record{% else %}Submit Report{% endif %}
+            </button>
+          </div>
         </div>
       </form>
+
+      <!-- Form Footer -->
+      <div class="form-footer">
+        <p>This is an official document of the Office of Student Affairs. Unauthorized modification is strictly prohibited.</p>
+        <p class="form-footer-meta">Form Version 2.0 | CHMSU-OSA-VRF</p>
+      </div>
     </section>
   </main>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const categorySelect = document.getElementById('violation-category');
+  const violationSelect = document.getElementById('violation-type');
+  const otherViolationInput = document.getElementById('other-violation');
+  const otherCategoryRow = document.getElementById('other-category-row');
+  const otherMajorRadio = document.getElementById('other-major');
+  const otherMinorRadio = document.getElementById('other-minor');
+  const form = document.querySelector('.official-form');
+  
+  // Store all violation options
+  const allOptions = Array.from(violationSelect.querySelectorAll('option[data-category]'));
+  
+  // Function to update select color based on category
+  function updateSelectColor(selectElement, category) {
+    if (category === 'major') {
+      selectElement.style.color = '#dc2626';
+      selectElement.style.fontWeight = '600';
+    } else if (category === 'minor') {
+      selectElement.style.color = '#d97706';
+      selectElement.style.fontWeight = '600';
+    } else {
+      selectElement.style.color = '';
+      selectElement.style.fontWeight = '';
+    }
+  }
+  
+  // Show/hide other category options based on other violation input
+  function toggleOtherCategory() {
+    if (otherViolationInput.value.trim() !== '') {
+      otherCategoryRow.style.display = 'block';
+      // Clear the dropdown selections when using other violation
+      categorySelect.value = '';
+      violationSelect.value = '';
+      updateSelectColor(categorySelect, null);
+      updateSelectColor(violationSelect, null);
+    } else {
+      otherCategoryRow.style.display = 'none';
+      otherMajorRadio.checked = false;
+      otherMinorRadio.checked = false;
+    }
+  }
+  
+  // Clear other violation when dropdown is used
+  function clearOtherViolation() {
+    if (violationSelect.value !== '') {
+      otherViolationInput.value = '';
+      otherCategoryRow.style.display = 'none';
+      otherMajorRadio.checked = false;
+      otherMinorRadio.checked = false;
+    }
+  }
+  
+  function filterViolations() {
+    const selectedCategory = categorySelect.value;
+    
+    // Remove all options except the placeholder
+    violationSelect.innerHTML = '<option value="" disabled selected>— Select Violation —</option>';
+    
+    // Add back filtered options
+    allOptions.forEach(option => {
+      if (!selectedCategory || option.dataset.category === selectedCategory) {
+        const newOption = option.cloneNode(true);
+        violationSelect.appendChild(newOption);
+      }
+    });
+    
+    // Reset violation select color
+    updateSelectColor(violationSelect, null);
+  }
+  
+  // Listen for other violation input
+  otherViolationInput.addEventListener('input', toggleOtherCategory);
+  
+  // Listen for category change
+  categorySelect.addEventListener('change', function() {
+    updateSelectColor(categorySelect, categorySelect.value);
+    filterViolations();
+    // Reset violation selection when category changes
+    violationSelect.value = '';
+    // Clear other violation when using dropdowns
+    clearOtherViolation();
+  });
+  
+  // When violation is selected, auto-set the category and update colors
+  violationSelect.addEventListener('change', function() {
+    const selected = violationSelect.options[violationSelect.selectedIndex];
+    if (selected && selected.dataset.category) {
+      categorySelect.value = selected.dataset.category;
+      updateSelectColor(categorySelect, selected.dataset.category);
+      updateSelectColor(violationSelect, selected.dataset.category);
+      // Clear other violation when using dropdowns
+      clearOtherViolation();
+    }
+  });
+  
+  // Form validation
+  form.addEventListener('submit', function(e) {
+    const hasDropdownSelection = violationSelect.value !== '' && categorySelect.value !== '';
+    const hasOtherViolation = otherViolationInput.value.trim() !== '';
+    const hasOtherCategory = otherMajorRadio.checked || otherMinorRadio.checked;
+    
+    // Must have either dropdown selection OR other violation with category
+    if (!hasDropdownSelection && !hasOtherViolation) {
+      e.preventDefault();
+      alert('Please either select a Violation Category and Specific Violation, OR fill in the Other Violation field.');
+      return false;
+    }
+    
+    // If other violation is filled, must have category selected
+    if (hasOtherViolation && !hasOtherCategory) {
+      e.preventDefault();
+      alert('Please select Major or Minor for the Other Violation.');
+      return false;
+    }
+    
+    // If using other violation, set the type from radio button
+    if (hasOtherViolation && hasOtherCategory) {
+      const selectedCategory = otherMajorRadio.checked ? 'major' : 'minor';
+      // Create hidden input to pass the category
+      let hiddenType = document.querySelector('input[name="type_from_other"]');
+      if (!hiddenType) {
+        hiddenType = document.createElement('input');
+        hiddenType.type = 'hidden';
+        hiddenType.name = 'type_from_other';
+        form.appendChild(hiddenType);
+      }
+      hiddenType.value = selectedCategory;
+    }
+    
+    return true;
+  });
+  
+  // Initial setup if category is pre-selected (edit mode)
+  if (categorySelect.value) {
+    updateSelectColor(categorySelect, categorySelect.value);
+    filterViolations();
+    // Restore the previously selected violation in edit mode
+    {% if edit_mode and violation.violation_type %}
+    violationSelect.value = '{{ violation.violation_type.id }}';
+    updateSelectColor(violationSelect, '{{ violation.violation_type.category }}');
+    {% endif %}
+  }
+  
+  // Initial check for other violation (edit mode)
+  toggleOtherCategory();
+});
+</script>
   <script src="{% static 'violations/js/script.js' %}"></script>
   <style>
-    .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-    .badge-success { background: #d1fae5; color: #059669; }
-    .badge-warning { background: #fef3c7; color: #d97706; }
+    {% include "violations/staff/partials/official_form_styles.html" %}
   </style>
 </body>
 </html>

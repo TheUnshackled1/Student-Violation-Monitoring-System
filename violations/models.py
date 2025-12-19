@@ -194,6 +194,40 @@ class ChatMessage(models.Model):
 		return f"ChatMessage({self.sender.username}@{self.room} {self.created_at:%Y-%m-%d %H:%M})"
 
 
+class ViolationType(models.Model):
+	"""Catalog of all violation types that can be assigned to students.
+	
+	Allows OSA to manage violation types dynamically from the admin panel.
+	"""
+	class Category(models.TextChoices):
+		MAJOR = "major", "Major Offense (MO)"
+		MINOR = "minor", "Minor Offense (MiO)"
+
+	name = models.CharField(max_length=255, help_text="Name/description of the violation")
+	category = models.CharField(max_length=10, choices=Category.choices, default=Category.MINOR)
+	code = models.CharField(max_length=20, blank=True, help_text="Optional violation code for reference")
+	description = models.TextField(blank=True, help_text="Detailed description or guidelines")
+	penalty = models.TextField(blank=True, help_text="Standard penalty for this violation type")
+	is_active = models.BooleanField(default=True, help_text="Inactive violations won't appear in selection")
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		ordering = ["category", "name"]
+		verbose_name = "Violation Type"
+		verbose_name_plural = "Violation Types"
+
+	def __str__(self) -> str:
+		prefix = "MO" if self.category == "major" else "MiO"
+		return f"{prefix}: {self.name}"
+
+	@property
+	def display_name(self):
+		"""Returns formatted name with category prefix."""
+		prefix = "MO" if self.category == "major" else "MiO"
+		return f"{prefix}: {self.name}"
+
+
 class StaffAlert(models.Model):
 	"""Record alerts when a student reaches the threshold of effective major violations.
 
@@ -233,6 +267,14 @@ class Violation(models.Model):
 
 	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="violations")
 	reported_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="violations_reported")
+	violation_type = models.ForeignKey(
+		ViolationType, 
+		null=True, 
+		blank=True, 
+		on_delete=models.SET_NULL, 
+		related_name="violations",
+		help_text="Specific violation type from the catalog"
+	)
 	incident_at = models.DateTimeField()
 	type = models.CharField(max_length=10, choices=Severity.choices)
 	location = models.CharField(max_length=200)
@@ -326,64 +368,6 @@ class ApologyLetter(models.Model):
 
 	def __str__(self):
 		return f"Apology Letter from {self.student.student_id} for Violation #{self.violation.id}"
-
-
-class IDConfiscation(models.Model):
-	"""Track student ID confiscation and release."""
-	class Status(models.TextChoices):
-		CONFISCATED = "confiscated", "Confiscated"
-		RELEASED = "released", "Released"
-
-	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="id_confiscations")
-	violation = models.ForeignKey(Violation, on_delete=models.CASCADE, related_name="id_confiscations", null=True, blank=True)
-	confiscated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="ids_confiscated")
-	confiscated_at = models.DateTimeField(auto_now_add=True)
-	reason = models.TextField()
-	status = models.CharField(max_length=20, choices=Status.choices, default=Status.CONFISCATED)
-	released_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="ids_released")
-	released_at = models.DateTimeField(null=True, blank=True)
-	release_notes = models.TextField(blank=True)
-
-	class Meta:
-		ordering = ["-confiscated_at"]
-
-	def release(self, releaser, notes=""):
-		self.status = self.Status.RELEASED
-		self.released_by = releaser
-		self.released_at = timezone.now()
-		self.release_notes = notes
-		self.save()
-
-	def __str__(self):
-		return f"ID {self.get_status_display()} - {self.student.student_id}"
-
-
-class ViolationClearance(models.Model):
-	"""Track student clearance progress after violations."""
-	class Status(models.TextChoices):
-		PENDING = "pending", "Pending Requirements"
-		IN_PROGRESS = "in_progress", "In Progress"
-		CLEARED = "cleared", "Cleared"
-		DENIED = "denied", "Denied"
-
-	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="clearances")
-	violation = models.ForeignKey(Violation, on_delete=models.CASCADE, related_name="clearances")
-	status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-	requirements_met = models.BooleanField(default=False)
-	apology_submitted = models.BooleanField(default=False)
-	sanction_completed = models.BooleanField(default=False)
-	cleared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-	cleared_at = models.DateTimeField(null=True, blank=True)
-	notes = models.TextField(blank=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
-
-	class Meta:
-		ordering = ["-created_at"]
-		unique_together = ["student", "violation"]
-
-	def __str__(self):
-		return f"Clearance {self.get_status_display()} - {self.student.student_id}"
 
 
 class StaffVerification(models.Model):

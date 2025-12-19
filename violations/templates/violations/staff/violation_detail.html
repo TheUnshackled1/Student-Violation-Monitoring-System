@@ -219,31 +219,6 @@
           </form>
         </section>
 
-        <!-- ID Confiscation Status -->
-        <section class="card" style="margin-bottom:20px;">
-          <h3 style="margin:0 0 16px;"><i class="fas fa-id-card"></i> ID Status</h3>
-          {% if id_confiscation %}
-          <div style="text-align:center; padding:12px;">
-            <span class="badge badge-lg {% if id_confiscation.status == 'confiscated' %}badge-danger{% else %}badge-success{% endif %}">
-              {{ id_confiscation.status|upper }}
-            </span>
-            <p style="margin:12px 0 0; color:#667085;">
-              {% if id_confiscation.status == 'confiscated' %}
-              Confiscated on {{ id_confiscation.confiscated_at|date:"M d, Y" }}
-              {% else %}
-              Released on {{ id_confiscation.released_at|date:"M d, Y" }}
-              {% endif %}
-            </p>
-          </div>
-          {% else %}
-          <p style="color:#667085; text-align:center;">No ID confiscation for this violation.</p>
-          <a href="{% url 'violations:staff_confiscate_id' %}?violation={{ violation.id }}&student={{ violation.student.student_id }}" 
-             class="ghost-btn" style="width:100%; text-align:center;">
-            <i class="fas fa-id-card"></i> Confiscate ID
-          </a>
-          {% endif %}
-        </section>
-
         <!-- Apology Letters -->
         <section class="card" style="margin-bottom:20px;">
           <h3 style="margin:0 0 16px;"><i class="fas fa-envelope-open-text"></i> Apology Letters</h3>

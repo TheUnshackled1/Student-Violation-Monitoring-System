@@ -26,94 +26,266 @@
   <div class="background-overlay"></div>
   <div class="background-image"></div>
 
-  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px); max-width:600px;">
-    <section class="card" style="text-align:center;">
-      <div style="background:#fee2e2; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
-        <i class="fas fa-exclamation-triangle" style="font-size:36px; color:#dc2626;"></i>
-      </div>
-      
-      <h2 style="margin:0 0 12px; color:#dc2626;">Delete Violation?</h2>
-      <p style="color:#667085; margin-bottom:24px;">
-        Are you sure you want to delete this violation? This action cannot be undone.
-      </p>
-
-      <!-- Violation Summary -->
-      <div style="background:#f9fafb; padding:16px; border-radius:8px; text-align:left; margin-bottom:24px;">
-        <h4 style="margin:0 0 12px;"><i class="fas fa-info-circle"></i> Violation Details</h4>
-        <div style="display:grid; gap:8px;">
-          <div>
-            <span style="color:#667085;">Violation ID:</span>
-            <strong>#{{ violation.id }}</strong>
-          </div>
-          <div>
-            <span style="color:#667085;">Student:</span>
-            <strong>{{ violation.student.user.get_full_name|default:violation.student.student_id }}</strong>
-            <span style="color:#667085;">({{ violation.student.student_id }})</span>
-          </div>
-          <div>
-            <span style="color:#667085;">Type:</span>
-            <span class="badge {% if violation.type == 'major' %}badge-danger{% else %}badge-warning{% endif %}">
-              {{ violation.get_type_display }}
-            </span>
-          </div>
-          <div>
-            <span style="color:#667085;">Status:</span>
-            <span class="badge 
-              {% if violation.status == 'reported' %}badge-info
-              {% elif violation.status == 'under_review' %}badge-warning
-              {% elif violation.status == 'resolved' %}badge-success
-              {% else %}badge-secondary{% endif %}">
-              {{ violation.get_status_display }}
-            </span>
-          </div>
-          <div>
-            <span style="color:#667085;">Incident Date:</span>
-            <strong>{{ violation.incident_at|date:"M d, Y g:i A" }}</strong>
-          </div>
-          <div>
-            <span style="color:#667085;">Description:</span>
-            <p style="margin:4px 0 0; padding:8px; background:#fff; border-radius:4px; border:1px solid #e5e7eb;">
-              {{ violation.description|truncatewords:30 }}
-            </p>
-          </div>
+  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px); padding-bottom: 40px;">
+    <section class="official-form-card" style="max-width: 700px;">
+      <!-- Form Header - Danger Theme -->
+      <div class="form-header form-header-danger">
+        <div class="form-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+        <div class="form-header-text">
+          <h1>Carlos Hilado Memorial State University</h1>
+          <h2>Office of Student Affairs</h2>
+          <h3>Violation Record Deletion Request</h3>
+        </div>
+        <div class="form-header-meta">
+          <span class="form-ref">Record No: <strong>#{{ violation.id }}</strong></span>
+          <span class="form-date">Date: <strong>{% now "F d, Y" %}</strong></span>
         </div>
       </div>
 
-      <!-- Warning -->
-      <div style="background:#fef3c7; padding:12px; border-radius:8px; margin-bottom:24px; text-align:left;">
-        <p style="margin:0; color:#92400e; font-size:14px;">
-          <i class="fas fa-exclamation-circle"></i>
-          <strong>Warning:</strong> Deleting this violation will also remove all associated:
-        </p>
-        <ul style="margin:8px 0 0 20px; color:#92400e; font-size:14px;">
-          <li>Evidence documents</li>
-          <li>Apology letters</li>
-          <li>Staff verifications</li>
-          <li>ID confiscation records (if any)</li>
-        </ul>
-      </div>
-
-      <!-- Action Buttons -->
-      <form method="post" style="display:flex; gap:12px; justify-content:center;">
+      <form method="post" class="official-form">
         {% csrf_token %}
-        <a href="{% url 'violations:staff_violation_detail' violation.id %}" class="ghost-btn" style="padding:12px 24px;">
-          <i class="fas fa-times"></i> Cancel
-        </a>
-        <button type="submit" class="login-button" style="background:#dc2626; padding:12px 24px;">
-          <i class="fas fa-trash-alt"></i> Yes, Delete Violation
-        </button>
+
+        <!-- Warning Banner -->
+        <div class="delete-warning-banner">
+          <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="warning-content">
+            <h3>Permanent Deletion Warning</h3>
+            <p>You are about to permanently delete this violation record. This action cannot be undone and will remove all associated data.</p>
+          </div>
+        </div>
+
+        <!-- Section A: Violation Record Summary -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-file-alt"></i> Violation Record Summary</legend>
+          
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Student Name</label>
+              <div class="readonly-field">{{ violation.student.user.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Student ID Number</label>
+              <div class="readonly-field">{{ violation.student.student_id }}</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Violation Category</label>
+              <div class="readonly-field">
+                <span class="status-badge {% if violation.type == 'major' %}status-danger{% else %}status-warning{% endif %}">
+                  {{ violation.get_type_display }}
+                </span>
+              </div>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Case Status</label>
+              <div class="readonly-field">
+                <span class="status-badge 
+                  {% if violation.status == 'reported' %}status-info
+                  {% elif violation.status == 'under_review' %}status-warning
+                  {% elif violation.status == 'resolved' %}status-success
+                  {% else %}status-secondary{% endif %}">
+                  {{ violation.get_status_display }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Incident Date & Time</label>
+              <div class="readonly-field">{{ violation.incident_at|date:"F d, Y \a\t g:i A" }}</div>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Reported By</label>
+              <div class="readonly-field">{{ violation.reported_by.get_full_name|default:"—" }}</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Violation Description</label>
+              <div class="readonly-field" style="min-height: 60px;">{{ violation.description|truncatewords:40 }}</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section B: Cascade Warning -->
+        <fieldset class="form-section form-section-danger">
+          <legend><i class="fas fa-link"></i> Associated Records to be Deleted</legend>
+          
+          <div class="cascade-warning">
+            <p>The following records linked to this violation will also be permanently removed:</p>
+            <ul class="cascade-list">
+              <li><i class="fas fa-file-image"></i> Evidence documents and attachments</li>
+              <li><i class="fas fa-envelope"></i> Apology letters submitted by the student</li>
+              <li><i class="fas fa-user-check"></i> Staff verification records</li>
+            </ul>
+          </div>
+        </fieldset>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <div class="form-notice warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+              <strong>Final Warning:</strong>
+              <span>This deletion is irreversible. Please ensure you have verified authorization before proceeding.</span>
+            </div>
+          </div>
+          <div class="action-buttons">
+            <a href="{% url 'violations:staff_violation_detail' violation.id %}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-danger">
+              <i class="fas fa-trash-alt"></i> Confirm Deletion
+            </button>
+          </div>
+        </div>
       </form>
+
+      <!-- Form Footer -->
+      <div class="form-footer">
+        <p>This is an official document of the Office of Student Affairs. Deletion records are logged for audit purposes.</p>
+        <p class="form-footer-meta">Form Version 1.0 | CHMSU-OSA-VDR</p>
+      </div>
     </section>
   </main>
 
   <script src="{% static 'violations/js/script.js' %}"></script>
   <style>
-    .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; text-transform: uppercase; display: inline-block; }
-    .badge-danger { background: #fee2e2; color: #dc2626; }
-    .badge-warning { background: #fef3c7; color: #d97706; }
-    .badge-success { background: #d1fae5; color: #059669; }
-    .badge-info { background: #dbeafe; color: #2563eb; }
-    .badge-secondary { background: #f3f4f6; color: #6b7280; }
+    {% include "violations/staff/partials/official_form_styles.html" %}
+    
+    /* Danger Theme Header */
+    .form-header-danger {
+      background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+      border-bottom-color: #fbbf24;
+    }
+    
+    /* Delete Warning Banner */
+    .delete-warning-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 2px solid #fca5a5;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .warning-icon {
+      width: 50px;
+      height: 50px;
+      background: #dc2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .warning-icon i {
+      font-size: 24px;
+      color: #ffffff;
+    }
+    
+    .warning-content h3 {
+      margin: 0 0 8px 0;
+      color: #991b1b;
+      font-size: 16px;
+    }
+    
+    .warning-content p {
+      margin: 0;
+      color: #b91c1c;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* Danger Section */
+    .form-section-danger {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+    
+    .form-section-danger legend {
+      color: #991b1b;
+    }
+    
+    .form-section-danger legend i {
+      color: #dc2626;
+    }
+    
+    /* Cascade Warning */
+    .cascade-warning p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      color: #7f1d1d;
+    }
+    
+    .cascade-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .cascade-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #991b1b;
+    }
+    
+    .cascade-list li i {
+      color: #dc2626;
+      font-size: 14px;
+    }
+    
+    /* Danger Button */
+    .btn-danger {
+      background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+    
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+    
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-success { background: #d1fae5; color: #059669; }
+    .status-warning { background: #fef3c7; color: #d97706; }
+    .status-danger { background: #fee2e2; color: #dc2626; }
+    .status-info { background: #dbeafe; color: #2563eb; }
+    .status-secondary { background: #f3f4f6; color: #6b7280; }
+    
+    @media (max-width: 768px) {
+      .cascade-list {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </body>
 </html>

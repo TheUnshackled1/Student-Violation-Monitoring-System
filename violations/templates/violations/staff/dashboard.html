@@ -11,139 +11,1038 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body class="role-staff">
-  <header class="top-nav">
-    <div class="top-left">
-      <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
-      <span class="header-title">OSA Staff Dashboard</span>
-    </div>
-    <div class="top-right">
-      <button class="icon-btn" id="sentMessagesBtn" aria-label="Sent Messages" title="View Sent Messages" style="position:relative;">
-        <i class="fas fa-paper-plane"></i>
-      </button>
-      <button class="icon-btn" id="studentRepliesBtn" aria-label="Student Replies" title="View  Replies" style="position:relative;">
-        <i class="fas fa-reply"></i>
-        {% if student_replies %}<span class="notif-badge" style="position:absolute; top:-4px; right:-4px; background:#ef4444; color:white; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ student_replies|length }}</span>{% endif %}
-      </button>
-      <button class="icon-btn" id="trashMessagesBtn" aria-label="Trash" title="View Deleted Messages" style="position:relative;">
-        <i class="fas fa-trash-alt"></i>
-        {% if trashed_messages %}<span class="notif-badge" style="position:absolute; top:-4px; right:-4px; background:#6b7280; color:white; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ trashed_messages|length }}</span>{% endif %}
-      </button>
-      <button class="icon-btn" id="staffAlertsBtn" aria-label="Staff Alerts" title="View Staff Alerts" style="position:relative;">
-        <i class="fas fa-exclamation-triangle"></i>
-        {% if staff_alerts %}<span class="notif-badge" style="position:absolute; top:-4px; right:-4px; background:#dc2626; color:white; font-size:10px; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;">{{ staff_alerts|length }}</span>{% endif %}
-      </button>
-      <div class="searchbar">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="Search student..." id="headerSearchInput" oninput="filterStudentTable(this.value)" />
+  <!-- Official Top Navigation -->
+  <header class="official-top-nav">
+    <div class="nav-container">
+      <!-- Left: Logo and Title -->
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU" />
+        </div>
+        <div class="brand-text">
+          <span class="brand-university">CHMSU</span>
+          <span class="brand-title">OSA Staff Portal</span>
+        </div>
       </div>
-      <button class="icon-btn" id="notifBtn" title="Message Faculty"><i class="fas fa-envelope"></i></button>
-      <div class="profile-menu">
-        <button class="profile-btn" id="profileBtn">
-          <span class="avatar">{{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}</span>
-          <span class="name">{{ request.user.get_full_name|default:request.user.username }}</span>
-          <i class="fas fa-chevron-down"></i>
+
+      <!-- Center: University Name -->
+      <div class="nav-center">
+        <span class="nav-department">Office of Student Affairs</span>
+        <span class="nav-system">Student Violation Tracking System</span>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="nav-actions">
+        <div class="nav-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search student..." id="headerSearchInput" oninput="filterStudentTable(this.value)" />
+        </div>
+        <button class="nav-icon-btn" id="sentMessagesBtn" aria-label="Sent Messages" title="Sent Messages">
+          <i class="fas fa-paper-plane"></i>
         </button>
-        <div class="dropdown" id="profileDropdown">
-          <a href="#">View Profile</a>
-          <a href="#" id="headerLoginHistoryLink">Login History</a>
-          <a href="{% url 'violations:auth_logout' %}">Logout</a>
+        <button class="nav-icon-btn" id="studentRepliesBtn" aria-label="Replies" title="Student Replies">
+          <i class="fas fa-reply"></i>
+          {% if student_replies %}<span class="nav-badge">{{ student_replies|length }}</span>{% endif %}
+        </button>
+        <button class="nav-icon-btn" id="trashMessagesBtn" aria-label="Trash" title="Deleted Messages">
+          <i class="fas fa-trash-alt"></i>
+          {% if trashed_messages %}<span class="nav-badge nav-badge-gray">{{ trashed_messages|length }}</span>{% endif %}
+        </button>
+        <button class="nav-icon-btn" id="staffAlertsBtn" aria-label="Alerts" title="Staff Alerts">
+          <i class="fas fa-exclamation-triangle"></i>
+          {% if staff_alerts %}<span class="nav-badge nav-badge-warning">{{ staff_alerts|length }}</span>{% endif %}
+        </button>
+        <button class="nav-icon-btn" id="notifBtn" title="Message Coordinator">
+          <i class="fas fa-envelope"></i>
+        </button>
+        <div class="nav-divider"></div>
+        <div class="nav-profile">
+          <button class="nav-profile-btn" id="profileBtn">
+            <span class="profile-avatar">{{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}</span>
+            <div class="profile-info">
+              <span class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+              <span class="profile-role">OSA Staff</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="nav-dropdown" id="profileDropdown">
+            <a href="#"><i class="fas fa-user"></i> View Profile</a>
+            <a href="#" id="headerLoginHistoryLink"><i class="fas fa-clock"></i> Login History</a>
+            <div class="dropdown-divider"></div>
+            <a href="{% url 'violations:auth_logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
         </div>
       </div>
     </div>
   </header>
 
-  <div class="background-overlay"></div>
-  <div class="background-image"></div>
+  <style>
+    /* Official Top Navigation Styles */
+    .official-top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 50%, #1a472a 100%);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      border-bottom: 3px solid #fbbf24;
+      pointer-events: auto !important;
+    }
+
+    .official-top-nav * {
+      pointer-events: auto !important;
+    }
+
+    .nav-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      pointer-events: auto !important;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white;
+      padding: 2px;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-university {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fbbf24;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .nav-department {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .nav-system {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 10001;
+      pointer-events: auto !important;
+    }
+
+    .nav-search {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      gap: 8px;
+      pointer-events: auto !important;
+    }
+
+    .nav-search i {
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+    }
+
+    .nav-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      width: 140px;
+      pointer-events: auto !important;
+    }
+
+    .nav-search input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .nav-icon-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      z-index: 10001;
+      pointer-events: auto !important;
+    }
+
+    .nav-icon-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      background: #dc2626;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 600;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .nav-badge-gray {
+      background: #6b7280;
+    }
+
+    .nav-badge-warning {
+      background: #f59e0b;
+    }
+
+    .nav-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 6px;
+    }
+
+    .nav-profile {
+      position: relative;
+      pointer-events: auto !important;
+    }
+
+    .nav-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 10px 5px 5px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      pointer-events: auto !important;
+      z-index: 10001;
+    }
+
+    .nav-profile-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .profile-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #1a472a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .profile-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .profile-role {
+      font-family: 'Poppins', sans-serif;
+      font-size: 9px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .nav-profile-btn i {
+      color: rgba(255,255,255,0.7);
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 180px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      border: 1px solid #e5e7eb;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .nav-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      color: #374151;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .nav-dropdown a:hover {
+      background: #f3f4f6;
+    }
+
+    .nav-dropdown a i {
+      width: 14px;
+      color: #6b7280;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 4px 0;
+    }
+
+    .nav-dropdown .logout-link {
+      color: #dc2626;
+    }
+
+    .nav-dropdown .logout-link i {
+      color: #dc2626;
+    }
+
+    @media (max-width: 1024px) {
+      .nav-center {
+        display: none;
+      }
+
+      .nav-search {
+        width: auto;
+      }
+
+      .nav-search input {
+        width: 100px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 0 12px;
+      }
+
+      .nav-search {
+        display: none;
+      }
+
+      .profile-info {
+        display: none;
+      }
+
+      .nav-profile-btn {
+        padding: 4px;
+        border-radius: 50%;
+      }
+
+      .nav-profile-btn i {
+        display: none;
+      }
+    }
+  </style>
+
+  <div class="background-overlay" style="pointer-events:none;"></div>
+  <div class="background-image" style="pointer-events:none;"></div>
 
   <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
-    <section class="dashboard-grid">
-      <div class="dash-card metric-filter" data-filter="all" role="button" tabindex="0">
-        <div class="card-icon"><i class="fas fa-users"></i></div>
-        <div class="card-title">Total Students</div>
-        <div class="card-metric">{{ total_students|default:'0' }}</div>
+    
+    <!-- Official Dashboard Statistics Section -->
+    <section class="official-stats-section">
+      <!-- Official Header -->
+      <div class="stats-header">
+        <div class="stats-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+        <div class="stats-header-text">
+          <p class="stats-republic">Republic of the Philippines</p>
+          <h1 class="stats-university">CARLOS HILADO MEMORIAL STATE UNIVERSITY</h1>
+          <p class="stats-address">Talisay City, Negros Occidental</p>
+          <p class="stats-office">Office of Student Affairs</p>
+        </div>
+        <div class="stats-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
       </div>
-      <div class="dash-card metric-filter" data-filter="has-violations" role="button" tabindex="0">
-        <div class="card-icon"><i class="fas fa-user-graduate"></i></div>
-        <div class="card-title">Students with Violations</div>
-        <div class="card-metric">{{ students_with_violations|default:'0' }}</div>
+
+      <div class="stats-title-bar">
+        <h2 class="stats-title"><i class="fas fa-chart-pie"></i> DASHBOARD OVERVIEW</h2>
+        <p class="stats-subtitle">Academic Year {{ academic_year|default:"2024-2025" }} • As of {% now "F d, Y" %}</p>
       </div>
-      <div class="dash-card metric-filter" data-filter="pending" role="button" tabindex="0">
-        <div class="card-icon"><i class="fas fa-triangle-exclamation"></i></div>
-        <div class="card-title">Pending Violations</div>
-        <div class="card-metric">{{ pending_violations|default:'0' }}</div>
-      </div>
-      <div class="dash-card">
-        <div class="card-icon"><i class="fas fa-clipboard-check"></i></div>
-        <div class="card-title">Resolved & Ongoing</div>
-        <div style="display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap;">
-          <div class="metric-chip" data-filter="resolved" role="button" tabindex="0">
-            <div class="card-desc" style="margin-bottom:4px;">Resolved</div>
-            <div class="card-metric">{{ resolved_violations|default:'0' }}</div>
+
+      <!-- Statistics Grid -->
+      <div class="stats-grid">
+        <div class="stat-card metric-filter" data-filter="all" role="button" tabindex="0">
+          <div class="stat-icon stat-icon-primary">
+            <i class="fas fa-users"></i>
           </div>
-          <div class="metric-chip" data-filter="ongoing" role="button" tabindex="0">
-            <div class="card-desc" style="margin-bottom:4px;">Ongoing</div>
-            <div class="card-metric">{{ ongoing_sanctions|default:'0' }}</div>
+          <div class="stat-content">
+            <span class="stat-label">Total Students</span>
+            <span class="stat-value">{{ total_students|default:'0' }}</span>
+            <span class="stat-desc">Registered in system</span>
+          </div>
+        </div>
+
+        <div class="stat-card metric-filter" data-filter="has-violations" role="button" tabindex="0">
+          <div class="stat-icon stat-icon-warning">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">With Violations</span>
+            <span class="stat-value">{{ students_with_violations|default:'0' }}</span>
+            <span class="stat-desc">Students flagged</span>
+          </div>
+        </div>
+
+        <div class="stat-card metric-filter" data-filter="pending" role="button" tabindex="0">
+          <div class="stat-icon stat-icon-danger">
+            <i class="fas fa-triangle-exclamation"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Pending Cases</span>
+            <span class="stat-value">{{ pending_violations|default:'0' }}</span>
+            <span class="stat-desc">Awaiting resolution</span>
+          </div>
+        </div>
+
+        <div class="stat-card stat-card-split">
+          <div class="stat-icon stat-icon-success">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Case Status</span>
+            <div class="stat-split-values">
+              <div class="split-item metric-chip" data-filter="resolved" role="button" tabindex="0">
+                <span class="split-value text-success">{{ resolved_violations|default:'0' }}</span>
+                <span class="split-label">Resolved</span>
+              </div>
+              <div class="split-divider"></div>
+              <div class="split-item metric-chip" data-filter="ongoing" role="button" tabindex="0">
+                <span class="split-value text-warning">{{ ongoing_sanctions|default:'0' }}</span>
+                <span class="split-label">Ongoing</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Stats Footer -->
+      <div class="stats-footer">
+        <p><i class="fas fa-info-circle"></i> Click on any statistic card to filter the student directory below</p>
+      </div>
     </section>
 
-    <!-- Quick Actions Section -->
-    <section class="card" style="margin-top:20px;">
-      <h3 style="margin:0 0 16px;"><i class="fas fa-bolt"></i> Quick Actions</h3>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
-        <button type="button" class="quick-action-btn" id="addStudentBtn">
-          <i class="fas fa-user-plus"></i>
-          <span>Add Student</span>
+    <!-- Official Quick Actions Section -->
+    <section class="official-actions-section" style="margin-top:20px;">
+      <div class="actions-title-bar">
+        <h2 class="actions-title"><i class="fas fa-bolt"></i> QUICK ACTIONS</h2>
+        <p class="actions-subtitle">Frequently used operations</p>
+      </div>
+
+      <div class="actions-grid">
+        <button type="button" class="official-action-btn action-primary" id="addStudentBtn">
+          <div class="action-icon"><i class="fas fa-user-plus"></i></div>
+          <div class="action-text">
+            <span class="action-label">Add Student</span>
+            <span class="action-desc">Register new student</span>
+          </div>
         </button>
-        <a href="{% url 'violations:staff_violation_create' %}" class="quick-action-btn">
-          <i class="fas fa-plus-circle"></i>
-          <span>Encode Violation</span>
+
+        <a href="{% url 'violations:staff_violation_create' %}" class="official-action-btn action-danger">
+          <div class="action-icon"><i class="fas fa-plus-circle"></i></div>
+          <div class="action-text">
+            <span class="action-label">Encode Violation</span>
+            <span class="action-desc">Record new incident</span>
+          </div>
         </a>
-        <a href="{% url 'violations:staff_violations_list' %}" class="quick-action-btn">
-          <i class="fas fa-list"></i>
-          <span>All Violations</span>
+
+        <a href="{% url 'violations:staff_violations_list' %}" class="official-action-btn action-info">
+          <div class="action-icon"><i class="fas fa-list"></i></div>
+          <div class="action-text">
+            <span class="action-label">All Violations</span>
+            <span class="action-desc">View complete list</span>
+          </div>
         </a>
-        <a href="{% url 'violations:staff_apology_letters' %}" class="quick-action-btn">
-          <i class="fas fa-envelope-open-text"></i>
-          <span>Apology Letters</span>
+
+        <a href="{% url 'violations:staff_apology_letters' %}" class="official-action-btn action-secondary">
+          <div class="action-icon"><i class="fas fa-envelope-open-text"></i></div>
+          <div class="action-text">
+            <span class="action-label">Apology Letters</span>
+            <span class="action-desc">Review submissions</span>
+          </div>
         </a>
-        <a href="{% url 'violations:staff_id_confiscation' %}" class="quick-action-btn">
-          <i class="fas fa-id-card"></i>
-          <span>ID Confiscation</span>
-        </a>
-        <a href="{% url 'violations:staff_clearances' %}" class="quick-action-btn">
-          <i class="fas fa-clipboard-check"></i>
-          <span>Clearances</span>
-        </a>
-        <a href="{% url 'violations:staff_reports' %}" class="quick-action-btn">
-          <i class="fas fa-chart-bar"></i>
-          <span>Reports</span>
+
+        <a href="{% url 'violations:staff_reports' %}" class="official-action-btn action-success">
+          <div class="action-icon"><i class="fas fa-chart-bar"></i></div>
+          <div class="action-text">
+            <span class="action-label">Reports</span>
+            <span class="action-desc">Generate analytics</span>
+          </div>
         </a>
       </div>
     </section>
 
-    <!-- Student Directory Table -->
-    <section class="card" style="margin-top:20px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-        <h3 style="margin:0;">Student Directory</h3>
-        <div class="searchbar" style="max-width:320px; width:100%;">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Filter by name, ID, program…" oninput="filterStudentTable(this.value)" />
+    <style>
+      /* Official Statistics Section */
+      .official-stats-section {
+        background: #ffffff;
+        border: 2px solid #1a472a;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+      }
+
+      .stats-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px 30px;
+        background: linear-gradient(180deg, #f8faf8 0%, #ffffff 100%);
+        border-bottom: 3px double #1a472a;
+      }
+
+      .stats-header-logo img {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+      }
+
+      .stats-header-text {
+        text-align: center;
+        flex: 1;
+      }
+
+      .stats-republic {
+        font-family: 'Times New Roman', Georgia, serif;
+        font-size: 11px;
+        color: #374151;
+        margin: 0;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .stats-university {
+        font-family: 'Times New Roman', Georgia, serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: #1a472a;
+        margin: 4px 0;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .stats-address {
+        font-family: 'Times New Roman', Georgia, serif;
+        font-size: 12px;
+        color: #4b5563;
+        margin: 2px 0;
+        font-style: italic;
+      }
+
+      .stats-office {
+        font-family: 'Times New Roman', Georgia, serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a472a;
+        margin: 6px 0 0 0;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      .stats-title-bar {
+        background: #1a472a;
+        color: #ffffff;
+        padding: 14px 25px;
+        text-align: center;
+      }
+
+      .stats-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .stats-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        border-bottom: 2px solid #1a472a;
+      }
+
+      .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .stat-card:last-child {
+        border-right: none;
+      }
+
+      .stat-card:hover {
+        background: #f0fdf4;
+      }
+
+      .stat-card:active {
+        background: #dcfce7;
+      }
+
+      .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+
+      .stat-icon-primary {
+        background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+        color: #ffffff;
+      }
+
+      .stat-icon-warning {
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        color: #ffffff;
+      }
+
+      .stat-icon-danger {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: #ffffff;
+      }
+
+      .stat-icon-success {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: #ffffff;
+      }
+
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .stat-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .stat-value {
+        font-family: 'Poppins', sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a472a;
+        line-height: 1.2;
+      }
+
+      .stat-desc {
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 2px;
+      }
+
+      .stat-card-split .stat-content {
+        flex: 1;
+      }
+
+      .stat-split-values {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+      }
+
+      .split-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .split-item:hover {
+        background: #f3f4f6;
+      }
+
+      .split-value {
+        font-family: 'Poppins', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .split-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+      }
+
+      .split-divider {
+        width: 1px;
+        height: 40px;
+        background: #e5e7eb;
+      }
+
+      .text-success { color: #059669; }
+      .text-warning { color: #d97706; }
+
+      .stats-footer {
+        background: #f9fafb;
+        padding: 10px 20px;
+        text-align: center;
+      }
+
+      .stats-footer p {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        color: #6b7280;
+        margin: 0;
+      }
+
+      .stats-footer i {
+        color: #1a472a;
+        margin-right: 4px;
+      }
+
+      /* Official Quick Actions Section */
+      .official-actions-section {
+        background: #ffffff;
+        border: 2px solid #1a472a;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+      }
+
+      .actions-title-bar {
+        background: #1a472a;
+        color: #ffffff;
+        padding: 12px 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .actions-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .actions-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        margin: 0;
+        opacity: 0.85;
+      }
+
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0;
+      }
+
+      .official-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 16px;
+        background: #ffffff;
+        border: none;
+        border-right: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .official-action-btn:last-child {
+        border-right: none;
+      }
+
+      .official-action-btn:hover {
+        background: #f9fafb;
+        transform: translateY(-2px);
+      }
+
+      .action-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+
+      .action-primary .action-icon {
+        background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+        color: #ffffff;
+      }
+
+      .action-danger .action-icon {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: #ffffff;
+      }
+
+      .action-info .action-icon {
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        color: #ffffff;
+      }
+
+      .action-secondary .action-icon {
+        background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+        color: #ffffff;
+      }
+
+      .action-success .action-icon {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: #ffffff;
+      }
+
+      .action-text {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .action-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .action-desc {
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 2px;
+      }
+
+      /* Responsive for Stats and Actions */
+      @media (max-width: 1200px) {
+        .stats-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .stat-card {
+          border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .stat-card:nth-child(2) {
+          border-right: none;
+        }
+
+        .actions-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .official-action-btn:nth-child(3) {
+          border-right: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .stats-header {
+          flex-direction: column;
+          gap: 10px;
+          padding: 15px;
+        }
+
+        .stats-header-logo:last-child {
+          display: none;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-card {
+          border-right: none;
+        }
+
+        .actions-title-bar {
+          flex-direction: column;
+          gap: 4px;
+          text-align: center;
+        }
+
+        .actions-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .official-action-btn {
+          border-right: none;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .official-action-btn:last-child {
+          border-bottom: none;
+        }
+      }
+    </style>
+
+    <!-- Student Directory Table - Official Document Style -->
+    <section class="official-directory-section" style="margin-top:20px;">
+      <!-- Official Header -->
+      <div class="directory-header">
+        <div class="header-logo-section">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo" class="directory-logo">
+        </div>
+        <div class="header-text-section">
+          <p class="header-republic">Republic of the Philippines</p>
+          <h1 class="header-university">CARLOS HILADO MEMORIAL STATE UNIVERSITY</h1>
+          <p class="header-address">Talisay City, Negros Occidental</p>
+          <p class="header-office">Office of Student Affairs</p>
+        </div>
+        <div class="header-logo-section">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo" class="directory-logo">
         </div>
       </div>
-      <div class="table-responsive">
-        <table class="table" id="studentsTable">
+
+      <div class="directory-title-bar">
+        <h2 class="directory-title"><i class="fas fa-users"></i> STUDENT DIRECTORY</h2>
+        <p class="directory-subtitle">Academic Year {{ academic_year|default:"2024-2025" }} • Generated: {% now "F d, Y" %}</p>
+      </div>
+
+      <!-- Search and Filter Bar -->
+      <div class="directory-toolbar">
+        <div class="toolbar-left">
+          <span class="record-count"><i class="fas fa-user-graduate"></i> Total Records: <strong>{{ students|length|default:"0" }}</strong></span>
+        </div>
+        <div class="toolbar-right">
+          <div class="directory-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search by name, ID, program, department..." oninput="filterStudentTable(this.value)" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Official Table -->
+      <div class="directory-table-wrapper">
+        <table class="directory-table" id="studentsTable">
           <thead>
             <tr>
-              <th style="min-width:120px;">Student ID</th>
-              <th style="min-width:180px;">Name</th>
-              <th>Program</th>
-              <th>Year</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th style="min-width:140px;">Contact</th>
-              <th style="min-width:180px;">Actions</th>
+              <th class="col-seq">#</th>
+              <th class="col-id">Student ID</th>
+              <th class="col-name">Full Name</th>
+              <th class="col-program">Program</th>
+              <th class="col-year">Year</th>
+              <th class="col-dept">College/Department</th>
+              <th class="col-status">Enrollment Status</th>
+              <th class="col-contact">Contact No.</th>
+              <th class="col-actions no-print">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -154,8 +1053,9 @@
                   data-pending="{{ s.pending_count|default:'0' }}"
                   data-resolved="{{ s.resolved_count|default:'0' }}"
                   data-ongoing="{{ s.ongoing_count|default:'0' }}">
-                <td>{{ s.student_id }}</td>
-                <td>
+                <td class="col-seq">{{ forloop.counter }}</td>
+                <td class="col-id"><code>{{ s.student_id }}</code></td>
+                <td class="col-name">
                   <a href="#" class="student-detail-link"
                      data-student-id="{{ s.student_id }}"
                      data-name="{{ s.user.get_full_name|default:s.user.username }}"
@@ -167,43 +1067,55 @@
                      data-enrollment="{{ s.enrollment_status|default:'' }}"
                      data-guardian-name="{{ s.guardian_name|default:'' }}"
                      data-guardian-contact="{{ s.guardian_contact|default:'' }}"
-                     data-image="{% if s.profile_image %}{{ s.profile_image.url }}{% endif %}"
-                     style="color: var(--chmsu-dark-green); text-decoration: underline;">
-                    {{ s.user.get_full_name|default:s.user.username }}
+                     data-image="{% if s.profile_image %}{{ s.profile_image.url }}{% endif %}">
+                    {{ s.user.last_name|default:'' }}{% if s.user.last_name %}, {% endif %}{{ s.user.first_name|default:s.user.username }}
                   </a>
                 </td>
-                <td>{{ s.program|default:'—' }}</td>
-                <td>{{ s.year_level }}</td>
-                <td>
+                <td class="col-program">{{ s.program|default:'—' }}</td>
+                <td class="col-year text-center">{{ s.year_level }}</td>
+                <td class="col-dept">
                   {% with dept=s.department|default:'' %}
                     {% if 'CAS' in dept or 'Arts and Science' in dept or 'Arts & Science' in dept %}
-                      <span class="dept-badge dept-cas" title="College of Arts and Science">CAS</span>
+                      <span class="college-tag college-cas">CAS</span>
                     {% elif 'CBMA' in dept or 'Business' in dept or 'Accountancy' in dept %}
-                      <span class="dept-badge dept-cbma" title="College of Business Management and Accountancy">CBMA</span>
+                      <span class="college-tag college-cbma">CBMA</span>
                     {% elif 'CCS' in dept or 'Computer' in dept %}
-                      <span class="dept-badge dept-ccs" title="College of Computer Studies">CCS</span>
+                      <span class="college-tag college-ccs">CCS</span>
                     {% elif 'COEd' in dept or 'Education' in dept %}
-                      <span class="dept-badge dept-coed" title="College of Education">COEd</span>
+                      <span class="college-tag college-coed">COEd</span>
                     {% elif 'CIT' in dept or 'Industrial' in dept %}
-                      <span class="dept-badge dept-cit" title="College of Industrial Technology">CIT</span>
+                      <span class="college-tag college-cit">CIT</span>
                     {% elif 'COE' in dept or 'Engineering' in dept %}
-                      <span class="dept-badge dept-coe" title="College of Engineering">COE</span>
+                      <span class="college-tag college-coe">COE</span>
                     {% elif dept %}
-                      <span class="dept-badge" title="{{ dept }}">{{ dept|truncatechars:15 }}</span>
+                      <span class="college-tag">{{ dept|truncatechars:12 }}</span>
                     {% else %}
-                      <span style="color:#667085;">—</span>
+                      <span class="text-muted">—</span>
                     {% endif %}
                   {% endwith %}
                 </td>
-                <td>{{ s.enrollment_status }}</td>
-                <td>{{ s.contact_number|default:'—' }}</td>
-                <td>
-                  <div class="actions-group">
-                    <a class="action-btn gray" href="{% url 'violations:staff_student_detail' s.student_id %}"><i class="fas fa-id-card"></i> View</a>
-                    <button class="action-btn gray message-student-btn" 
+                <td class="col-status">
+                  {% if s.enrollment_status == 'Enrolled' or s.enrollment_status == 'Active' %}
+                    <span class="status-badge status-active">{{ s.enrollment_status }}</span>
+                  {% elif s.enrollment_status == 'Inactive' or s.enrollment_status == 'Dropped' %}
+                    <span class="status-badge status-inactive">{{ s.enrollment_status }}</span>
+                  {% elif s.enrollment_status == 'Graduated' %}
+                    <span class="status-badge status-graduated">{{ s.enrollment_status }}</span>
+                  {% else %}
+                    <span class="status-badge">{{ s.enrollment_status|default:'—' }}</span>
+                  {% endif %}
+                </td>
+                <td class="col-contact">{{ s.contact_number|default:'—' }}</td>
+                <td class="col-actions no-print">
+                  <div class="action-buttons">
+                    <a class="btn-action btn-view" href="{% url 'violations:staff_student_detail' s.student_id %}" title="View Full Profile">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <button class="btn-action btn-message message-student-btn" 
                             data-student-id="{{ s.student_id }}"
-                            data-student-name="{{ s.user.get_full_name|default:s.user.username }}">
-                      <i class="fas fa-paper-plane"></i> Message
+                            data-student-name="{{ s.user.get_full_name|default:s.user.username }}"
+                            title="Send Message">
+                      <i class="fas fa-envelope"></i>
                     </button>
                   </div>
                 </td>
@@ -211,35 +1123,500 @@
               {% endfor %}
             {% else %}
               <tr>
-                <td colspan="8" style="text-align:center; color:#555;">No students found.</td>
+                <td colspan="9" class="empty-state">
+                  <i class="fas fa-folder-open"></i>
+                  <p>No student records found in the database.</p>
+                </td>
               </tr>
             {% endif %}
             <tr id="noStudentResultsRow" style="display:none;">
-              <td colspan="8" style="text-align:center; padding:40px 20px;">
-                <i class="fas fa-search" style="font-size:32px; color:#d0d5dd; margin-bottom:12px; display:block;"></i>
-                <p style="color:#667085; margin:0;">No students match your search.</p>
+              <td colspan="9" class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>No students match your search criteria.</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Footer -->
+      <div class="directory-footer">
+        <p class="footer-note"><i class="fas fa-info-circle"></i> This document is for official use only. Unauthorized distribution is prohibited.</p>
+        <p class="footer-generated">Document Reference: OSA-SD-{% now "Ymd" %} • Printed by: {{ request.user.get_full_name|default:request.user.username }}</p>
+      </div>
     </section>
+
+    <style>
+      /* Official Directory Styles */
+      .official-directory-section {
+        background: #ffffff;
+        border: 2px solid #1a472a;
+        border-radius: 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        font-family: 'Times New Roman', Georgia, serif;
+        overflow: hidden;
+      }
+
+      /* Header Styles */
+      .directory-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px 30px;
+        background: linear-gradient(180deg, #f8faf8 0%, #ffffff 100%);
+        border-bottom: 3px double #1a472a;
+      }
+
+      .header-logo-section {
+        flex: 0 0 auto;
+      }
+
+      .directory-logo {
+        width: 75px;
+        height: 75px;
+        object-fit: contain;
+      }
+
+      .header-text-section {
+        text-align: center;
+        flex: 1;
+      }
+
+      .header-republic {
+        font-size: 11px;
+        color: #374151;
+        margin: 0;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .header-university {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a472a;
+        margin: 4px 0;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .header-address {
+        font-size: 12px;
+        color: #4b5563;
+        margin: 2px 0;
+        font-style: italic;
+      }
+
+      .header-office {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a472a;
+        margin: 6px 0 0 0;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      /* Title Bar */
+      .directory-title-bar {
+        background: #1a472a;
+        color: #ffffff;
+        padding: 15px 25px;
+        text-align: center;
+      }
+
+      .directory-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .directory-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-size: 12px;
+        margin: 6px 0 0 0;
+        opacity: 0.9;
+      }
+
+      /* Toolbar */
+      .directory-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        background: #f3f4f6;
+        border-bottom: 1px solid #d1d5db;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .record-count {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        color: #374151;
+      }
+
+      .record-count strong {
+        color: #1a472a;
+        font-weight: 600;
+      }
+
+      .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .directory-search {
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 8px 12px;
+        min-width: 280px;
+      }
+
+      .directory-search i {
+        color: #6b7280;
+        margin-right: 8px;
+      }
+
+      .directory-search input {
+        border: none;
+        outline: none;
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        width: 100%;
+        background: transparent;
+      }
+
+      .directory-export-btn {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 16px;
+        background: #1a472a;
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+      }
+
+      .directory-export-btn:hover {
+        background: #15392a;
+      }
+
+      /* Table Wrapper */
+      .directory-table-wrapper {
+        overflow-x: auto;
+        padding: 0;
+      }
+
+      /* Official Table */
+      .directory-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .directory-table thead {
+        background: #1a472a;
+        color: #ffffff;
+      }
+
+      .directory-table thead th {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 10px;
+        text-align: left;
+        border: 1px solid #15392a;
+        white-space: nowrap;
+      }
+
+      .directory-table tbody tr {
+        border-bottom: 1px solid #e5e7eb;
+        transition: background 0.15s;
+      }
+
+      .directory-table tbody tr:nth-child(even) {
+        background: #f9fafb;
+      }
+
+      .directory-table tbody tr:hover {
+        background: #ecfdf5;
+      }
+
+      .directory-table tbody td {
+        padding: 10px;
+        vertical-align: middle;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        font-family: 'Poppins', sans-serif;
+        color: #374151;
+      }
+
+      .directory-table .col-seq {
+        text-align: center;
+        font-weight: 600;
+        color: #6b7280;
+        width: 45px;
+      }
+
+      .directory-table .col-id code {
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 12px;
+        background: #f3f4f6;
+        padding: 3px 8px;
+        border-radius: 4px;
+        color: #1a472a;
+        font-weight: 600;
+      }
+
+      .directory-table .col-name a {
+        color: #1a472a;
+        font-weight: 500;
+        text-decoration: none;
+        border-bottom: 1px dashed #1a472a;
+      }
+
+      .directory-table .col-name a:hover {
+        color: #15392a;
+        border-bottom-style: solid;
+      }
+
+      .directory-table .col-year {
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .directory-table .text-center {
+        text-align: center;
+      }
+
+      .directory-table .text-muted {
+        color: #9ca3af;
+      }
+
+      /* College Tags */
+      .college-tag {
+        display: inline-block;
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      .college-cas { background: #dcfce7; color: #166534; }
+      .college-cbma { background: #fef3c7; color: #92400e; }
+      .college-ccs { background: #e0e7ff; color: #3730a3; }
+      .college-coed { background: #dbeafe; color: #1e40af; }
+      .college-cit { background: #fee2e2; color: #991b1b; }
+      .college-coe { background: #ffedd5; color: #c2410c; }
+
+      /* Status Badges */
+      .status-badge {
+        display: inline-block;
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        font-weight: 500;
+        padding: 3px 10px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+
+      .status-active {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .status-graduated {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      /* Action Buttons */
+      .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+      }
+
+      .btn-action {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #6b7280;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+
+      .btn-action:hover {
+        border-color: #1a472a;
+        color: #1a472a;
+        background: #ecfdf5;
+      }
+
+      .btn-view:hover {
+        background: #ecfdf5;
+        color: #166534;
+        border-color: #166534;
+      }
+
+      .btn-message:hover {
+        background: #eff6ff;
+        color: #1e40af;
+        border-color: #1e40af;
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 50px 20px !important;
+        color: #6b7280;
+      }
+
+      .empty-state i {
+        font-size: 40px;
+        color: #d1d5db;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      .empty-state p {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+      }
+
+      /* Footer */
+      .directory-footer {
+        background: #f9fafb;
+        border-top: 2px solid #1a472a;
+        padding: 15px 25px;
+        text-align: center;
+      }
+
+      .footer-note {
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        color: #991b1b;
+        margin: 0 0 6px 0;
+        font-weight: 500;
+      }
+
+      .footer-generated {
+        font-family: 'Poppins', sans-serif;
+        font-size: 10px;
+        color: #6b7280;
+        margin: 0;
+      }
+
+      /* Print Styles */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+
+        .official-directory-section {
+          border: 1px solid #000;
+          box-shadow: none;
+        }
+
+        .directory-toolbar {
+          display: none;
+        }
+
+        .directory-table thead {
+          background: #1a472a !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .directory-table tbody tr:nth-child(even) {
+          background: #f5f5f5 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .college-tag, .status-badge {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .directory-footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .directory-header {
+          flex-direction: column;
+          gap: 10px;
+          padding: 15px;
+        }
+
+        .header-logo-section:last-child {
+          display: none;
+        }
+
+        .directory-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .toolbar-right {
+          flex-direction: column;
+        }
+
+        .directory-search {
+          min-width: 100%;
+        }
+      }
+    </style>
   </main>
 
-  <!-- Realtime Chat Panel (Staff ↔ Faculty) -->
-  <aside class="notif-panel" id="chatPanel" aria-hidden="true" style="right: 16px; bottom: 16px; top: auto; width: min(420px, 95vw);">
-    <div class="notif-header">
-      <h3 style="display:flex; align-items:center; gap:8px;"><i class="fas fa-comments"></i> Team Chat</h3>
-      <button class="icon-btn" onclick="document.getElementById('chatPanel').classList.remove('show')"><i class="fas fa-times"></i></button>
-    </div>
-    <div style="display:flex; flex-direction:column; height: 360px;">
-      <ul id="chatFeed" style="list-style:none; margin:0; padding:10px 12px; flex:1 1 auto; overflow:auto;"></ul>
-      <form id="chatForm" style="display:flex; gap:8px; padding:10px 12px; border-top:1px solid #eee;">
-        <input id="chatInput" type="text" placeholder="Message staff and faculty…" style="flex:1 1 auto;">
-        <button class="login-button" type="submit" style="padding:10px 14px;">Send</button>
-      </form>
-    </div>
-  </aside>
 
   <!-- Staff Alerts Panel -->
   <aside class="notif-panel" id="staffAlertsPanel" aria-hidden="true">
@@ -464,7 +1841,7 @@
   </aside>
 
   <!-- Sent Messages Panel -->
-  <aside class="notif-panel" id="sentMessagesPanel" aria-hidden="true" style="right:16px; width:min(450px, 95vw);">
+  <aside class="notif-panel" id="sentMessagesPanel" aria-hidden="true">
     <div class="notif-header">
       <h3><i class="fas fa-paper-plane"></i> Sent Messages</h3>
       <button class="icon-btn" id="sentMsgClose"><i class="fas fa-times"></i></button>
@@ -515,7 +1892,7 @@
   </aside>
 
   <!-- Student Replies Panel -->
-  <aside class="notif-panel" id="studentRepliesPanel" aria-hidden="true" style="right:16px; width:min(450px, 95vw);">
+  <aside class="notif-panel" id="studentRepliesPanel" aria-hidden="true">
     <div class="notif-header">
       <h3><i class="fas fa-reply"></i> Replies</h3>
       <button class="icon-btn" id="studentRepliesClose"><i class="fas fa-times"></i></button>
@@ -568,7 +1945,7 @@
   </aside>
 
   <!-- Trash Messages Panel -->
-  <aside class="notif-panel" id="trashMessagesPanel" aria-hidden="true" style="right:16px; width:min(450px, 95vw);">
+  <aside class="notif-panel" id="trashMessagesPanel" aria-hidden="true">
     <div class="notif-header">
       <h3><i class="fas fa-trash-alt"></i> Deleted Messages</h3>
       <button class="icon-btn" id="trashMsgClose"><i class="fas fa-times"></i></button>
@@ -732,56 +2109,6 @@
 
   <script src="{% static 'violations/js/script.js' %}"></script>
   <script src="{% static 'violations/js/chat.js' %}"></script>
-  <script>
-    // Header chat button toggles chat panel
-    (function(){
-      const btn = document.getElementById('chatHeaderBtn');
-      const panel = document.getElementById('chatPanel');
-      if(btn && panel){ btn.addEventListener('click', () => { panel.classList.toggle('show'); }); }
-    })();
-  </script>
-  <script>
-    // Sent Messages panel toggle
-    (function(){
-      const btn = document.getElementById('sentMessagesBtn');
-      const panel = document.getElementById('sentMessagesPanel');
-      const closeBtn = document.getElementById('sentMsgClose');
-      if(btn && panel){ 
-        btn.addEventListener('click', () => { panel.classList.toggle('show'); }); 
-      }
-      if(closeBtn && panel){
-        closeBtn.addEventListener('click', () => { panel.classList.remove('show'); });
-      }
-    })();
-  </script>
-  <script>
-    // Student Replies panel toggle
-    (function(){
-      const btn = document.getElementById('studentRepliesBtn');
-      const panel = document.getElementById('studentRepliesPanel');
-      const closeBtn = document.getElementById('studentRepliesClose');
-      if(btn && panel){ 
-        btn.addEventListener('click', () => { panel.classList.toggle('show'); }); 
-      }
-      if(closeBtn && panel){
-        closeBtn.addEventListener('click', () => { panel.classList.remove('show'); });
-      }
-    })();
-  </script>
-  <script>
-    // Trash Messages panel toggle
-    (function(){
-      const btn = document.getElementById('trashMessagesBtn');
-      const panel = document.getElementById('trashMessagesPanel');
-      const closeBtn = document.getElementById('trashMsgClose');
-      if(btn && panel){ 
-        btn.addEventListener('click', () => { panel.classList.toggle('show'); }); 
-      }
-      if(closeBtn && panel){
-        closeBtn.addEventListener('click', () => { panel.classList.remove('show'); });
-      }
-    })();
-  </script>
   <script>
     // Delete and Restore message functionality
     (function(){
@@ -1051,19 +2378,12 @@
     // Staff Alerts Panel Logic
     (function(){
       const panel = document.getElementById('staffAlertsPanel');
-      const btnOpen = document.getElementById('staffAlertsBtn');
       const btnClose = document.getElementById('staffAlertsClose');
 
-      function openPanel(){
-        if(panel) panel.classList.add('show');
-      }
       function closePanel(){
         if(panel) panel.classList.remove('show');
       }
 
-      if(btnOpen) btnOpen.addEventListener('click', () => {
-        if(panel) panel.classList.toggle('show');
-      });
       if(btnClose) btnClose.addEventListener('click', closePanel);
 
       // Schedule Meeting functionality
@@ -1259,6 +2579,533 @@
       background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
       color: #c2410c;
       border: 1px solid #fdba74;
+    }
+  </style>
+
+  <!-- Official Navigation JavaScript -->
+  <script>
+  (function(){
+    // Profile Dropdown Toggle
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    
+    if(profileBtn && profileDropdown) {
+      profileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('show');
+      });
+      
+      document.addEventListener('click', (e) => {
+        if(!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+          profileDropdown.classList.remove('show');
+        }
+      });
+    }
+
+    // Sent Messages Panel Toggle
+    const sentMessagesBtn = document.getElementById('sentMessagesBtn');
+    const sentMessagesPanel = document.getElementById('sentMessagesPanel');
+    const sentMessagesClose = document.getElementById('sentMsgClose');
+    
+    if(sentMessagesBtn && sentMessagesPanel) {
+      sentMessagesBtn.addEventListener('click', () => {
+        sentMessagesPanel.classList.add('show');
+      });
+    }
+    if(sentMessagesClose && sentMessagesPanel) {
+      sentMessagesClose.addEventListener('click', () => {
+        sentMessagesPanel.classList.remove('show');
+      });
+    }
+
+    // Student Replies Panel Toggle
+    const studentRepliesBtn = document.getElementById('studentRepliesBtn');
+    const studentRepliesPanel = document.getElementById('studentRepliesPanel');
+    const studentRepliesClose = document.getElementById('studentRepliesClose');
+    
+    if(studentRepliesBtn && studentRepliesPanel) {
+      studentRepliesBtn.addEventListener('click', () => {
+        studentRepliesPanel.classList.add('show');
+      });
+    }
+    if(studentRepliesClose && studentRepliesPanel) {
+      studentRepliesClose.addEventListener('click', () => {
+        studentRepliesPanel.classList.remove('show');
+      });
+    }
+
+    // Trash Messages Panel Toggle
+    const trashMessagesBtn = document.getElementById('trashMessagesBtn');
+    const trashMessagesPanel = document.getElementById('trashMessagesPanel');
+    const trashMessagesClose = document.getElementById('trashMsgClose');
+    
+    if(trashMessagesBtn && trashMessagesPanel) {
+      trashMessagesBtn.addEventListener('click', () => {
+        trashMessagesPanel.classList.add('show');
+      });
+    }
+    if(trashMessagesClose && trashMessagesPanel) {
+      trashMessagesClose.addEventListener('click', () => {
+        trashMessagesPanel.classList.remove('show');
+      });
+    }
+
+    // Staff Alerts Panel Toggle
+    const staffAlertsBtn = document.getElementById('staffAlertsBtn');
+    const staffAlertsPanel = document.getElementById('staffAlertsPanel');
+    const staffAlertsClose = document.getElementById('staffAlertsClose');
+    
+    if(staffAlertsBtn && staffAlertsPanel) {
+      staffAlertsBtn.addEventListener('click', () => {
+        staffAlertsPanel.classList.add('show');
+      });
+    }
+    if(staffAlertsClose && staffAlertsPanel) {
+      staffAlertsClose.addEventListener('click', () => {
+        staffAlertsPanel.classList.remove('show');
+      });
+    }
+
+    // Message Coordinator Panel Toggle
+    const notifBtn = document.getElementById('notifBtn');
+    const notifPanel = document.getElementById('notifPanel');
+    const notifClose = document.getElementById('notifClose');
+    
+    if(notifBtn && notifPanel) {
+      notifBtn.addEventListener('click', () => {
+        notifPanel.classList.add('show');
+      });
+    }
+    if(notifClose && notifPanel) {
+      notifClose.addEventListener('click', () => {
+        notifPanel.classList.remove('show');
+      });
+    }
+
+    // Login History from dropdown
+    const loginHistoryLink = document.getElementById('headerLoginHistoryLink');
+    const loginHistoryModal = document.getElementById('loginHistoryModal');
+    
+    if(loginHistoryLink && loginHistoryModal) {
+      loginHistoryLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        profileDropdown.classList.remove('show');
+        loginHistoryModal.classList.add('show');
+      });
+    }
+
+    // Close panels/modals on Escape key
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') {
+        profileDropdown?.classList.remove('show');
+        sentMessagesPanel?.classList.remove('show');
+        studentRepliesPanel?.classList.remove('show');
+        trashMessagesPanel?.classList.remove('show');
+        staffAlertsPanel?.classList.remove('show');
+        notifPanel?.classList.remove('show');
+      }
+    });
+  })();
+  </script>
+
+  <!-- Official Modal Styles -->
+  <style>
+    /* Official Modal Overlay */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 20px;
+    }
+
+    .modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Official Modal Card */
+    .modal-card {
+      background: #ffffff;
+      border-radius: 0;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 550px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(-20px) scale(0.95);
+      transition: transform 0.3s ease;
+      border: 2px solid #1a472a;
+      overflow: hidden;
+    }
+
+    .modal.show .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Official Modal Header */
+    .modal-header {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+      color: #ffffff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #fbbf24;
+    }
+
+    .modal-header h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-header .icon-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-header .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+    }
+
+    /* Official Modal Body */
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      background: #ffffff;
+    }
+
+    .modal-body label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .modal-body input[type="text"],
+    .modal-body input[type="email"],
+    .modal-body input[type="password"],
+    .modal-body input[type="datetime-local"],
+    .modal-body input[type="date"],
+    .modal-body input[type="number"],
+    .modal-body select,
+    .modal-body textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      color: #374151;
+      background: #f9fafb;
+      transition: all 0.2s ease;
+    }
+
+    .modal-body input:focus,
+    .modal-body select:focus,
+    .modal-body textarea:focus {
+      outline: none;
+      border-color: #1a472a;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+    }
+
+    .modal-body .form-group {
+      margin-bottom: 16px;
+    }
+
+    /* Modal Info Box */
+    .modal-info-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 1px solid #86efac;
+      border-left: 4px solid #1a472a;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+    }
+
+    .modal-info-box strong {
+      color: #166534;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .modal-info-box ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #166534;
+      font-size: 13px;
+    }
+
+    /* Student Detail Card in Modal */
+    .stat-card.small {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-left: 3px solid #1a472a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .stat-card.small .label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card.small .value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a472a;
+      margin-top: 4px;
+    }
+
+    /* Official Modal Actions/Footer */
+    .modal-actions {
+      background: #f9fafb;
+      border-top: 2px solid #e5e7eb;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Official Modal Buttons */
+    .modal-actions .login-button,
+    .modal-actions button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .modal-actions .btn-primary,
+    .modal-actions .login-button {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+      color: #ffffff;
+    }
+
+    .modal-actions .btn-primary:hover,
+    .modal-actions .login-button:hover {
+      background: linear-gradient(135deg, #15392a 0%, #1a472a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+    }
+
+    /* Modal Table Styles */
+    .modal-body .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .modal-body .table thead {
+      background: #1a472a;
+      color: #ffffff;
+    }
+
+    .modal-body .table thead th {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 10px;
+      text-align: left;
+      border: 1px solid #15392a;
+    }
+
+    .modal-body .table tbody tr {
+      border-bottom: 1px solid #e5e7eb;
+      transition: background 0.15s;
+    }
+
+    .modal-body .table tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .modal-body .table tbody tr:hover {
+      background: #f0fdf4;
+    }
+
+    .modal-body .table tbody td {
+      padding: 10px;
+      font-family: 'Poppins', sans-serif;
+      color: #374151;
+      border-left: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+    }
+
+    /* Notification Panel Official Style */
+    .notif-panel {
+      position: fixed;
+      top: 80px;
+      right: -500px;
+      width: min(450px, 95vw);
+      max-height: calc(100vh - 100px);
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.15);
+      z-index: 9998;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .notif-panel.show {
+      right: 16px;
+    }
+
+    .notif-header {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+      color: #ffffff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #fbbf24;
+    }
+
+    .notif-header h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notif-header .icon-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #ffffff;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notif-header .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .notif-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .notif-list li {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: background 0.15s;
+    }
+
+    .notif-list li:hover {
+      background: #f9fafb;
+    }
+
+    .notif-list li.unread {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-left: 4px solid #1a472a;
+    }
+
+    /* Badge styles */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .modal-card {
+        margin: 10px;
+        max-height: 95vh;
+      }
+
+      .modal-body {
+        padding: 16px;
+      }
+
+      .modal-actions {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+      }
+
+      .notif-panel {
+        width: 100%;
+        right: -100%;
+        top: 64px;
+      }
+
+      .notif-panel.show {
+        right: 0;
+      }
     }
   </style>
 </body>
