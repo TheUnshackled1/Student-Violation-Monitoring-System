@@ -502,6 +502,63 @@ def student_dashboard_view(request):
 	return render(request, "violations/student/dashboard.html", ctx)
 
 
+@role_required({User.Role.STUDENT})
+def student_update_profile_view(request):
+	"""Student can update their profile photo, contact, guardian info, and email."""
+	if request.method != 'POST':
+		return JsonResponse({'success': False, 'error': 'Invalid request method'})
+	
+	try:
+		student = getattr(request.user, "student_profile", None)
+		if not student:
+			return JsonResponse({'success': False, 'error': 'Student profile not found'})
+		
+		# Update contact number
+		contact_number = request.POST.get('contact_number', '').strip()
+		if contact_number:
+			student.contact_number = contact_number
+		
+		# Update guardian name
+		guardian_name = request.POST.get('guardian_name', '').strip()
+		if guardian_name:
+			student.guardian_name = guardian_name
+		
+		# Update guardian contact
+		guardian_contact = request.POST.get('guardian_contact', '').strip()
+		if guardian_contact:
+			student.guardian_contact = guardian_contact
+		
+		# Update email (on User model)
+		email = request.POST.get('email', '').strip()
+		if email and email != request.user.email:
+			# Check if email is already taken
+			if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+				return JsonResponse({'success': False, 'error': 'This email is already in use'})
+			request.user.email = email
+			request.user.save(update_fields=['email'])
+		
+		# Update profile image
+		if 'profile_image' in request.FILES:
+			profile_image = request.FILES['profile_image']
+			# Validate file size (5MB max)
+			if profile_image.size > 5 * 1024 * 1024:
+				return JsonResponse({'success': False, 'error': 'Image must be less than 5MB'})
+			# Validate file type
+			allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+			if profile_image.content_type not in allowed_types:
+				return JsonResponse({'success': False, 'error': 'Only JPG and PNG images are allowed'})
+			# Delete old image if exists
+			if student.profile_image:
+				student.profile_image.delete(save=False)
+			student.profile_image = profile_image
+		
+		student.save()
+		
+		return JsonResponse({'success': True, 'message': 'Profile updated successfully'})
+	except Exception as e:
+		return JsonResponse({'success': False, 'error': str(e)})
+
+
 ############################################
 # OSA Coordinator (Reporting Personnel) - frontend-only
 ############################################
@@ -1214,6 +1271,23 @@ def staff_verify_apology_view(request, letter_id):
 	
 	ctx = {'letter': letter}
 	return render(request, 'violations/staff/verify_apology.html', ctx)
+
+
+@role_required({User.Role.STAFF})
+def staff_send_to_formator_view(request, letter_id):
+	"""Staff: Send apology letter to Student Formator for verification."""
+	letter = get_object_or_404(ApologyLetter, id=letter_id)
+	
+	if request.method == 'POST':
+		letter.formator_status = 'pending'
+		letter.sent_to_formator_at = timezone.now()
+		letter.sent_to_formator_by = request.user
+		letter.save()
+		
+		messages.success(request, f"Apology letter has been sent to the Student Formator for verification.")
+		return redirect('violations:staff_verify_apology', letter_id=letter.id)
+	
+	return redirect('violations:staff_verify_apology', letter_id=letter.id)
 
 
 @role_required({User.Role.STAFF})
@@ -2045,6 +2119,21 @@ def guard_dashboard_view(request):
 		'student', 'student__user', 'violation_type'
 	).order_by('-created_at')[:10]
 	
+	# Full activity log - all violations reported by this guard
+	activity_log = Violation.objects.filter(
+		reported_by_guard=guard_code
+	).select_related(
+		'student', 'student__user', 'violation_type'
+	).order_by('-created_at')[:50]
+	
+	activity_log_count = my_reports_count  # Total count of all reports
+	
+	# Count resolved reports
+	resolved_reports = Violation.objects.filter(
+		reported_by_guard=guard_code,
+		status=Violation.Status.RESOLVED
+	).count()
+	
 	# Student lookup
 	search_id = request.GET.get('student_id', '').strip()
 	searched_student = None
@@ -2060,6 +2149,9 @@ def guard_dashboard_view(request):
 				student=searched_student
 			).count()
 	
+	# Get all violation types for the incident report form
+	violation_types = ViolationType.objects.all().order_by('category', 'name')
+	
 	ctx = {
 		'guard_code': guard_code,
 		'current_date': timezone.now().strftime('%B %d, %Y'),
@@ -2068,8 +2160,12 @@ def guard_dashboard_view(request):
 		'today_incidents': today_incidents,
 		'pending_reports': pending_reports,
 		'my_incident_reports': my_incident_reports,
+		'activity_log': activity_log,
+		'activity_log_count': activity_log_count,
+		'resolved_reports': resolved_reports,
 		'search_id': search_id,
 		'searched_student': searched_student,
+		'violation_types': violation_types,
 	}
 	
 	return render(request, 'violations/guard/dashboard.html', ctx)
@@ -2081,50 +2177,142 @@ def guard_report_incident_view(request):
 	guard_code = request.session.get('guard_code', 'Guard')
 	
 	if request.method == 'POST':
-		student_id = request.POST.get('student_id', '').strip()
-		violation_type_id = request.POST.get('violation_type', '')
-		severity = request.POST.get('severity', 'minor')
-		location = request.POST.get('location', '').strip()
-		description = request.POST.get('description', '').strip()
-		
-		# Validate student exists
 		try:
-			student = StudentModel.objects.get(student_id=student_id)
-		except StudentModel.DoesNotExist:
+			student_id = request.POST.get('student_id', '').strip()
+			violation_type_id = request.POST.get('violation_type', '')
+			severity = request.POST.get('severity', 'minor')
+			location = request.POST.get('location', '').strip()
+			description = request.POST.get('description', '').strip()
+			proof_image = request.POST.get('proof_image', '')  # Base64 image data
+			
+			# Additional fields for new student registration
+			first_name = request.POST.get('first_name', '').strip()
+			last_name = request.POST.get('last_name', '').strip()
+			program = request.POST.get('program', '').strip()
+			year_level = request.POST.get('year_level', '1')
+			
+			# Check if student exists, auto-register if not
+			try:
+				student = StudentModel.objects.get(student_id=student_id)
+				student_created = False
+			except StudentModel.DoesNotExist:
+				# Validate required fields for new student
+				if not first_name or not last_name:
+					return JsonResponse({
+						'success': False,
+						'error': 'Student not found. Please provide First Name and Last Name to register.',
+						'student_not_found': True
+					})
+				
+				# Create a User account for the new student
+				from django.contrib.auth import get_user_model
+				User = get_user_model()
+				
+				# Generate a username based on student_id
+				username = student_id.replace('-', '').lower()
+				
+				# Check if user already exists (unlikely but safe)
+				if User.objects.filter(username=username).exists():
+					username = f"{username}_{timezone.now().strftime('%H%M%S')}"
+				
+				# Create the user with a default password (student_id)
+				user = User.objects.create_user(
+					username=username,
+					first_name=first_name,
+					last_name=last_name,
+					password=student_id,  # Default password is student ID
+					email=f"{username}@student.chmsu.edu.ph",
+					role='student'  # Set the role to student
+				)
+				
+				# Create the Student profile
+				try:
+					year_level_int = int(year_level)
+				except (ValueError, TypeError):
+					year_level_int = 1
+				
+				student = StudentModel.objects.create(
+					user=user,
+					student_id=student_id,
+					program=program,
+					year_level=year_level_int,
+					enrollment_status='Active'
+				)
+				student_created = True
+			
+			# Get violation type if provided
+			violation_type = None
+			if violation_type_id:
+				try:
+					violation_type = ViolationType.objects.get(id=violation_type_id)
+					# Use the category from the violation type as severity
+					severity = violation_type.category
+				except ViolationType.DoesNotExist:
+					pass
+			
+			# Create the violation/incident report
+			violation = Violation.objects.create(
+				student=student,
+				reported_by_guard=guard_code,
+				violation_type=violation_type,
+				incident_at=timezone.now(),
+				type=severity,
+				location=location,
+				description=description,
+				status=Violation.Status.REPORTED,
+			)
+			
+			# Save proof image if provided
+			if proof_image and proof_image.startswith('data:image'):
+				import base64
+				from django.core.files.base import ContentFile
+				
+				# Extract the base64 data
+				format_data, imgstr = proof_image.split(';base64,')
+				ext = format_data.split('/')[-1]
+				
+				# Create file from base64
+				image_data = base64.b64decode(imgstr)
+				file_name = f"proof_{violation.id}_{timezone.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
+				violation.evidence_file.save(file_name, ContentFile(image_data), save=True)
+			
+			# Build success message
+			if student_created:
+				message = f'Incident report #{violation.id} submitted! New student "{first_name} {last_name}" ({student_id}) was automatically registered.'
+			else:
+				message = f'Incident report #{violation.id} submitted successfully for {student.user.get_full_name() or student_id}!'
+			
+			return JsonResponse({
+				'success': True,
+				'message': message,
+				'violation_id': violation.id,
+				'student_created': student_created,
+			})
+		except Exception as e:
+			import traceback
+			print(f"Error in guard_report_incident_view: {e}")
+			print(traceback.format_exc())
 			return JsonResponse({
 				'success': False,
-				'error': f'Student with ID "{student_id}" not found.'
+				'error': f'Server error: {str(e)}'
 			})
-		
-		# Get violation type if provided
-		violation_type = None
-		if violation_type_id:
-			try:
-				violation_type = ViolationType.objects.get(id=violation_type_id)
-				# Use the severity from the violation type
-				severity = violation_type.severity
-			except ViolationType.DoesNotExist:
-				pass
-		
-		# Create the violation/incident report
-		violation = Violation.objects.create(
-			student=student,
-			reported_by_guard=guard_code,
-			violation_type=violation_type,
-			incident_at=timezone.now(),
-			type=severity,
-			location=location,
-			description=description,
-			status=Violation.Status.REPORTED,
-		)
-		
-		return JsonResponse({
-			'success': True,
-			'message': f'Incident report #{violation.id} submitted successfully!',
-			'violation_id': violation.id,
-		})
 	
-	# GET request - return violation types for the form
+	# GET request - check student existence or return violation types
+	check_student_id = request.GET.get('check_student', '')
+	if check_student_id:
+		# AJAX call to check if student exists
+		exists = StudentModel.objects.filter(student_id=check_student_id).exists()
+		if exists:
+			student = StudentModel.objects.get(student_id=check_student_id)
+			return JsonResponse({
+				'exists': True,
+				'student_name': student.user.get_full_name() or student_id,
+				'program': student.program,
+				'year_level': student.year_level,
+			})
+		else:
+			return JsonResponse({'exists': False})
+	
 	violation_types = list(ViolationType.objects.values('id', 'name', 'severity', 'category'))
 	return JsonResponse({'violation_types': violation_types})
 
@@ -2192,9 +2380,24 @@ def formator_dashboard_view(request):
 		status__in=[Violation.Status.REPORTED, Violation.Status.UNDER_REVIEW]
 	).count()
 	
-	# Pending apology letters
+	# Pending apology letters (general count)
 	from .models import ApologyLetter
 	pending_apologies = ApologyLetter.objects.filter(status='pending').count()
+	
+	# Letters pending formator review
+	pending_formator_letters = ApologyLetter.objects.filter(
+		formator_status='pending'
+	).select_related('student', 'student__user', 'violation').order_by('-sent_to_formator_at')
+	
+	# Signed letters log (documents formator has signed)
+	signed_letters = ApologyLetter.objects.filter(
+		formator_status='signed'
+	).select_related('student', 'student__user', 'violation').order_by('-formator_signed_at')[:20]
+	
+	# Rejected letters log
+	rejected_letters = ApologyLetter.objects.filter(
+		formator_status='rejected'
+	).select_related('student', 'student__user', 'violation').order_by('-formator_signed_at')[:10]
 	
 	# Active alerts
 	active_alerts = StaffAlert.objects.filter(resolved=False).count()
@@ -2230,6 +2433,11 @@ def formator_dashboard_view(request):
 		'total_students': total_students,
 		'active_violations': active_violations,
 		'pending_apologies': pending_apologies,
+		'pending_formator_letters': pending_formator_letters,
+		'pending_formator_count': pending_formator_letters.count(),
+		'signed_letters': signed_letters,
+		'signed_letters_count': signed_letters.count(),
+		'rejected_letters': rejected_letters,
 		'active_alerts': active_alerts,
 		'recent_violations': recent_violations,
 		'students_with_violations': students_with_violations,
@@ -2238,3 +2446,47 @@ def formator_dashboard_view(request):
 	}
 	
 	return render(request, 'violations/formator/dashboard.html', ctx)
+
+
+@formator_required
+def formator_verify_letter_view(request, letter_id):
+	"""Formator: Review and sign an apology letter."""
+	letter = get_object_or_404(
+		ApologyLetter.objects.select_related('student', 'student__user', 'violation'),
+		id=letter_id,
+		formator_status='pending'
+	)
+	
+	if request.method == 'POST':
+		action = request.POST.get('action', '')
+		formator_remarks = request.POST.get('formator_remarks', '').strip()
+		formator_signature = request.POST.get('formator_signature', '')
+		community_service = request.POST.get('community_service_completed') == 'on'
+		
+		if action == 'sign':
+			letter.formator_status = 'signed'
+			letter.formator_signed_at = timezone.now()
+			letter.formator_signature = formator_signature
+			letter.formator_remarks = formator_remarks
+			letter.community_service_completed = community_service
+			
+			# Handle photo upload
+			if 'formator_photo' in request.FILES:
+				letter.formator_photo = request.FILES['formator_photo']
+			
+			letter.save()
+			messages.success(request, 'Letter has been signed successfully. Staff will be notified.')
+			return redirect('violations:formator_dashboard')
+		
+		elif action == 'reject':
+			letter.formator_status = 'rejected'
+			letter.formator_remarks = formator_remarks
+			letter.save()
+			messages.warning(request, 'Letter has been rejected.')
+			return redirect('violations:formator_dashboard')
+	
+	ctx = {
+		'letter': letter,
+		'formator_code': request.session.get('formator_code', 'Formator'),
+	}
+	return render(request, 'violations/formator/verify_letter.html', ctx)

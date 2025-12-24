@@ -350,6 +350,12 @@ class ApologyLetter(models.Model):
 		REJECTED = "rejected", "Rejected"
 		REVISION_NEEDED = "revision_needed", "Revision Needed"
 
+	class FormatorStatus(models.TextChoices):
+		NOT_SENT = "not_sent", "Not Sent to Formator"
+		PENDING = "pending", "Pending Formator Review"
+		SIGNED = "signed", "Signed by Formator"
+		REJECTED = "rejected", "Rejected by Formator"
+
 	violation = models.ForeignKey(Violation, on_delete=models.CASCADE, related_name="apology_letters")
 	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="apology_letters")
 	file = models.FileField(upload_to="apology_letters/%Y/%m/", blank=True, null=True)
@@ -368,6 +374,27 @@ class ApologyLetter(models.Model):
 	letter_violations = models.TextField(blank=True, help_text="Specific violation/s")
 	letter_printed_name = models.CharField(max_length=200, blank=True, help_text="Printed name for signature")
 	signature_data = models.TextField(blank=True, help_text="Base64 encoded signature image")
+
+	# Formator verification workflow fields
+	formator_status = models.CharField(max_length=20, choices=FormatorStatus.choices, default=FormatorStatus.NOT_SENT)
+	sent_to_formator_at = models.DateTimeField(null=True, blank=True, help_text="When staff sent to formator")
+	sent_to_formator_by = models.ForeignKey(
+		settings.AUTH_USER_MODEL, 
+		on_delete=models.SET_NULL, 
+		null=True, 
+		blank=True, 
+		related_name="letters_sent_to_formator"
+	)
+	formator_signed_at = models.DateTimeField(null=True, blank=True, help_text="When formator signed")
+	formator_signature = models.TextField(blank=True, help_text="Base64 encoded formator signature")
+	formator_photo = models.ImageField(
+		upload_to="apology_letters/formator_photos/%Y/%m/", 
+		blank=True, 
+		null=True,
+		help_text="Photo evidence of community service completion"
+	)
+	formator_remarks = models.TextField(blank=True, help_text="Formator notes/comments")
+	community_service_completed = models.BooleanField(default=False, help_text="Has the student completed community service")
 
 	class Meta:
 		ordering = ["-submitted_at"]

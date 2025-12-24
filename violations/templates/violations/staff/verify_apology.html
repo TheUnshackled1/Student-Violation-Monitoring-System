@@ -10,17 +10,464 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <style>
+    /* Official Top Navigation Styles */
+    .official-top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 50%, #1a472a 100%);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      border-bottom: 3px solid #fbbf24;
+      pointer-events: auto !important;
+    }
+
+    .official-top-nav * {
+      pointer-events: auto !important;
+    }
+
+    .nav-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      pointer-events: auto !important;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white;
+      padding: 2px;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-university {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fbbf24;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .nav-department {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .nav-system {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 10001;
+      pointer-events: auto !important;
+    }
+
+    .nav-icon-btn {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      z-index: 10001;
+      pointer-events: auto !important;
+      text-decoration: none;
+    }
+
+    .nav-icon-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .nav-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+      margin: 0 8px;
+    }
+
+    .nav-profile {
+      position: relative;
+      pointer-events: auto !important;
+    }
+
+    .nav-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px 6px 6px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      pointer-events: auto !important;
+      z-index: 10001;
+    }
+
+    .nav-profile-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .profile-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #1a472a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .profile-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .profile-role {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .nav-profile-btn i {
+      color: rgba(255,255,255,0.7);
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+
+    .nav-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 180px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      border: 1px solid #e5e7eb;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .nav-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #374151;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .nav-dropdown a:hover {
+      background: #f3f4f6;
+    }
+
+    .nav-dropdown a i {
+      width: 16px;
+      color: #6b7280;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 4px 0;
+    }
+
+    .nav-dropdown .logout-link {
+      color: #dc2626;
+    }
+
+    .nav-dropdown .logout-link i {
+      color: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+      .nav-center {
+        display: none;
+      }
+
+      .nav-container {
+        padding: 0 12px;
+      }
+
+      .profile-info {
+        display: none;
+      }
+
+      .nav-profile-btn {
+        padding: 4px;
+        border-radius: 50%;
+      }
+
+      .nav-profile-btn i {
+        display: none;
+      }
+    }
+
+    /* Official Letter Review Section */
+    .official-review-section {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 18px 30px;
+      background: linear-gradient(180deg, #f8faf8 0%, #ffffff 100%);
+      border-bottom: 3px double #1a472a;
+    }
+
+    .review-header-logo img {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
+
+    .review-header-text {
+      text-align: center;
+      flex: 1;
+    }
+
+    .review-republic {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 10px;
+      color: #374151;
+      margin: 0;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .review-university {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a472a;
+      margin: 3px 0;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .review-address {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 11px;
+      color: #4b5563;
+      margin: 2px 0;
+      font-style: italic;
+    }
+
+    .review-office {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a472a;
+      margin: 5px 0 0 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .review-title-bar {
+      background: #1a472a;
+      color: #ffffff;
+      padding: 12px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .review-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .review-subtitle {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .review-content {
+      padding: 20px;
+    }
+
+    .review-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .review-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .review-info-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .review-info-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .review-info-sub {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .review-footer {
+      background: #f9fafb;
+      padding: 10px 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .review-footer p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .review-footer i {
+      color: #1a472a;
+      margin-right: 4px;
+    }
+
     /* Official Letter Template Styles */
+    .official-letter-section {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .letter-section-header {
+      background: #1a472a;
+      color: #ffffff;
+      padding: 12px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .letter-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .letter-template {
         background: white;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
         padding: 40px;
         font-family: 'Times New Roman', Times, serif;
         font-size: 14px;
         line-height: 1.6;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .letter-header {
         display: flex;
@@ -114,6 +561,630 @@
         font-weight: bold;
         font-size: 12px;
     }
+
+    /* Official Verification Form Section */
+    .official-form-section {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .form-section-header {
+      background: #1a472a;
+      color: #ffffff;
+      padding: 12px 25px;
+    }
+
+    .form-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-content {
+      padding: 24px;
+    }
+
+    .decision-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .decision-option {
+      flex: 1;
+      min-width: 150px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #ffffff;
+    }
+
+    .decision-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .decision-option.option-approve {
+      border-color: #d1fae5;
+      background: #f0fdf4;
+    }
+
+    .decision-option.option-approve:has(input:checked) {
+      border-color: #059669;
+      background: #d1fae5;
+    }
+
+    .decision-option.option-revision {
+      border-color: #fef3c7;
+      background: #fffbeb;
+    }
+
+    .decision-option.option-revision:has(input:checked) {
+      border-color: #d97706;
+      background: #fef3c7;
+    }
+
+    .decision-option.option-reject {
+      border-color: #fee2e2;
+      background: #fef2f2;
+    }
+
+    .decision-option.option-reject:has(input:checked) {
+      border-color: #dc2626;
+      background: #fee2e2;
+    }
+
+    .decision-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .option-approve .decision-icon {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+    }
+
+    .option-revision .decision-icon {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+      color: #ffffff;
+    }
+
+    .option-reject .decision-icon {
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      color: #ffffff;
+    }
+
+    .decision-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .decision-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .decision-desc {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      color: #6b7280;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #1a472a;
+      box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+    }
+
+    .btn-cancel {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+      background: #e5e7eb;
+    }
+
+    /* Status Badge Styles */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      border: 1px solid #f59e0b;
+    }
+
+    .status-approved {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+
+    .status-rejected {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+
+    /* Attached File Section */
+    .official-file-section {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .file-section-header {
+      background: #1a472a;
+      color: #ffffff;
+      padding: 12px 25px;
+    }
+
+    .file-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-content {
+      padding: 24px;
+      text-align: center;
+    }
+
+    .btn-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-file:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .file-note {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
+      margin: 12px 0 0 0;
+    }
+
+    /* Formator Verification Section */
+    .official-formator-section {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .formator-section-header {
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      padding: 12px 25px;
+    }
+
+    .formator-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .formator-content {
+      padding: 24px;
+    }
+
+    .formator-status-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .formator-status-card.status-waiting {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid #f59e0b;
+    }
+
+    .formator-status-card.status-pending {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 2px solid #3b82f6;
+    }
+
+    .formator-status-card.status-signed {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border: 2px solid #10b981;
+    }
+
+    .formator-status-card.status-rejected {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 2px solid #ef4444;
+    }
+
+    .formator-status-card .status-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .status-waiting .status-icon {
+      background: #f59e0b;
+      color: #ffffff;
+    }
+
+    .status-pending .status-icon {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .status-signed .status-icon {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .status-rejected .status-icon {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .formator-status-card .status-info h4 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+
+    .formator-status-card .status-info p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #4b5563;
+      margin: 0 0 4px 0;
+      line-height: 1.5;
+    }
+
+    .community-confirmed {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #059669;
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px !important;
+      font-weight: 600;
+      margin-top: 8px !important;
+    }
+
+    .send-formator-form {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-send-formator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-send-formator:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Timeline Styles */
+    .formator-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 44px;
+      width: 2px;
+      height: calc(100% - 20px);
+      background: #e5e7eb;
+    }
+
+    .timeline-item.completed:not(:last-child)::after {
+      background: #10b981;
+    }
+
+    .timeline-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+      background: #e5e7eb;
+      color: #6b7280;
+      z-index: 1;
+    }
+
+    .timeline-item.completed .timeline-icon {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .timeline-item.current .timeline-icon {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .timeline-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .timeline-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .timeline-item.completed .timeline-label {
+      color: #059669;
+    }
+
+    .timeline-item.current .timeline-label {
+      color: #2563eb;
+    }
+
+    .timeline-date {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    /* Formator Details Grid */
+    .formator-details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .formator-detail-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .formator-detail-card h5 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .formator-detail-card h5 i {
+      color: #7c3aed;
+    }
+
+    .signature-preview img,
+    .photo-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+    .photo-hint {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .no-data {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .formator-remarks-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .formator-remarks-box h5 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .formator-remarks-box h5 i {
+      color: #7c3aed;
+    }
+
+    .formator-remarks-box p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #4b5563;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .formator-details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media print {
         body * { visibility: hidden; }
         .letter-template, .letter-template * { visibility: visible; }
@@ -128,69 +1199,127 @@
         }
         .no-print { display: none !important; }
     }
-    .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-    .badge-warning { background: #fef3c7; color: #d97706; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-danger { background: #fee2e2; color: #b91c1c; }
   </style>
 </head>
 <body class="role-staff">
-  <header class="top-nav no-print">
-    <div class="top-left">
-      <a href="{% url 'violations:staff_dashboard' %}" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;">
-        <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
-        <span class="header-title">Review Apology Letter</span>
-      </a>
-    </div>
-    <div class="top-right">
-      <button type="button" class="ghost-btn" onclick="window.print()" style="margin-right: 8px;">
-        <i class="fas fa-print"></i> Print
-      </button>
-      <a href="{% url 'violations:staff_apology_letters' %}" class="ghost-btn"><i class="fas fa-arrow-left"></i> Back</a>
+  <!-- Official Top Navigation -->
+  <header class="official-top-nav no-print">
+    <div class="nav-container">
+      <!-- Left: Logo and Title -->
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU" />
+        </div>
+        <div class="brand-text">
+          <span class="brand-university">CHMSU</span>
+          <span class="brand-title">OSA Staff Portal</span>
+        </div>
+      </div>
+
+      <!-- Center: University Name -->
+      <div class="nav-center">
+        <span class="nav-department">Office of Student Affairs</span>
+        <span class="nav-system">Student Violation Tracking System</span>
+      </div>
+
+      <!-- Right: Actions -->
+      <div class="nav-actions">
+        <button type="button" class="nav-icon-btn" onclick="window.print()" title="Print Letter">
+          <i class="fas fa-print"></i>
+        </button>
+        <a href="{% url 'violations:staff_apology_letters' %}" class="nav-icon-btn" title="Back to Letters">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="nav-divider"></div>
+        <div class="nav-profile">
+          <button class="nav-profile-btn" id="profileBtn">
+            <span class="profile-avatar">{{ request.user.first_name|slice:":1"|default:request.user.username|slice:":1"|upper }}</span>
+            <div class="profile-info">
+              <span class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+              <span class="profile-role">OSA Staff</span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="nav-dropdown" id="profileDropdown">
+            <a href="{% url 'violations:staff_dashboard' %}"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="{% url 'violations:staff_apology_letters' %}"><i class="fas fa-envelope-open-text"></i> Apology Letters</a>
+            <div class="dropdown-divider"></div>
+            <a href="{% url 'violations:auth_logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
-  <div class="background-overlay no-print"></div>
-  <div class="background-image no-print"></div>
+  <div class="background-overlay no-print" style="pointer-events:none;"></div>
+  <div class="background-image no-print" style="pointer-events:none;"></div>
 
   <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px); max-width: 900px;">
-    <!-- Letter Info -->
-    <section class="card no-print" style="margin-bottom: 20px;">
-      <h2 style="margin-bottom:16px;"><i class="fas fa-envelope-open-text"></i> Review Apology Letter</h2>
-      <div style="background:#f9fafb; padding:16px; border-radius:8px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <div>
-            <span style="color:#667085;">Student:</span>
-            <strong>{{ letter.student.user.get_full_name|default:letter.student.student_id }}</strong>
-            <div style="font-size:12px; color:#667085;">{{ letter.student.student_id }}</div>
+    
+    <!-- Official Letter Review Header -->
+    <section class="official-review-section no-print">
+      <!-- Official Header -->
+      <div class="review-header">
+        <div class="review-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+        <div class="review-header-text">
+          <p class="review-republic">Republic of the Philippines</p>
+          <h1 class="review-university">CARLOS HILADO MEMORIAL STATE UNIVERSITY</h1>
+          <p class="review-address">Talisay City, Negros Occidental</p>
+          <p class="review-office">Office of Student Affairs</p>
+        </div>
+        <div class="review-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+      </div>
+
+      <div class="review-title-bar">
+        <h2 class="review-title"><i class="fas fa-envelope-open-text"></i> REVIEW APOLOGY LETTER</h2>
+        <span class="review-subtitle">Letter #{{ letter.id }} • Submitted {% now "F d, Y" %}</span>
+      </div>
+
+      <div class="review-content">
+        <div class="review-info-grid">
+          <div class="review-info-item">
+            <span class="review-info-label">Student Name</span>
+            <span class="review-info-value">{{ letter.student.user.get_full_name|default:letter.student.student_id }}</span>
+            <span class="review-info-sub">{{ letter.student.student_id }}</span>
           </div>
-          <div>
-            <span style="color:#667085;">Violation:</span>
-            <a href="{% url 'violations:staff_violation_detail' letter.violation.id %}" style="color:var(--chmsu-dark-green);">
-              <strong>#{{ letter.violation.id }}</strong>
+          <div class="review-info-item">
+            <span class="review-info-label">Violation Reference</span>
+            <a href="{% url 'violations:staff_violation_detail' letter.violation.id %}" style="color:#1a472a; text-decoration:none;">
+              <span class="review-info-value"><i class="fas fa-external-link-alt" style="font-size:11px;"></i> Violation #{{ letter.violation.id }}</span>
             </a>
+            <span class="review-info-sub">{{ letter.violation.get_type_display }} Offense</span>
           </div>
-          <div>
-            <span style="color:#667085;">Submitted:</span>
-            <strong>{{ letter.submitted_at|date:"F d, Y \a\t g:i A" }}</strong>
+          <div class="review-info-item">
+            <span class="review-info-label">Date Submitted</span>
+            <span class="review-info-value">{{ letter.submitted_at|date:"F d, Y" }}</span>
+            <span class="review-info-sub">{{ letter.submitted_at|date:"g:i A" }}</span>
           </div>
-          <div>
-            <span style="color:#667085;">Current Status:</span>
-            <span class="badge 
-              {% if letter.status == 'approved' %}badge-success
-              {% elif letter.status == 'rejected' %}badge-danger
-              {% else %}badge-warning{% endif %}">
+          <div class="review-info-item">
+            <span class="review-info-label">Current Status</span>
+            <span class="status-badge 
+              {% if letter.status == 'approved' %}status-approved
+              {% elif letter.status == 'rejected' %}status-rejected
+              {% else %}status-pending{% endif %}">
+              <i class="fas {% if letter.status == 'approved' %}fa-check-circle{% elif letter.status == 'rejected' %}fa-times-circle{% else %}fa-clock{% endif %}"></i>
               {{ letter.get_status_display }}
             </span>
           </div>
         </div>
       </div>
+
+      <div class="review-footer">
+        <p><i class="fas fa-info-circle"></i> Review the letter below and provide your verification decision</p>
+      </div>
     </section>
 
     <!-- Official CHMSU Letter of Apology Template (Read-Only) -->
-    <section class="card" style="margin-bottom: 20px;">
-      <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="margin: 0;"><i class="fas fa-file-alt"></i> Student's Letter of Apology</h3>
+    <section class="official-letter-section">
+      <div class="letter-section-header no-print">
+        <h3 class="letter-section-title"><i class="fas fa-file-alt"></i> STUDENT'S LETTER OF APOLOGY</h3>
       </div>
       
       <div class="letter-template" id="letterTemplate">
@@ -209,7 +1338,7 @@
         
         <div class="letter-body">
           <p style="margin-bottom: 24px;">
-            Date: <span class="letter-field">{{ letter.letter_date|default:letter.submitted_at|date:"F d, Y" }}</span>
+            Date: <span class="letter-field">{% if letter.letter_date %}{{ letter.letter_date }}{% else %}{{ letter.submitted_at|date:"F d, Y" }}{% endif %}</span>
           </p>
           
           <p style="margin-bottom: 4px;"><strong>The Student Formator</strong></p>
@@ -278,59 +1407,337 @@
 
     {% if letter.file %}
     <!-- Uploaded File (if available) -->
-    <section class="card no-print" style="margin-bottom: 20px;">
-      <h4><i class="fas fa-paperclip"></i> Attached File</h4>
-      <div style="background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; text-align:center;">
-        <a href="{{ letter.file.url }}" target="_blank" class="login-button">
-          <i class="fas fa-external-link-alt"></i> Open Attached File
-        </a>
-        <p style="margin:12px 0 0; color:#667085; font-size: 0.875rem;">Student also uploaded a physical signed copy</p>
+    <section class="official-file-section no-print">
+      <div class="file-section-header">
+        <h3 class="file-section-title"><i class="fas fa-paperclip"></i> ATTACHED IMAGE</h3>
+      </div>
+      <div class="file-content">
+        <p class="file-note" style="margin: 0 0 16px 0;"><i class="fas fa-info-circle"></i> Student uploaded a physical signed copy</p>
+        
+        <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 16px;">
+          <button type="button" class="btn-file" id="togglePreviewBtn" onclick="toggleImagePreview()">
+            <i class="fas fa-eye" id="toggleIcon"></i> <span id="toggleText">Show Image</span>
+          </button>
+          <a href="{{ letter.file.url }}" download class="btn-cancel">
+            <i class="fas fa-download"></i> Download
+          </a>
+        </div>
+        
+        <!-- Image Preview (Hidden by default) -->
+        <div class="file-preview-container" id="imagePreviewContainer" style="display: none; margin-top: 16px;">
+          <img src="{{ letter.file.url }}" alt="Attached File" class="file-preview-image" id="attachedFilePreview"
+               style="max-width: 100%; max-height: 500px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;"
+               onclick="openImageModal(this.src)" />
+          <p style="font-size: 11px; color: #6b7280; margin-top: 8px;"><i class="fas fa-search-plus"></i> Click image to view full size</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Image Modal for Full Size View -->
+    <div id="imageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; justify-content:center; align-items:center; cursor:pointer;" onclick="closeImageModal()">
+      <button type="button" onclick="closeImageModal()" style="position:absolute; top:20px; right:30px; background:none; border:none; color:#fff; font-size:32px; cursor:pointer; z-index:100000;">
+        <i class="fas fa-times"></i>
+      </button>
+      <img id="modalImage" src="" alt="Full Size" style="max-width:95%; max-height:95%; object-fit:contain; border-radius:8px;" onclick="event.stopPropagation();" />
+    </div>
+    
+    <script>
+      function toggleImagePreview() {
+        const container = document.getElementById('imagePreviewContainer');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const toggleText = document.getElementById('toggleText');
+        
+        if (container.style.display === 'none') {
+          container.style.display = 'block';
+          toggleIcon.className = 'fas fa-eye-slash';
+          toggleText.textContent = 'Hide Image';
+        } else {
+          container.style.display = 'none';
+          toggleIcon.className = 'fas fa-eye';
+          toggleText.textContent = 'Show Image';
+        }
+      }
+      
+      function openImageModal(src) {
+        document.getElementById('modalImage').src = src;
+        document.getElementById('imageModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function closeImageModal() {
+        document.getElementById('imageModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+      
+      // Close modal on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeImageModal();
+      });
+    </script>
+    {% endif %}
+
+    <!-- Formator Verification Section -->
+    <section class="official-formator-section no-print">
+      <div class="formator-section-header">
+        <h3 class="formator-section-title"><i class="fas fa-user-tie"></i> STUDENT FORMATOR VERIFICATION</h3>
+      </div>
+      <div class="formator-content">
+        
+        {% if letter.formator_status == 'not_sent' %}
+        <!-- Step 1: Send to Formator -->
+        <div class="formator-status-card status-waiting">
+          <div class="status-icon"><i class="fas fa-paper-plane"></i></div>
+          <div class="status-info">
+            <h4>Awaiting Formator Review</h4>
+            <p>This letter has not been sent to the Student Formator yet. Before making a verification decision, you must send this letter to the Student Formator for review and confirmation of community service completion.</p>
+          </div>
+        </div>
+        
+        <form method="post" action="{% url 'violations:staff_send_to_formator' letter.id %}" class="send-formator-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label class="form-label">Message to Formator (Optional)</label>
+            <textarea name="staff_message" rows="3" class="form-textarea" 
+                      placeholder="Add any notes or instructions for the Student Formator..."></textarea>
+          </div>
+          <button type="submit" class="btn-send-formator">
+            <i class="fas fa-share"></i> Send to Student Formator
+          </button>
+        </form>
+        
+        {% elif letter.formator_status == 'pending' %}
+        <!-- Step 2: Pending Formator Response -->
+        <div class="formator-status-card status-pending">
+          <div class="status-icon"><i class="fas fa-hourglass-half"></i></div>
+          <div class="status-info">
+            <h4>Pending Formator Review</h4>
+            <p>This letter was sent to the Student Formator on <strong>{{ letter.sent_to_formator_at|date:"F d, Y \a\t g:i A" }}</strong>.</p>
+            <p>Waiting for the Formator to review, sign, and confirm community service completion.</p>
+          </div>
+        </div>
+        
+        <div class="formator-timeline">
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fas fa-check"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Letter Submitted</span>
+              <span class="timeline-date">{{ letter.submitted_at|date:"M d, Y g:i A" }}</span>
+            </div>
+          </div>
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fas fa-check"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Sent to Formator</span>
+              <span class="timeline-date">{{ letter.sent_to_formator_at|date:"M d, Y g:i A" }}</span>
+            </div>
+          </div>
+          <div class="timeline-item current">
+            <div class="timeline-icon"><i class="fas fa-spinner fa-spin"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Awaiting Formator Response</span>
+              <span class="timeline-date">In Progress</span>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fas fa-circle"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Staff Final Decision</span>
+              <span class="timeline-date">Pending</span>
+            </div>
+          </div>
+        </div>
+        
+        {% elif letter.formator_status == 'signed' %}
+        <!-- Step 3: Formator Has Signed - Show Details -->
+        <div class="formator-status-card status-signed">
+          <div class="status-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="status-info">
+            <h4>Formator Verification Complete</h4>
+            <p>The Student Formator has reviewed and signed this letter on <strong>{{ letter.formator_signed_at|date:"F d, Y \a\t g:i A" }}</strong>.</p>
+            {% if letter.community_service_completed %}
+            <p class="community-confirmed"><i class="fas fa-handshake"></i> Community Service Confirmed as Completed</p>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Formator Details -->
+        <div class="formator-details-grid">
+          <div class="formator-detail-card">
+            <h5><i class="fas fa-signature"></i> Formator's Signature</h5>
+            {% if letter.formator_signature %}
+            <div class="signature-preview">
+              <img src="{{ letter.formator_signature }}" alt="Formator Signature" />
+            </div>
+            {% else %}
+            <p class="no-data">No signature provided</p>
+            {% endif %}
+          </div>
+          
+          <div class="formator-detail-card">
+            <h5><i class="fas fa-camera"></i> Community Service Photo</h5>
+            {% if letter.formator_photo %}
+            <div class="photo-preview">
+              <img src="{{ letter.formator_photo.url }}" alt="Community Service Photo" onclick="openImageModal(this.src)" style="cursor:pointer;" />
+              <p class="photo-hint"><i class="fas fa-search-plus"></i> Click to enlarge</p>
+            </div>
+            {% else %}
+            <p class="no-data">No photo provided</p>
+            {% endif %}
+          </div>
+        </div>
+        
+        {% if letter.formator_remarks %}
+        <div class="formator-remarks-box">
+          <h5><i class="fas fa-comment-alt"></i> Formator's Remarks</h5>
+          <p>{{ letter.formator_remarks }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="formator-timeline">
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fas fa-check"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Letter Submitted</span>
+              <span class="timeline-date">{{ letter.submitted_at|date:"M d, Y g:i A" }}</span>
+            </div>
+          </div>
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fas fa-check"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Sent to Formator</span>
+              <span class="timeline-date">{{ letter.sent_to_formator_at|date:"M d, Y g:i A" }}</span>
+            </div>
+          </div>
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fas fa-check"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Formator Signed</span>
+              <span class="timeline-date">{{ letter.formator_signed_at|date:"M d, Y g:i A" }}</span>
+            </div>
+          </div>
+          <div class="timeline-item current">
+            <div class="timeline-icon"><i class="fas fa-arrow-right"></i></div>
+            <div class="timeline-content">
+              <span class="timeline-label">Ready for Staff Decision</span>
+              <span class="timeline-date">Proceed below</span>
+            </div>
+          </div>
+        </div>
+        
+        {% elif letter.formator_status == 'rejected' %}
+        <!-- Formator Rejected -->
+        <div class="formator-status-card status-rejected">
+          <div class="status-icon"><i class="fas fa-times-circle"></i></div>
+          <div class="status-info">
+            <h4>Formator Rejected Letter</h4>
+            <p>The Student Formator has rejected this letter.</p>
+            {% if letter.formator_remarks %}
+            <p><strong>Reason:</strong> {{ letter.formator_remarks }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        
+      </div>
+    </section>
+
+    <!-- Verification Form - Only show if formator has signed OR status allows -->
+    {% if letter.formator_status == 'signed' or letter.formator_status == 'rejected' %}
+    <section class="official-form-section no-print">
+      <div class="form-section-header">
+        <h3 class="form-section-title"><i class="fas fa-clipboard-check"></i> VERIFICATION DECISION</h3>
+      </div>
+      <div class="form-content">
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="form-group">
+            <label class="form-label">Decision <span style="color:#dc2626;">*</span></label>
+            <div class="decision-options">
+              <label class="decision-option option-approve">
+                <input type="radio" name="action" value="approved" checked style="display:none;">
+                <div class="decision-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="decision-text">
+                  <span class="decision-label">Approve</span>
+                  <span class="decision-desc">Letter is acceptable</span>
+                </div>
+              </label>
+              <label class="decision-option option-revision">
+                <input type="radio" name="action" value="revision_needed" style="display:none;">
+                <div class="decision-icon"><i class="fas fa-redo"></i></div>
+                <div class="decision-text">
+                  <span class="decision-label">Needs Revision</span>
+                  <span class="decision-desc">Requires changes</span>
+                </div>
+              </label>
+              <label class="decision-option option-reject">
+                <input type="radio" name="action" value="rejected" style="display:none;">
+                <div class="decision-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="decision-text">
+                  <span class="decision-label">Reject</span>
+                  <span class="decision-desc">Not acceptable</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Remarks / Feedback</label>
+            <textarea name="remarks" rows="4" class="form-textarea" 
+                      placeholder="Add remarks or feedback for the student (required if revision needed or rejected)...">{{ letter.remarks }}</textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit">
+              <i class="fas fa-paper-plane"></i> Submit Decision
+            </button>
+            <a href="{% url 'violations:staff_apology_letters' %}" class="btn-cancel">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </section>
+    {% else %}
+    <!-- Message when formator verification is still pending -->
+    <section class="official-form-section no-print" style="opacity: 0.6;">
+      <div class="form-section-header">
+        <h3 class="form-section-title"><i class="fas fa-lock"></i> VERIFICATION DECISION</h3>
+      </div>
+      <div class="form-content" style="text-align: center; padding: 40px;">
+        <div style="font-size: 48px; color: #d97706; margin-bottom: 16px;"><i class="fas fa-hourglass-half"></i></div>
+        <h4 style="color: #374151; margin-bottom: 8px;">Awaiting Formator Verification</h4>
+        <p style="color: #6b7280;">You cannot make a verification decision until the Student Formator has reviewed and signed this letter.</p>
       </div>
     </section>
     {% endif %}
-
-    <!-- Verification Form -->
-    <section class="card no-print">
-      <h3 style="margin-bottom: 16px;"><i class="fas fa-clipboard-check"></i> Verification Decision</h3>
-      <form method="post">
-        {% csrf_token %}
-        <div style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Decision <span style="color:red;">*</span></label>
-          <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid #d1fae5; border-radius:8px; cursor:pointer; flex:1; background:#f0fdf4; min-width:150px;">
-              <input type="radio" name="action" value="approved" checked>
-              <i class="fas fa-check-circle" style="color:#059669;"></i>
-              <span>Approve</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid #fef3c7; border-radius:8px; cursor:pointer; flex:1; background:#fffbeb; min-width:150px;">
-              <input type="radio" name="action" value="revision_needed">
-              <i class="fas fa-redo" style="color:#d97706;"></i>
-              <span>Needs Revision</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; padding:12px 20px; border:2px solid #fee2e2; border-radius:8px; cursor:pointer; flex:1; background:#fef2f2; min-width:150px;">
-              <input type="radio" name="action" value="rejected">
-              <i class="fas fa-times-circle" style="color:#dc2626;"></i>
-              <span>Reject</span>
-            </label>
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px;">
-          <label style="display:block; margin-bottom:6px; font-weight:600;">Remarks / Feedback</label>
-          <textarea name="remarks" rows="4" placeholder="Add remarks or feedback for the student (required if revision needed or rejected)..."
-                    style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px;">{{ letter.remarks }}</textarea>
-        </div>
-
-        <div style="display:flex; gap:12px;">
-          <button type="submit" class="login-button">
-            <i class="fas fa-paper-plane"></i> Submit Decision
-          </button>
-          <a href="{% url 'violations:staff_apology_letters' %}" class="ghost-btn">Cancel</a>
-        </div>
-      </form>
-    </section>
   </main>
 
   <script src="{% static 'violations/js/script.js' %}"></script>
+  <script>
+    // Profile dropdown toggle
+    const profileBtn = document.getElementById('profileBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    
+    if (profileBtn && profileDropdown) {
+      profileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('show');
+      });
+      
+      document.addEventListener('click', function() {
+        profileDropdown.classList.remove('show');
+      });
+    }
+
+    // Decision option selection styling
+    const decisionOptions = document.querySelectorAll('.decision-option');
+    decisionOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        decisionOptions.forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+  </script>
 </body>
 </html>

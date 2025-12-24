@@ -30,6 +30,7 @@ urlpatterns = [
     # Student
     path('student/dashboard/', views.student_dashboard_view, name='student_dashboard'),
     path('student/apology/', views.student_apology_view, name='student_apology'),
+    path('student/update-profile/', views.student_update_profile_view, name='student_update_profile'),
     path('student/message/<int:message_id>/read/', views.student_mark_message_read_view, name='student_mark_message_read'),
     path('student/message/reply/', views.student_reply_message_view, name='student_reply_message'),
     path('student/message/delete/', views.student_delete_message_view, name='student_delete_message'),
@@ -61,6 +62,7 @@ urlpatterns = [
     # OSA Staff - Apology Letters
     path('staff/apology-letters/', views.staff_apology_letters_view, name='staff_apology_letters'),
     path('staff/apology-letters/<int:letter_id>/verify/', views.staff_verify_apology_view, name='staff_verify_apology'),
+    path('staff/apology-letters/<int:letter_id>/send-to-formator/', views.staff_send_to_formator_view, name='staff_send_to_formator'),
     
     # OSA Staff - Reports
     path('staff/reports/', views.staff_reports_view, name='staff_reports'),
@@ -89,6 +91,7 @@ urlpatterns = [
     path('formator/login/', views.formator_login_view, name='formator_login'),
     path('formator/logout/', views.formator_logout_view, name='formator_logout'),
     path('formator/dashboard/', views.formator_dashboard_view, name='formator_dashboard'),
+    path('formator/letter/<int:letter_id>/verify/', views.formator_verify_letter_view, name='formator_verify_letter'),
 
     # Authentication (Django built-ins for testing/demo)
     path('auth/login/', auth_views.LoginView.as_view(template_name='violations/auth/login.html'), name='auth_login'),

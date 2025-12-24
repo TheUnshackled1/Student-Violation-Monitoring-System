@@ -1,0 +1,1625 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Letter - Student Formator</title>
+  <link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'violations/css/main.css' %}" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* Official Top Navigation Styles */
+    .official-top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10000;
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #7c3aed 100%);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      border-bottom: 3px solid #fbbf24;
+    }
+
+    .nav-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: white;
+      padding: 2px;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-university {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fbbf24;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .nav-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .nav-department {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 10px;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .nav-system {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .formator-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .nav-icon-btn {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-icon-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Official Review Section */
+    .official-review-section {
+      background: #ffffff;
+      border: 2px solid #7c3aed;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 18px 30px;
+      background: linear-gradient(180deg, #f8f5ff 0%, #ffffff 100%);
+      border-bottom: 3px double #7c3aed;
+    }
+
+    .review-header-logo img {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
+
+    .review-header-text {
+      text-align: center;
+      flex: 1;
+    }
+
+    .review-republic {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 10px;
+      color: #374151;
+      margin: 0;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .review-university {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #7c3aed;
+      margin: 3px 0;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .review-address {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 11px;
+      color: #4b5563;
+      margin: 2px 0;
+      font-style: italic;
+    }
+
+    .review-office {
+      font-family: 'Times New Roman', Georgia, serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7c3aed;
+      margin: 5px 0 0 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .review-title-bar {
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      padding: 12px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .review-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .review-subtitle {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .review-content {
+      padding: 20px;
+    }
+
+    .review-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      background: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .review-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .review-info-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .review-info-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .review-info-sub {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .review-footer {
+      background: #f9fafb;
+      padding: 10px 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .review-footer p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    /* Letter Template Styles */
+    .official-letter-section {
+      background: #ffffff;
+      border: 2px solid #7c3aed;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .letter-section-header {
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      padding: 12px 25px;
+    }
+
+    .letter-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .letter-template {
+      background: white;
+      padding: 40px;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .letter-header {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #1f2937;
+      padding-bottom: 16px;
+    }
+
+    .letter-logo {
+      width: 70px;
+      height: 70px;
+      margin-right: 20px;
+    }
+
+    .letter-title-section {
+      flex: 1;
+      text-align: center;
+    }
+
+    .letter-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .letter-doc-info {
+      text-align: right;
+      font-size: 11px;
+      border: 1px solid #000;
+      padding: 4px 8px;
+    }
+
+    .letter-doc-info div {
+      border-bottom: 1px solid #000;
+      padding: 2px 0;
+    }
+
+    .letter-doc-info div:last-child {
+      border-bottom: none;
+    }
+
+    .letter-body {
+      margin-top: 24px;
+    }
+
+    .letter-field {
+      border: none;
+      border-bottom: 1px solid #000;
+      min-width: 150px;
+      display: inline-block;
+      padding: 2px 4px;
+      font-weight: 500;
+      background: #f9fafb;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 14px;
+    }
+
+    .letter-field.wide {
+      min-width: 300px;
+    }
+
+    .letter-field.full {
+      display: block;
+      width: 100%;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+
+    .signature-image {
+      max-width: 250px;
+      max-height: 80px;
+      border: 1px solid #000;
+    }
+
+    .letter-paragraph {
+      text-align: justify;
+      text-indent: 40px;
+      margin: 16px 0;
+    }
+
+    .letter-signature {
+      margin-top: 48px;
+    }
+
+    /* Signature Form Section */
+    .official-form-section {
+      background: #ffffff;
+      border: 2px solid #7c3aed;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .form-section-header {
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      padding: 12px 25px;
+    }
+
+    .form-section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-content {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    }
+
+    /* Signature Pad */
+    .signature-pad-container {
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      background: #f9fafb;
+    }
+
+    .signature-pad-container canvas {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: crosshair;
+    }
+
+    .signature-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn-clear-sig {
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Photo Upload */
+    .photo-upload-container {
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      background: #f9fafb;
+      cursor: default;
+      transition: all 0.2s ease;
+    }
+
+    .photo-upload-container:hover {
+      border-color: #7c3aed;
+      background: #f5f3ff;
+    }
+
+    .photo-upload-container input {
+      display: none;
+    }
+
+    .photo-upload-container i {
+      font-size: 32px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .photo-upload-container p {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .photo-preview {
+      margin-top: 16px;
+    }
+
+    .photo-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      border: 2px solid #e5e7eb;
+    }
+
+    .file-preview {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+
+    .file-preview .file-info {
+      flex: 1;
+    }
+
+    .file-preview .file-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 0.9rem;
+    }
+
+    .file-preview .file-size {
+      color: #6b7280;
+      font-size: 0.8rem;
+    }
+
+    .file-preview .remove-file {
+      cursor: pointer;
+      color: #dc2626;
+      padding: 8px;
+      transition: transform 0.2s;
+    }
+
+    .file-preview .remove-file:hover {
+      transform: scale(1.1);
+    }
+
+    /* Checkbox */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      border-radius: 10px;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #10b981;
+    }
+
+    .checkbox-container label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #065f46;
+    }
+
+    /* Action Buttons */
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-sign {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-sign:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-reject {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reject:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-cancel {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+      background: #e5e7eb;
+    }
+
+    /* ===== MOBILE RESPONSIVE STYLES FOR ANDROID ===== */
+    @media (max-width: 768px) {
+      .nav-center {
+        display: none;
+      }
+      
+      .nav-container {
+        padding: 0 12px;
+        height: 56px;
+      }
+      
+      .brand-logo img {
+        width: 36px;
+        height: 36px;
+      }
+      
+      .brand-university {
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      
+      .brand-title {
+        font-size: 12px;
+      }
+      
+      .formator-badge {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .formator-badge span {
+        display: none;
+      }
+      
+      .nav-icon-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
+      
+      .nav-actions {
+        gap: 8px;
+      }
+      
+      .review-info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      main.container {
+        padding: 0 12px !important;
+        margin-top: calc(var(--header-height) + 12px) !important;
+      }
+      
+      .official-review-section {
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+      
+      .review-header {
+        flex-direction: column;
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .review-header-logo img {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .review-header-text .header-title {
+        font-size: 14px;
+      }
+      
+      .review-header-text .header-subtitle {
+        font-size: 10px;
+      }
+      
+      .review-info-grid {
+        padding: 16px;
+        gap: 12px;
+      }
+      
+      .info-item {
+        padding: 10px;
+      }
+      
+      .info-label {
+        font-size: 10px;
+      }
+      
+      .info-value {
+        font-size: 13px;
+      }
+      
+      /* Letter Template Mobile */
+      .letter-template-section {
+        padding: 16px;
+      }
+      
+      .letter-template {
+        padding: 16px;
+        font-size: 12px;
+      }
+      
+      .letter-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+        padding-bottom: 16px;
+      }
+      
+      .letter-logo {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .letter-title-section .letter-title {
+        font-size: 14px;
+      }
+      
+      .letter-doc-info {
+        font-size: 9px;
+        text-align: center;
+      }
+      
+      .letter-body p {
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      
+      .letter-field {
+        font-size: 12px;
+        padding: 2px 4px;
+      }
+      
+      .letter-field.wide {
+        min-width: auto;
+        width: 100%;
+        display: block;
+        margin: 4px 0;
+      }
+      
+      .letter-field.full {
+        font-size: 11px;
+      }
+      
+      /* Form Section Mobile */
+      .verification-form-section {
+        padding: 16px;
+      }
+      
+      .form-section-title {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      
+      .form-group {
+        margin-bottom: 16px;
+      }
+      
+      .form-label {
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      
+      .checkbox-container {
+        padding: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .checkbox-container label {
+        font-size: 12px;
+      }
+      
+      /* Photo Upload Mobile */
+      .photo-upload-container {
+        padding: 16px;
+      }
+      
+      .photo-upload-container i {
+        font-size: 2rem;
+      }
+      
+      .photo-upload-container p {
+        font-size: 12px;
+      }
+      
+      #uploadArea > div {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      
+      #uploadArea button {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+        font-size: 14px;
+      }
+      
+      .file-preview {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+        padding: 12px;
+      }
+      
+      .file-preview img {
+        width: 80px;
+        height: 80px;
+      }
+      
+      /* Signature Pad Mobile */
+      .signature-pad-container {
+        padding: 12px;
+      }
+      
+      .signature-pad-container canvas {
+        height: 150px !important;
+        touch-action: none;
+      }
+      
+      .signature-actions {
+        margin-top: 8px;
+      }
+      
+      .btn-clear-sig {
+        padding: 10px 16px;
+        font-size: 12px;
+        width: 100%;
+      }
+      
+      /* Form Textarea Mobile */
+      .form-textarea {
+        font-size: 14px;
+        padding: 12px;
+      }
+      
+      /* Action Buttons Mobile */
+      .form-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .btn-sign, .btn-reject, .btn-cancel {
+        width: 100%;
+        justify-content: center;
+        padding: 16px 24px;
+        font-size: 15px;
+      }
+      
+      /* Webcam Modal Mobile */
+      #webcamModal > div {
+        padding: 16px;
+        margin: 12px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      
+      #webcamModal h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+      
+      #webcamModal video {
+        max-height: 300px;
+      }
+      
+      #webcamModal > div > div:last-of-type {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      #webcamModal button {
+        width: 100%;
+        padding: 14px 20px;
+      }
+      
+      /* Image Preview Modal Mobile */
+      #imagePreviewModal > div {
+        padding: 12px;
+      }
+      
+      #imagePreviewModal img {
+        max-height: 70vh;
+      }
+    }
+    
+    /* Extra small screens (phones in portrait) */
+    @media (max-width: 480px) {
+      .nav-brand {
+        gap: 8px;
+      }
+      
+      .brand-logo img {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .brand-text {
+        display: none;
+      }
+      
+      .letter-template {
+        padding: 12px;
+      }
+      
+      .letter-body p {
+        font-size: 11px;
+      }
+      
+      .signature-pad-container canvas {
+        height: 120px !important;
+      }
+    }
+    
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .nav-icon-btn,
+      .btn-sign,
+      .btn-reject,
+      .btn-cancel,
+      .btn-clear-sig,
+      #webcamBtn,
+      #galleryBtn,
+      #captureBtn,
+      #retakeBtn,
+      #usePhotoBtn,
+      #closeWebcamBtn {
+        min-height: 48px;
+      }
+      
+      .checkbox-container input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .form-textarea {
+        min-height: 100px;
+      }
+    }
+  </style>
+</head>
+<body class="role-formator">
+  <!-- Official Top Navigation -->
+  <header class="official-top-nav">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU" />
+        </div>
+        <div class="brand-text">
+          <span class="brand-university">CHMSU</span>
+          <span class="brand-title">Student Formator Portal</span>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <span class="nav-department">Office of Student Affairs</span>
+        <span class="nav-system">Letter Verification</span>
+      </div>
+
+      <div class="nav-actions">
+        <div class="formator-badge">
+          <i class="fas fa-user-tie"></i>
+          <span>{{ formator_code }}</span>
+        </div>
+        <a href="{% url 'violations:formator_dashboard' %}" class="nav-icon-btn" title="Back to Dashboard">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="background-overlay" style="pointer-events:none;"></div>
+  <div class="background-image" style="pointer-events:none;"></div>
+
+  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px); max-width: 900px;">
+    
+    <!-- Letter Info Header -->
+    <section class="official-review-section">
+      <div class="review-header">
+        <div class="review-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+        <div class="review-header-text">
+          <p class="review-republic">Republic of the Philippines</p>
+          <h1 class="review-university">CARLOS HILADO MEMORIAL STATE UNIVERSITY</h1>
+          <p class="review-address">Talisay City, Negros Occidental</p>
+          <p class="review-office">Student Formator Verification</p>
+        </div>
+        <div class="review-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+        </div>
+      </div>
+
+      <div class="review-title-bar">
+        <h2 class="review-title"><i class="fas fa-envelope-open-text"></i> REVIEW & SIGN LETTER</h2>
+        <span class="review-subtitle">Letter #{{ letter.id }} • Sent for Review</span>
+      </div>
+
+      <div class="review-content">
+        <div class="review-info-grid">
+          <div class="review-info-item">
+            <span class="review-info-label">Student Name</span>
+            <span class="review-info-value">{{ letter.student.user.get_full_name|default:letter.student.student_id }}</span>
+            <span class="review-info-sub">{{ letter.student.student_id }}</span>
+          </div>
+          <div class="review-info-item">
+            <span class="review-info-label">Violation</span>
+            <span class="review-info-value">{{ letter.violation.get_type_display }} Offense</span>
+            <span class="review-info-sub">{{ letter.violation.description|truncatewords:10 }}</span>
+          </div>
+          <div class="review-info-item">
+            <span class="review-info-label">Submitted Date</span>
+            <span class="review-info-value">{{ letter.submitted_at|date:"F d, Y" }}</span>
+            <span class="review-info-sub">{{ letter.submitted_at|date:"g:i A" }}</span>
+          </div>
+          <div class="review-info-item">
+            <span class="review-info-label">Sent by Staff</span>
+            <span class="review-info-value">{{ letter.sent_to_formator_at|date:"F d, Y" }}</span>
+            <span class="review-info-sub">{{ letter.sent_to_formator_at|date:"g:i A" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-footer">
+        <p><i class="fas fa-info-circle"></i> Review the student's apology letter, then sign to confirm community service completion.</p>
+      </div>
+    </section>
+
+    <!-- Student's Letter -->
+    <section class="official-letter-section">
+      <div class="letter-section-header">
+        <h3 class="letter-section-title"><i class="fas fa-file-alt"></i> STUDENT'S LETTER OF APOLOGY</h3>
+      </div>
+      
+      <div class="letter-template">
+        <div class="letter-header">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" class="letter-logo" alt="CHMSU Logo" />
+          <div class="letter-title-section">
+            <div class="letter-title">LETTER OF APOLOGY</div>
+          </div>
+          <div class="letter-doc-info">
+            <div><strong>Document Code:</strong> F.25-OSAS-CHMSU</div>
+            <div><strong>Revision No.:</strong> 0</div>
+            <div><strong>Effective Date:</strong> September 2, 2024</div>
+            <div><strong>Page:</strong> 1 of 1</div>
+          </div>
+        </div>
+        
+        <div class="letter-body">
+          <p style="margin-bottom: 24px;">
+            Date: <span class="letter-field">{% if letter.letter_date %}{{ letter.letter_date }}{% else %}{{ letter.submitted_at|date:"F d, Y" }}{% endif %}</span>
+          </p>
+          
+          <p style="margin-bottom: 4px;"><strong>The Student Formator</strong></p>
+          <p style="margin-bottom: 16px;">
+            <span class="letter-field">{{ letter.letter_campus|default:letter.student.department|default:"—" }}</span> Campus
+          </p>
+          
+          <p style="margin-bottom: 16px;">SIR/MADAM:</p>
+          
+          <p style="margin-bottom: 16px;">
+            I, <span class="letter-field">{{ letter.letter_full_name|default:letter.student.user.get_full_name|default:"—" }}</span>, from 
+            <span class="letter-field wide">{{ letter.letter_home_address|default:"—" }}</span> (Home Address) of
+            <span class="letter-field wide">{{ letter.letter_program|default:letter.student.program|default:"—" }}</span> (Program, Major, Year & Section)
+          </p>
+          
+          <p style="margin-bottom: 16px;">has violated the Student Code of Conduct.</p>
+          
+          <p style="margin-bottom: 16px;">
+            Specific Violation/s: <span class="letter-field full">{{ letter.letter_violations|default:letter.violation.description }}</span>
+          </p>
+          
+          <p class="letter-paragraph">
+            I sincerely apologize for my recent violation of the university's Rules & Regulations and 
+            understand the importance of adhering to these guidelines in the future. I am committed to 
+            upholding these standards to maintain a positive learning environment.
+          </p>
+          
+          <p class="letter-paragraph">
+            I acknowledge the seriousness of my actions and the potential consequences of further 
+            violations. I assure you that I take this matter seriously and will strive to prevent such incidents 
+            from happening again. Your understanding is appreciated, and I am grateful for the opportunity 
+            to learn and grow from this experience.
+          </p>
+          
+          <p style="margin-top: 32px;">Respectfully yours,</p>
+          
+          <div class="letter-signature">
+            {% if letter.signature_data %}
+            <p style="font-size: 12px; color: #666; margin-bottom: 4px;">Student Signature:</p>
+            <img src="{{ letter.signature_data }}" alt="Student Signature" class="signature-image" />
+            {% else %}
+            <p style="font-size: 12px; color: #999;">(No digital signature)</p>
+            {% endif %}
+            <div style="border-top: 1px solid #000; width: 250px; margin-top: 8px; padding-top: 4px; text-align: center;">
+              <span class="letter-field" style="border-bottom: none;">{{ letter.letter_printed_name|default:letter.student.user.get_full_name|default:"—" }}</span>
+              <div style="font-size: 12px; color: #666;">Signature over printed name</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Formator Signature Form -->
+    <section class="official-form-section">
+      <div class="form-section-header">
+        <h3 class="form-section-title"><i class="fas fa-signature"></i> FORMATOR VERIFICATION</h3>
+      </div>
+      <div class="form-content">
+        <form method="post" enctype="multipart/form-data" id="verifyForm">
+          {% csrf_token %}
+          
+          <!-- Community Service Confirmation -->
+          <div class="form-group">
+            <div class="checkbox-container">
+              <input type="checkbox" name="community_service_completed" id="communityService">
+              <label for="communityService">
+                <i class="fas fa-handshake"></i> I confirm that this student has completed their required community service
+              </label>
+            </div>
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-camera"></i> Community Service Photo Evidence</label>
+            <div class="photo-upload-container" id="uploadArea">
+              <i class="fas fa-camera" style="font-size: 2.5rem; color: #7c3aed; margin-bottom: 12px;"></i>
+              <p style="color: #1f2937; margin-bottom: 12px; font-weight: 600;">
+                Take a photo of the community service evidence
+              </p>
+              
+              <!-- Webcam and Gallery buttons -->
+              <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px;">
+                <button type="button" id="webcamBtn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem;">
+                  <i class="fas fa-video"></i> Use Webcam
+                </button>
+                <button type="button" id="galleryBtn" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; font-size: 1rem;">
+                  <i class="fas fa-images"></i> Choose File
+                </button>
+              </div>
+              
+              <p style="color: #9ca3af; font-size: 0.875rem;">
+                Accepted formats: JPEG, PNG only (Max 5MB)
+              </p>
+              
+              <!-- Hidden file inputs -->
+              <input type="file" name="formator_photo" id="formatorPhoto" accept="image/jpeg,image/png,image/jpg" style="display: none;" />
+              <input type="file" id="galleryInput" accept="image/jpeg,image/png,image/jpg" style="display: none;" />
+            </div>
+            
+            <!-- Webcam Modal -->
+            <div id="webcamModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+              <div style="background: white; border-radius: 12px; padding: 24px; max-width: 700px; width: 95%; text-align: center;">
+                <h3 style="margin-bottom: 16px; color: #1f2937;"><i class="fas fa-camera"></i> Take Photo with Webcam</h3>
+                
+                <div id="webcamStatus" style="margin-bottom: 12px; padding: 10px 16px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <span id="statusText">Initializing camera...</span>
+                </div>
+                
+                <div style="position: relative; margin-bottom: 16px;">
+                  <video id="webcamVideo" autoplay playsinline style="width: 100%; max-height: 400px; border-radius: 8px; background: #000;"></video>
+                  <canvas id="webcamCanvas" style="display: none;"></canvas>
+                </div>
+                <div id="webcamPreview" style="display: none; margin-bottom: 16px;">
+                  <img id="capturedImage" style="width: 100%; max-height: 400px; border-radius: 8px; object-fit: contain;" />
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                  <button type="button" id="captureBtn" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-camera"></i> Capture Photo
+                  </button>
+                  <button type="button" id="retakeBtn" style="display: none; background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; align-items: center; gap: 8px;">
+                    <i class="fas fa-redo"></i> Retake
+                  </button>
+                  <button type="button" id="usePhotoBtn" style="display: none; background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; align-items: center; gap: 8px;">
+                    <i class="fas fa-check"></i> Use This Photo
+                  </button>
+                  <button type="button" id="closeWebcamBtn" style="background: #dc2626; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                </div>
+                <p id="webcamError" style="color: #dc2626; margin-top: 12px; display: none;"></p>
+              </div>
+            </div>
+            
+            <!-- File Preview -->
+            <div class="file-preview" id="filePreview" style="display: none;">
+              <img id="fileThumbnail" src="" alt="Preview" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #e5e7eb;" title="Click to view full size" onclick="openImagePreview()" />
+              <div class="file-info">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+                <button type="button" onclick="openImagePreview()" style="background: none; border: none; color: #7c3aed; cursor: pointer; font-size: 0.875rem; padding: 0; margin-top: 4px; text-decoration: underline;">
+                  <i class="fas fa-eye"></i> Click to review photo
+                </button>
+              </div>
+              <span class="remove-file" id="removeFile" title="Remove file">
+                <i class="fas fa-times-circle fa-lg"></i>
+              </span>
+            </div>
+            
+            <!-- Image Preview Modal -->
+            <div id="imagePreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; cursor: pointer;" onclick="closeImagePreview()">
+              <div style="position: relative; max-width: 90%; max-height: 90%;">
+                <img id="previewImage" src="" alt="Full Preview" style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);" />
+                <p style="text-align: center; color: white; margin-top: 12px; font-size: 0.9rem;">Click anywhere to close</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Signature Pad -->
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-signature"></i> Your Signature (Student Formator)</label>
+            <div class="signature-pad-container">
+              <canvas id="signatureCanvas"></canvas>
+              <input type="hidden" name="formator_signature" id="formatorSignature">
+              <div class="signature-actions">
+                <button type="button" class="btn-clear-sig" onclick="clearSignature()">
+                  <i class="fas fa-eraser"></i> Clear Signature
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div class="form-group">
+            <label class="form-label">Remarks / Notes (Optional)</label>
+            <textarea name="formator_remarks" rows="3" class="form-textarea" 
+                      placeholder="Add any notes or remarks about the student's community service..."></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button type="submit" name="action" value="sign" class="btn-sign">
+              <i class="fas fa-check-circle"></i> Sign & Confirm
+            </button>
+            <button type="submit" name="action" value="reject" class="btn-reject">
+              <i class="fas fa-times-circle"></i> Reject
+            </button>
+            <a href="{% url 'violations:formator_dashboard' %}" class="btn-cancel">
+              <i class="fas fa-arrow-left"></i> Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== WEBCAM & FILE UPLOAD FUNCTIONALITY =====
+    const uploadArea = document.getElementById('uploadArea');
+    const formatorPhoto = document.getElementById('formatorPhoto');
+    const galleryInput = document.getElementById('galleryInput');
+    const galleryBtn = document.getElementById('galleryBtn');
+    const webcamBtn = document.getElementById('webcamBtn');
+    const webcamModal = document.getElementById('webcamModal');
+    const webcamVideo = document.getElementById('webcamVideo');
+    const webcamCanvas = document.getElementById('webcamCanvas');
+    const capturedImage = document.getElementById('capturedImage');
+    const webcamPreview = document.getElementById('webcamPreview');
+    const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const usePhotoBtn = document.getElementById('usePhotoBtn');
+    const closeWebcamBtn = document.getElementById('closeWebcamBtn');
+    const webcamError = document.getElementById('webcamError');
+    const webcamStatus = document.getElementById('webcamStatus');
+    const statusText = document.getElementById('statusText');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSizeEl = document.getElementById('fileSize');
+    const removeFile = document.getElementById('removeFile');
+    let webcamStream = null;
+    let capturedBlob = null;
+    let selectedFile = null;
+
+    // Gallery button - opens file picker
+    galleryBtn?.addEventListener('click', () => {
+      galleryInput.click();
+    });
+
+    // Handle gallery input file selection
+    galleryInput?.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+        // Copy file to main input for form submission
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(e.target.files[0]);
+        formatorPhoto.files = dataTransfer.files;
+      }
+    });
+
+    // Open webcam modal
+    webcamBtn?.addEventListener('click', async () => {
+      webcamModal.style.display = 'flex';
+      webcamPreview.style.display = 'none';
+      webcamVideo.style.display = 'block';
+      captureBtn.style.display = 'inline-flex';
+      retakeBtn.style.display = 'none';
+      usePhotoBtn.style.display = 'none';
+      webcamError.style.display = 'none';
+      
+      webcamStatus.style.background = '#f3f4f6';
+      webcamStatus.style.color = '#374151';
+      statusText.textContent = 'Initializing camera...';
+      
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }, 
+          audio: false 
+        });
+        webcamVideo.srcObject = webcamStream;
+        
+        webcamVideo.onloadedmetadata = () => {
+          statusText.textContent = 'Camera ready. Position the document and capture.';
+          webcamStatus.style.background = '#d1fae5';
+          webcamStatus.style.color = '#059669';
+        };
+      } catch (err) {
+        console.error('Webcam error:', err);
+        webcamError.textContent = 'Could not access camera. Please check permissions or use "Choose File" instead.';
+        webcamError.style.display = 'block';
+        statusText.textContent = 'Camera access denied';
+        webcamStatus.style.background = '#fee2e2';
+        webcamStatus.style.color = '#dc2626';
+      }
+    });
+
+    // Capture photo from webcam
+    captureBtn?.addEventListener('click', () => {
+      if (!webcamStream) return;
+      
+      webcamCanvas.width = webcamVideo.videoWidth;
+      webcamCanvas.height = webcamVideo.videoHeight;
+      const ctx = webcamCanvas.getContext('2d');
+      ctx.drawImage(webcamVideo, 0, 0);
+      
+      // Convert to blob
+      webcamCanvas.toBlob((blob) => {
+        capturedBlob = blob;
+        capturedImage.src = URL.createObjectURL(blob);
+        
+        // Show preview, hide video
+        webcamVideo.style.display = 'none';
+        webcamPreview.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-flex';
+        usePhotoBtn.style.display = 'inline-flex';
+        
+        statusText.innerHTML = '<i class="fas fa-check-circle"></i> Photo captured! Review and use or retake.';
+        webcamStatus.style.background = '#d1fae5';
+        webcamStatus.style.color = '#059669';
+      }, 'image/jpeg', 0.9);
+    });
+
+    // Retake photo
+    retakeBtn?.addEventListener('click', () => {
+      webcamPreview.style.display = 'none';
+      webcamVideo.style.display = 'block';
+      captureBtn.style.display = 'inline-flex';
+      retakeBtn.style.display = 'none';
+      usePhotoBtn.style.display = 'none';
+      capturedBlob = null;
+      
+      statusText.textContent = 'Camera ready. Position the document and capture.';
+      webcamStatus.style.background = '#d1fae5';
+      webcamStatus.style.color = '#059669';
+    });
+
+    // Use captured photo
+    usePhotoBtn?.addEventListener('click', () => {
+      if (!capturedBlob) return;
+      
+      // Create a file from the blob
+      const file = new File([capturedBlob], 'community_service_' + Date.now() + '.jpg', { type: 'image/jpeg' });
+      
+      // Handle the file
+      handleFile(file);
+      
+      // Set the file to the input
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      formatorPhoto.files = dataTransfer.files;
+      
+      // Close modal and stop webcam
+      closeWebcam();
+    });
+
+    // Close webcam modal
+    closeWebcamBtn?.addEventListener('click', closeWebcam);
+
+    function closeWebcam() {
+      webcamModal.style.display = 'none';
+      
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+        webcamStream = null;
+      }
+      capturedBlob = null;
+    }
+
+    // Close modal when clicking outside
+    webcamModal?.addEventListener('click', (e) => {
+      if (e.target === webcamModal) {
+        closeWebcam();
+      }
+    });
+
+    // Handle file
+    function handleFile(file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload an image file (JPEG or PNG only).');
+        return;
+      }
+
+      if (file.size > maxSize) {
+        alert('File size must be less than 5MB.');
+        return;
+      }
+
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSizeEl.textContent = formatFileSize(file.size);
+      uploadArea.style.display = 'none';
+      filePreview.style.display = 'flex';
+      
+      // Set thumbnail preview
+      const thumbnail = document.getElementById('fileThumbnail');
+      const previewImg = document.getElementById('previewImage');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        thumbnail.src = e.target.result;
+        previewImg.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' bytes';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // Remove file
+    removeFile?.addEventListener('click', () => {
+      selectedFile = null;
+      formatorPhoto.value = '';
+      galleryInput.value = '';
+      uploadArea.style.display = 'block';
+      filePreview.style.display = 'none';
+    });
+
+    // Image preview modal functions
+    function openImagePreview() {
+      const modal = document.getElementById('imagePreviewModal');
+      modal.style.display = 'flex';
+    }
+
+    function closeImagePreview() {
+      const modal = document.getElementById('imagePreviewModal');
+      modal.style.display = 'none';
+    }
+
+    // ===== SIGNATURE PAD =====
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    // Set canvas size
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width - 32;
+      canvas.height = 200;
+      ctx.strokeStyle = '#1a472a';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Drawing functions
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      lastX = x;
+      lastY = y;
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      
+      lastX = x;
+      lastY = y;
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+      // Save signature data
+      document.getElementById('formatorSignature').value = canvas.toDataURL('image/png');
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // Touch events
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('formatorSignature').value = '';
+    }
+
+    // Form validation
+    document.getElementById('verifyForm').addEventListener('submit', function(e) {
+      const action = e.submitter.value;
+      
+      if (action === 'sign') {
+        const signature = document.getElementById('formatorSignature').value;
+        if (!signature) {
+          e.preventDefault();
+          alert('Please provide your signature before signing.');
+          return;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

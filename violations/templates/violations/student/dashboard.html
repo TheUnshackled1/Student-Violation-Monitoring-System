@@ -508,6 +508,9 @@
             <aside class="official-profile-section">
                 <div class="profile-title-bar">
                     <h2 class="profile-title"><i class="fas fa-user"></i> STUDENT INFORMATION</h2>
+                    <button type="button" class="profile-edit-btn" id="editProfileBtn" title="Edit Profile">
+                        <i class="fas fa-edit"></i>
+                    </button>
                 </div>
                 
                 <div class="profile-content">
@@ -631,7 +634,7 @@
                                 data-status-raw="{{ v.status }}"
                                 data-apology-status="{% if latest_apology %}{{ latest_apology.status }}{% endif %}"
                                 data-apology-id="{% if latest_apology %}{{ latest_apology.id }}{% endif %}"
-                                data-apology-date="{% if latest_apology %}{{ latest_apology.letter_date|default:latest_apology.submitted_at|date:'F d, Y' }}{% endif %}"
+                                data-apology-date="{% if latest_apology %}{% if latest_apology.letter_date %}{{ latest_apology.letter_date }}{% else %}{{ latest_apology.submitted_at|date:'F d, Y' }}{% endif %}{% endif %}"
                                 data-apology-campus="{% if latest_apology %}{{ latest_apology.letter_campus }}{% endif %}"
                                 data-apology-fullname="{% if latest_apology %}{{ latest_apology.letter_full_name }}{% endif %}"
                                 data-apology-address="{% if latest_apology %}{{ latest_apology.letter_home_address }}{% endif %}"
@@ -643,7 +646,7 @@
                                 data-incident-date="{{ v.incident_at|date:'M d, Y g:i A' }}"
                                 data-location="{{ v.location }}"
                                 data-description="{{ v.description }}"
-                                data-reporter="{{ v.reporter.get_full_name|default:v.reporter.username }}"
+                                data-reporter="{% if v.reported_by_guard %}{{ v.reported_by_guard }}{% elif v.reporter %}{{ v.reporter.get_full_name|default:v.reporter.username }}{% else %}Unknown{% endif %}"
                                 data-witness="{{ v.witness_statement|default:'' }}"
                                 data-evidence="{% if v.evidence_file %}{{ v.evidence_file.url }}{% endif %}">
                                 <td class="col-seq">{{ forloop.counter }}</td>
@@ -678,7 +681,7 @@
                                         <span class="status-badge-table">{{ v.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="col-reporter">{{ v.reporter.get_full_name|default:v.reporter.username }}</td>
+                                <td class="col-reporter">{% if v.reported_by_guard %}{{ v.reported_by_guard }}{% elif v.reporter %}{{ v.reporter.get_full_name|default:v.reporter.username }}{% else %}Unknown{% endif %}</td>
                                 <td class="col-action">
                                     <button class="view-violation-btn btn-view-official">
                                         <i class="fas fa-eye"></i> View
@@ -1223,6 +1226,140 @@
             color: #9ca3af;
             margin: 0;
             text-align: center;
+        }
+
+        /* Profile Edit Button */
+        .profile-title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .profile-edit-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .profile-edit-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        /* Edit Profile Modal Styles */
+        .edit-profile-photo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .current-photo-preview {
+            flex-shrink: 0;
+        }
+
+        .current-photo-preview img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1a472a;
+        }
+
+        .current-photo-preview .photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .photo-upload-controls {
+            flex: 1;
+        }
+
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+            color: #fff !important;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #15392a 0%, #1a472a 100%);
+            transform: translateY(-1px);
+        }
+
+        .photo-hint {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            color: #6b7280;
+            margin: 8px 0 0 0;
+        }
+
+        .edit-form-group {
+            margin-bottom: 16px;
+        }
+
+        .edit-form-group label {
+            display: block;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .edit-form-group label i {
+            color: #1a472a;
+            margin-right: 6px;
+            width: 16px;
+        }
+
+        .edit-form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            color: #374151;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .edit-form-input:focus {
+            outline: none;
+            border-color: #1a472a;
+            box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+        }
+
+        .edit-form-input::placeholder {
+            color: #9ca3af;
         }
 
         /* Official Violations Section */
@@ -1770,6 +1907,69 @@
                     <i class="fas fa-times"></i> Close
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal" id="editProfileModal" aria-hidden="true">
+        <div class="modal-card" style="max-width:500px;">
+            <div class="modal-header" style="background:linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%); color:#fff;">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <button class="icon-btn" id="editProfileClose" style="color:#fff;"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="editProfileForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body" style="max-height:60vh; overflow-y:auto;">
+                    <!-- Profile Photo Upload -->
+                    <div class="edit-profile-photo-section">
+                        <div class="current-photo-preview">
+                            {% if student and student.profile_image %}
+                                <img src="{{ student.profile_image.url }}" alt="Current Photo" id="profilePhotoPreview" />
+                            {% else %}
+                                <div class="photo-placeholder" id="profilePhotoPreview">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="photo-upload-controls">
+                            <label for="profilePhotoInput" class="upload-btn">
+                                <i class="fas fa-camera"></i> Change Photo
+                            </label>
+                            <input type="file" id="profilePhotoInput" name="profile_image" accept="image/*" style="display:none;" />
+                            <p class="photo-hint">Max 5MB. JPG, PNG only.</p>
+                        </div>
+                    </div>
+
+                    <!-- Editable Fields -->
+                    <div class="edit-form-group">
+                        <label for="editContact"><i class="fas fa-phone"></i> Contact Number</label>
+                        <input type="tel" id="editContact" name="contact_number" value="{{ student.contact_number|default:'' }}" placeholder="e.g., 09123456789" class="edit-form-input" />
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label for="editGuardianName"><i class="fas fa-user-shield"></i> Guardian Name</label>
+                        <input type="text" id="editGuardianName" name="guardian_name" value="{{ student.guardian_name|default:'' }}" placeholder="Guardian's full name" class="edit-form-input" />
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label for="editGuardianContact"><i class="fas fa-phone-alt"></i> Guardian Contact</label>
+                        <input type="tel" id="editGuardianContact" name="guardian_contact" value="{{ student.guardian_contact|default:'' }}" placeholder="Guardian's phone number" class="edit-form-input" />
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label for="editEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" id="editEmail" name="email" value="{{ request.user.email|default:'' }}" placeholder="your.email@example.com" class="edit-form-input" />
+                    </div>
+                </div>
+                <div class="modal-actions" style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="login-button" id="editProfileCancelBtn" style="background:linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="login-button" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -2715,12 +2915,125 @@
             });
         }
 
+        // Edit Profile Modal
+        const editProfileModal = document.getElementById('editProfileModal');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const editProfileClose = document.getElementById('editProfileClose');
+        const editProfileCancelBtn = document.getElementById('editProfileCancelBtn');
+        const editProfileForm = document.getElementById('editProfileForm');
+        const profilePhotoInput = document.getElementById('profilePhotoInput');
+
+        function openEditProfileModal() {
+            editProfileModal?.classList.add('show');
+        }
+
+        function closeEditProfileModal() {
+            editProfileModal?.classList.remove('show');
+        }
+
+        if(editProfileBtn) {
+            editProfileBtn.addEventListener('click', openEditProfileModal);
+        }
+        if(editProfileClose) {
+            editProfileClose.addEventListener('click', closeEditProfileModal);
+        }
+        if(editProfileCancelBtn) {
+            editProfileCancelBtn.addEventListener('click', closeEditProfileModal);
+        }
+
+        // Close modal on overlay click
+        if(editProfileModal) {
+            editProfileModal.addEventListener('click', (e) => {
+                if(e.target === editProfileModal) {
+                    closeEditProfileModal();
+                }
+            });
+        }
+
+        // Profile photo preview
+        if(profilePhotoInput) {
+            profilePhotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if(file) {
+                    // Validate file size (5MB max)
+                    if(file.size > 5 * 1024 * 1024) {
+                        alert('File size must be less than 5MB');
+                        this.value = '';
+                        return;
+                    }
+                    // Validate file type
+                    if(!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+                        alert('Only JPG and PNG files are allowed');
+                        this.value = '';
+                        return;
+                    }
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.getElementById('profilePhotoPreview');
+                        if(preview.tagName === 'IMG') {
+                            preview.src = e.target.result;
+                        } else {
+                            // Replace placeholder with image
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = 'Preview';
+                            img.id = 'profilePhotoPreview';
+                            preview.parentNode.replaceChild(img, preview);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Edit Profile Form Submit
+        if(editProfileForm) {
+            editProfileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                
+                fetch("{% url 'violations:student_update_profile' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Profile updated successfully!');
+                        closeEditProfileModal();
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Error updating profile');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Error updating profile. Please try again.');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            });
+        }
+
         // Close panels/modals on Escape key
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Escape') {
                 profileDropdown?.classList.remove('show');
                 notifPanel?.classList.remove('show');
                 trashPanel?.classList.remove('show');
+                closeEditProfileModal();
             }
         });
     })();

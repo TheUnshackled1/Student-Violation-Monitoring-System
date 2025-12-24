@@ -101,13 +101,13 @@
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon stat-icon-alert">
-            <i class="fas fa-users"></i>
+          <div class="stat-icon stat-icon-resolved">
+            <i class="fas fa-check-circle"></i>
           </div>
           <div class="stat-content">
-            <span class="stat-label">Total Students</span>
-            <span class="stat-value">{{ total_students }}</span>
-            <span class="stat-desc">In the system</span>
+            <span class="stat-label">Cases Resolved</span>
+            <span class="stat-value">{{ resolved_reports }}</span>
+            <span class="stat-desc">Successfully resolved</span>
           </div>
         </div>
       </div>
@@ -179,6 +179,78 @@
       </div>
     </section>
 
+    <!-- Activity Log Section - All Students Caught -->
+    <section class="official-directory-section activity-log-section" style="margin-top:20px;">
+      <div class="directory-title-bar activity-bar">
+        <h2 class="directory-title"><i class="fas fa-history"></i> YOUR ACTIVITY LOG</h2>
+        <p class="directory-subtitle">{{ activity_log_count }} student{{ activity_log_count|pluralize }} caught with violation{{ activity_log_count|pluralize }}</p>
+      </div>
+
+      <div class="directory-table-wrapper">
+        <table class="directory-table">
+          <thead>
+            <tr>
+              <th class="col-seq">#</th>
+              <th class="col-date">Date Reported</th>
+              <th class="col-student">Student Caught</th>
+              <th class="col-type">Violation Type</th>
+              <th class="col-location">Location</th>
+              <th class="col-status">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in activity_log %}
+            <tr class="activity-row">
+              <td class="col-seq">{{ forloop.counter }}</td>
+              <td class="col-date">
+                {{ v.created_at|date:"M d, Y" }}
+                <div class="time-sub">{{ v.created_at|date:"g:i A" }}</div>
+              </td>
+              <td class="col-student">
+                <span class="student-name">{{ v.student.user.get_full_name|default:v.student.student_id }}</span>
+                <div class="student-id-sub">{{ v.student.student_id }}</div>
+                <div class="program-sub">{{ v.student.program|default:"" }} {% if v.student.year_level %}• Year {{ v.student.year_level }}{% endif %}</div>
+              </td>
+              <td class="col-type">
+                {% if v.violation_type %}
+                  <span class="type-badge type-{{ v.violation_type.severity|default:'minor' }}">{{ v.violation_type.name }}</span>
+                {% else %}
+                  <span class="type-badge type-{{ v.type }}">{{ v.get_type_display|default:"General" }}</span>
+                {% endif %}
+              </td>
+              <td class="col-location">
+                <span class="location-text">{{ v.location|default:"N/A"|truncatewords:4 }}</span>
+              </td>
+              <td class="col-status">
+                {% if v.status == 'resolved' %}
+                  <span class="status-badge status-resolved"><i class="fas fa-check"></i> Resolved</span>
+                {% elif v.status == 'dismissed' %}
+                  <span class="status-badge status-dismissed"><i class="fas fa-ban"></i> Dismissed</span>
+                {% elif v.status == 'under_review' %}
+                  <span class="status-badge status-review"><i class="fas fa-search"></i> Under Review</span>
+                {% else %}
+                  <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pending</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="empty-state">
+                <i class="fas fa-history" style="color: #9ca3af;"></i>
+                <p>No Activity Log Yet</p>
+                <span>Students you catch with violations will appear here</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="directory-footer">
+        <p><i class="fas fa-info-circle"></i> This is your complete activity log showing all students you have caught with violations.</p>
+      </div>
+    </section>
+
     <!-- Quick Actions -->
     <section class="guard-quick-actions" style="margin-top:20px; margin-bottom: 40px;">
       <div class="action-card" onclick="openReportModal()">
@@ -195,54 +267,271 @@
 
   <!-- Report Incident Modal -->
   <div id="reportModal" class="modal-overlay" style="display:none;">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3><i class="fas fa-clipboard-list"></i> Report New Incident</h3>
-        <button type="button" class="modal-close" onclick="closeReportModal()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <form id="reportForm" class="modal-body">
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="report_student_id"><i class="fas fa-id-card"></i> Student ID *</label>
-          <input type="text" id="report_student_id" name="student_id" placeholder="Enter Student ID (e.g., 2023-0001)" required>
+    <div class="modal-container official-form-card">
+      <!-- Official Form Header -->
+      <div class="form-header">
+        <div class="form-header-logo">
+          <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
         </div>
-        <div class="form-group">
-          <label for="report_violation_type"><i class="fas fa-exclamation-triangle"></i> Violation Type</label>
-          <select id="report_violation_type" name="violation_type">
-            <option value="">-- Select Violation Type --</option>
-          </select>
+        <div class="form-header-text">
+          <h1>Carlos Hilado Memorial State University</h1>
+          <h2>Office of Student Affairs</h2>
+          <h3>Incident Report Form</h3>
         </div>
-        <div class="form-group">
-          <label for="report_severity"><i class="fas fa-layer-group"></i> Severity *</label>
-          <select id="report_severity" name="severity" required>
-            <option value="minor">Minor</option>
-            <option value="major">Major</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="report_location"><i class="fas fa-map-marker-alt"></i> Location *</label>
-          <input type="text" id="report_location" name="location" placeholder="Where did the incident occur?" required>
-        </div>
-        <div class="form-group">
-          <label for="report_description"><i class="fas fa-align-left"></i> Description *</label>
-          <textarea id="report_description" name="description" rows="4" placeholder="Describe the incident in detail..." required></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" onclick="closeReportModal()">Cancel</button>
-          <button type="submit" class="btn-submit">
-            <i class="fas fa-paper-plane"></i> Submit Report
+        <div class="form-header-meta">
+          <span class="form-date">Date: <strong>{% now "F d, Y" %}</strong></span>
+          <span class="form-guard">Guard: <strong>{{ guard_code }}</strong></span>
+          <button type="button" class="modal-close-btn" onclick="closeReportModal()">
+            <i class="fas fa-times"></i>
           </button>
         </div>
+      </div>
+
+      <form id="reportForm" class="official-form">
+        {% csrf_token %}
+
+        <!-- Section A: Student Information -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-user-graduate"></i> Section A: Student Information</legend>
+          
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Student ID Number <span class="required">*</span></label>
+              <div class="student-id-input-wrapper">
+                <input type="text" id="report_student_id" name="student_id" required 
+                       placeholder="Enter Student ID (e.g., 2024-00001)" 
+                       class="form-input">
+                <button type="button" id="checkStudentBtn" class="check-student-btn" onclick="checkStudent()">
+                  <i class="fas fa-search"></i> Verify
+                </button>
+              </div>
+              <span class="field-hint"><i class="fas fa-info-circle"></i> Enter the student ID and click Verify to check if student exists</span>
+              
+              <!-- Student Status Indicator -->
+              <div id="studentStatusIndicator" class="student-status-indicator" style="display: none;">
+                <!-- Will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+
+          <!-- New Student Registration Fields (shown when student not found) -->
+          <div id="newStudentFields" class="new-student-fields" style="display: none;">
+            <div class="new-student-notice">
+              <i class="fas fa-user-plus"></i>
+              <span>Student not found in database. Please provide the following information to register:</span>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-field">
+                <label class="field-label">First Name <span class="required">*</span></label>
+                <input type="text" id="student_first_name" name="first_name" 
+                       placeholder="Enter First Name" 
+                       class="form-input">
+              </div>
+              <div class="form-field">
+                <label class="field-label">Last Name <span class="required">*</span></label>
+                <input type="text" id="student_last_name" name="last_name" 
+                       placeholder="Enter Last Name" 
+                       class="form-input">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-field">
+                <label class="field-label">Program/Course</label>
+                <select id="student_program" name="program" class="form-input form-select">
+                  <option value="">— Select Program —</option>
+                  <option value="BSIT">BSIT - Information Technology</option>
+                  <option value="BSCS">BSCS - Computer Science</option>
+                  <option value="BSIS">BSIS - Information Systems</option>
+                  <option value="BSA">BSA - Accountancy</option>
+                  <option value="BSBA">BSBA - Business Administration</option>
+                  <option value="BSEd">BSEd - Secondary Education</option>
+                  <option value="BEEd">BEEd - Elementary Education</option>
+                  <option value="BSCE">BSCE - Civil Engineering</option>
+                  <option value="BSEE">BSEE - Electrical Engineering</option>
+                  <option value="BSME">BSME - Mechanical Engineering</option>
+                  <option value="BSN">BSN - Nursing</option>
+                  <option value="BSCRIM">BSCRIM - Criminology</option>
+                  <option value="Other">Other Program</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label class="field-label">Year Level</label>
+                <select id="student_year_level" name="year_level" class="form-input form-select">
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                  <option value="5">5th Year</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="new-student-note">
+              <i class="fas fa-info-circle"></i>
+              <span>A student account will be created with the Student ID as the default password.</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section B: Incident Details -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-clipboard-list"></i> Section B: Incident Details</legend>
+          
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">Violation Category <span class="required">*</span></label>
+              <select name="type" id="violation-category" class="form-input form-select">
+                <option value="" disabled selected>— Select Category —</option>
+                <option value="minor" style="color: #d97706; font-weight: 600;">Minor Offense</option>
+                <option value="major" style="color: #dc2626; font-weight: 600;">Major Offense</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="field-label">Specific Violation <span class="required">*</span></label>
+              <select name="violation_type_id" id="violation-type" class="form-input form-select">
+                <option value="" disabled selected>— Select Violation —</option>
+                {% for vt in violation_types %}
+                <option value="{{ vt.id }}" 
+                        data-category="{{ vt.category }}"
+                        style="color: {% if vt.category == 'major' %}#dc2626{% else %}#d97706{% endif %}; font-weight: 500;">
+                  {% if vt.category == 'major' %}MO:{% else %}MiO:{% endif %} {{ vt.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- Other Violation (if not in list) -->
+          <div class="form-row other-violation-section">
+            <div class="form-field full-width">
+              <label class="field-label">
+                <i class="fas fa-edit"></i> Other Violation - Please Specify The Nature of Violation
+                <span class="field-hint-inline">(Fill this if violation is not in the list above)</span>
+              </label>
+              <input type="text" name="other_violation" id="other-violation"
+                     placeholder="Describe the specific nature of the violation..."
+                     class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-row other-violation-category" id="other-category-row" style="display: none;">
+            <div class="form-field full-width">
+              <label class="field-label">Category for Other Violation <span class="required">*</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-label major-checkbox">
+                  <input type="radio" name="other_category" value="major" id="other-major">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text" style="color: #dc2626; font-weight: 600;">
+                    <i class="fas fa-exclamation-triangle"></i> Major Offense
+                  </span>
+                </label>
+                <label class="checkbox-label minor-checkbox">
+                  <input type="radio" name="other_category" value="minor" id="other-minor">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text" style="color: #d97706; font-weight: 600;">
+                    <i class="fas fa-exclamation-circle"></i> Minor Offense
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Location of Incident <span class="required">*</span></label>
+              <input type="text" id="report_location" name="location" required
+                     placeholder="e.g., CHMSU Main Gate, Canteen, Library Building"
+                     class="form-input">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Section C: Incident Description -->
+        <fieldset class="form-section">
+          <legend><i class="fas fa-file-alt"></i> Section C: Detailed Description</legend>
+          
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label">Nature of Violation / Incident Narrative <span class="required">*</span></label>
+              <textarea id="report_description" name="description" required rows="5" 
+                        placeholder="Provide a detailed and objective account of the incident. Include:&#10;• Specific behavior or action observed&#10;• Circumstances leading to the incident&#10;• Any immediate actions taken"
+                        class="form-input form-textarea"></textarea>
+              <span class="field-hint"><i class="fas fa-info-circle"></i> Please provide complete and accurate information for proper assessment</span>
+            </div>
+          </div>
+
+          <!-- Camera Capture for Proof -->
+          <div class="form-row">
+            <div class="form-field full-width">
+              <label class="field-label"><i class="fas fa-camera"></i> Capture Proof of Violation</label>
+              <div class="camera-capture-container">
+                <div class="camera-preview-wrapper">
+                  <video id="cameraPreview" class="camera-preview" autoplay playsinline style="display:none;"></video>
+                  <canvas id="cameraCanvas" class="camera-canvas" style="display:none;"></canvas>
+                  <div id="capturedImagePreview" class="captured-image-preview" style="display:none;">
+                    <img id="capturedImage" alt="Captured proof" />
+                  </div>
+                  <div id="cameraPlaceholder" class="camera-placeholder">
+                    <i class="fas fa-camera"></i>
+                    <span>Click "Start Camera" to capture proof</span>
+                  </div>
+                </div>
+                <div class="camera-controls">
+                  <button type="button" id="startCameraBtn" class="btn btn-secondary" onclick="startCamera()">
+                    <i class="fas fa-video"></i> Start Camera
+                  </button>
+                  <button type="button" id="captureBtn" class="btn btn-primary" onclick="capturePhoto()" style="display:none;">
+                    <i class="fas fa-camera"></i> Capture Photo
+                  </button>
+                  <button type="button" id="retakeBtn" class="btn btn-warning" onclick="retakePhoto()" style="display:none;">
+                    <i class="fas fa-redo"></i> Retake
+                  </button>
+                  <button type="button" id="stopCameraBtn" class="btn btn-secondary" onclick="stopCamera()" style="display:none;">
+                    <i class="fas fa-stop"></i> Stop Camera
+                  </button>
+                </div>
+                <input type="hidden" id="violationProofImage" name="proof_image" />
+              </div>
+              <span class="field-hint"><i class="fas fa-info-circle"></i> Optional: Capture a photo as evidence of the violation</span>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <div class="form-notice">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Fields marked with <span class="required">*</span> are mandatory. Please ensure all information provided is accurate and complete.</span>
+          </div>
+          <div class="action-buttons">
+            <button type="button" class="btn btn-secondary" onclick="closeReportModal()">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-paper-plane"></i> Submit Report
+            </button>
+          </div>
+        </div>
       </form>
+
+      <!-- Form Footer -->
+      <div class="form-footer">
+        <p>This is an official document of the Office of Student Affairs. Unauthorized modification is strictly prohibited.</p>
+        <p class="form-footer-meta">Security Guard Incident Report | CHMSU-OSA-SGIR</p>
+      </div>
+
+      <!-- Success State -->
       <div id="reportSuccess" class="modal-success" style="display:none;">
         <div class="success-icon">
           <i class="fas fa-check-circle"></i>
         </div>
         <h4>Report Submitted Successfully!</h4>
         <p id="successMessage"></p>
-        <button type="button" class="btn-close-success" onclick="closeReportModal(); location.reload();">Close</button>
+        <button type="button" class="btn btn-primary" onclick="closeReportModal(); location.reload();">
+          <i class="fas fa-check"></i> Close
+        </button>
       </div>
     </div>
   </div>
@@ -258,53 +547,468 @@
     updateClock();
     setInterval(updateClock, 1000);
 
+    // Store all violation types
+    let allViolationTypes = [];
+    
+    // Track student verification status
+    let studentVerified = false;
+    let studentExists = false;
+
     // Modal functions
     function openReportModal() {
       document.getElementById('reportModal').style.display = 'flex';
       document.getElementById('reportForm').style.display = 'block';
+      document.querySelector('.form-footer').style.display = 'block';
       document.getElementById('reportSuccess').style.display = 'none';
-      loadViolationTypes();
+      // Reset form
+      document.getElementById('reportForm').reset();
+      document.getElementById('other-category-row').style.display = 'none';
+      document.getElementById('violation-category').style.color = '';
+      document.getElementById('violation-category').style.fontWeight = '';
+      document.getElementById('violation-type').style.color = '';
+      document.getElementById('violation-type').style.fontWeight = '';
+      // Reset student verification
+      studentVerified = false;
+      studentExists = false;
+      document.getElementById('newStudentFields').style.display = 'none';
+      document.getElementById('studentStatusIndicator').style.display = 'none';
+      // Reset violation type dropdown to show all options
+      resetViolationTypeDropdown();
+    }
+
+    // Reset violation type dropdown to show all options
+    function resetViolationTypeDropdown() {
+      const violationSelect = document.getElementById('violation-type');
+      violationSelect.innerHTML = '<option value="" disabled selected>— Select Violation —</option>';
+      allViolationTypes.forEach(vt => {
+        const option = document.createElement('option');
+        option.value = vt.id;
+        const prefix = vt.category === 'major' ? 'MO:' : 'MiO:';
+        option.textContent = prefix + ' ' + vt.name;
+        option.dataset.category = vt.category;
+        if (vt.category === 'major') {
+          option.style.color = '#dc2626';
+          option.style.fontWeight = '500';
+        } else {
+          option.style.color = '#d97706';
+          option.style.fontWeight = '500';
+        }
+        violationSelect.appendChild(option);
+      });
     }
 
     function closeReportModal() {
       document.getElementById('reportModal').style.display = 'none';
       document.getElementById('reportForm').reset();
+      document.getElementById('other-category-row').style.display = 'none';
+      document.getElementById('newStudentFields').style.display = 'none';
+      document.getElementById('studentStatusIndicator').style.display = 'none';
+      studentVerified = false;
+      studentExists = false;
+      // Reset camera state
+      stopCamera();
+      resetCameraUI();
     }
 
-    // Load violation types for dropdown
-    function loadViolationTypes() {
-      fetch("{% url 'violations:guard_report_incident' %}")
+    // Camera functionality for capturing proof
+    let cameraStream = null;
+
+    function startCamera() {
+      const video = document.getElementById('cameraPreview');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      const startBtn = document.getElementById('startCameraBtn');
+      const captureBtn = document.getElementById('captureBtn');
+      const stopBtn = document.getElementById('stopCameraBtn');
+
+      navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      })
+      .then(function(stream) {
+        cameraStream = stream;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        startBtn.style.display = 'none';
+        captureBtn.style.display = 'inline-flex';
+        stopBtn.style.display = 'inline-flex';
+      })
+      .catch(function(err) {
+        console.error('Camera error:', err);
+        alert('Unable to access camera. Please ensure camera permissions are granted.');
+      });
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      const video = document.getElementById('cameraPreview');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      const startBtn = document.getElementById('startCameraBtn');
+      const captureBtn = document.getElementById('captureBtn');
+      const stopBtn = document.getElementById('stopCameraBtn');
+      const retakeBtn = document.getElementById('retakeBtn');
+
+      video.style.display = 'none';
+      video.srcObject = null;
+      placeholder.style.display = 'flex';
+      startBtn.style.display = 'inline-flex';
+      captureBtn.style.display = 'none';
+      stopBtn.style.display = 'none';
+      retakeBtn.style.display = 'none';
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById('cameraPreview');
+      const canvas = document.getElementById('cameraCanvas');
+      const capturedImage = document.getElementById('capturedImage');
+      const capturedPreview = document.getElementById('capturedImagePreview');
+      const proofInput = document.getElementById('violationProofImage');
+      const captureBtn = document.getElementById('captureBtn');
+      const stopBtn = document.getElementById('stopCameraBtn');
+      const retakeBtn = document.getElementById('retakeBtn');
+
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw video frame to canvas
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert to base64 image
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      proofInput.value = imageData;
+
+      // Show captured image preview
+      capturedImage.src = imageData;
+      capturedPreview.style.display = 'block';
+      video.style.display = 'none';
+
+      // Stop the camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+
+      // Update buttons
+      captureBtn.style.display = 'none';
+      stopBtn.style.display = 'none';
+      retakeBtn.style.display = 'inline-flex';
+    }
+
+    function retakePhoto() {
+      const capturedPreview = document.getElementById('capturedImagePreview');
+      const proofInput = document.getElementById('violationProofImage');
+      const retakeBtn = document.getElementById('retakeBtn');
+
+      // Clear captured image
+      capturedPreview.style.display = 'none';
+      proofInput.value = '';
+      retakeBtn.style.display = 'none';
+
+      // Restart camera
+      startCamera();
+    }
+
+    function resetCameraUI() {
+      const video = document.getElementById('cameraPreview');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      const capturedPreview = document.getElementById('capturedImagePreview');
+      const proofInput = document.getElementById('violationProofImage');
+      const startBtn = document.getElementById('startCameraBtn');
+      const captureBtn = document.getElementById('captureBtn');
+      const stopBtn = document.getElementById('stopCameraBtn');
+      const retakeBtn = document.getElementById('retakeBtn');
+
+      video.style.display = 'none';
+      placeholder.style.display = 'flex';
+      capturedPreview.style.display = 'none';
+      proofInput.value = '';
+      startBtn.style.display = 'inline-flex';
+      captureBtn.style.display = 'none';
+      stopBtn.style.display = 'none';
+      retakeBtn.style.display = 'none';
+    }
+
+    // Check if student exists in database
+    function checkStudent() {
+      const studentId = document.getElementById('report_student_id').value.trim();
+      const statusIndicator = document.getElementById('studentStatusIndicator');
+      const newStudentFields = document.getElementById('newStudentFields');
+      const checkBtn = document.getElementById('checkStudentBtn');
+      
+      if (!studentId) {
+        alert('Please enter a Student ID first.');
+        return;
+      }
+      
+      // Show loading state
+      checkBtn.disabled = true;
+      checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+      
+      fetch(`{% url 'violations:guard_report_incident' %}?check_student=${encodeURIComponent(studentId)}`)
         .then(response => response.json())
         .then(data => {
-          const select = document.getElementById('report_violation_type');
-          select.innerHTML = '<option value="">-- Select Violation Type --</option>';
+          studentVerified = true;
           
-          if (data.violation_types) {
-            data.violation_types.forEach(vt => {
-              const option = document.createElement('option');
-              option.value = vt.id;
-              option.textContent = `${vt.name} (${vt.severity})`;
-              option.dataset.severity = vt.severity;
-              select.appendChild(option);
-            });
+          if (data.exists) {
+            // Student found
+            studentExists = true;
+            newStudentFields.style.display = 'none';
+            statusIndicator.style.display = 'block';
+            statusIndicator.className = 'student-status-indicator status-found';
+            statusIndicator.innerHTML = `
+              <i class="fas fa-check-circle"></i>
+              <div class="status-details">
+                <span class="status-title">Student Found</span>
+                <span class="status-info">${data.student_name}</span>
+                <span class="status-sub">${data.program || 'N/A'} • Year ${data.year_level || 'N/A'}</span>
+              </div>
+            `;
+          } else {
+            // Student not found - show registration fields
+            studentExists = false;
+            newStudentFields.style.display = 'block';
+            statusIndicator.style.display = 'block';
+            statusIndicator.className = 'student-status-indicator status-not-found';
+            statusIndicator.innerHTML = `
+              <i class="fas fa-user-plus"></i>
+              <div class="status-details">
+                <span class="status-title">New Student</span>
+                <span class="status-info">Not registered in the system</span>
+                <span class="status-sub">Please fill in the details below to register</span>
+              </div>
+            `;
+            // Focus on first name field
+            document.getElementById('student_first_name').focus();
           }
         })
-        .catch(err => console.error('Error loading violation types:', err));
+        .catch(err => {
+          console.error('Error checking student:', err);
+          statusIndicator.style.display = 'block';
+          statusIndicator.className = 'student-status-indicator status-error';
+          statusIndicator.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <div class="status-details">
+              <span class="status-title">Error</span>
+              <span class="status-info">Could not verify student</span>
+            </div>
+          `;
+        })
+        .finally(() => {
+          checkBtn.disabled = false;
+          checkBtn.innerHTML = '<i class="fas fa-search"></i> Verify';
+        });
     }
 
-    // Auto-update severity when violation type is selected
-    document.getElementById('report_violation_type').addEventListener('change', function() {
-      const selectedOption = this.options[this.selectedIndex];
-      if (selectedOption.dataset.severity) {
-        document.getElementById('report_severity').value = selectedOption.dataset.severity;
+    // Auto-check when student ID changes (with debounce)
+    let checkTimeout;
+    document.getElementById('report_student_id').addEventListener('input', function() {
+      studentVerified = false;
+      studentExists = false;
+      document.getElementById('newStudentFields').style.display = 'none';
+      document.getElementById('studentStatusIndicator').style.display = 'none';
+      
+      // Clear previous timeout
+      clearTimeout(checkTimeout);
+      
+      // Set new timeout for auto-check (after 800ms of no typing)
+      const value = this.value.trim();
+      if (value.length >= 5) { // Only check if at least 5 characters
+        checkTimeout = setTimeout(checkStudent, 800);
       }
     });
+
+    // Store original violation type options from server-rendered HTML
+    function storeViolationTypes() {
+      const violationSelect = document.getElementById('violation-type');
+      const options = violationSelect.querySelectorAll('option[data-category]');
+      allViolationTypes = [];
+      options.forEach(opt => {
+        allViolationTypes.push({
+          id: opt.value,
+          name: opt.textContent.trim(),
+          category: opt.dataset.category
+        });
+      });
+    }
+
+    // Initialize violation types on page load
+    storeViolationTypes();
+
+    // Function to update select color based on category
+    function updateSelectColor(selectElement, category) {
+      if (category === 'major') {
+        selectElement.style.color = '#dc2626';
+        selectElement.style.fontWeight = '600';
+      } else if (category === 'minor') {
+        selectElement.style.color = '#d97706';
+        selectElement.style.fontWeight = '600';
+      } else {
+        selectElement.style.color = '';
+        selectElement.style.fontWeight = '';
+      }
+    }
+
+    // Filter violations by category
+    function filterViolations() {
+      const categorySelect = document.getElementById('violation-category');
+      const violationSelect = document.getElementById('violation-type');
+      const selectedCategory = categorySelect.value;
+      
+      // Reset violation select
+      violationSelect.innerHTML = '<option value="" disabled selected>— Select Violation —</option>';
+      updateSelectColor(violationSelect, null);
+      
+      // Add filtered options from stored violation types
+      allViolationTypes.forEach(vt => {
+        if (!selectedCategory || vt.category === selectedCategory) {
+          const option = document.createElement('option');
+          option.value = vt.id;
+          const prefix = vt.category === 'major' ? 'MO:' : 'MiO:';
+          option.textContent = prefix + ' ' + vt.name;
+          option.dataset.category = vt.category;
+          if (vt.category === 'major') {
+            option.style.color = '#dc2626';
+            option.style.fontWeight = '500';
+          } else {
+            option.style.color = '#d97706';
+            option.style.fontWeight = '500';
+          }
+          violationSelect.appendChild(option);
+        }
+      });
+    }
+
+    // Show/hide other category options based on other violation input
+    function toggleOtherCategory() {
+      const otherViolationInput = document.getElementById('other-violation');
+      const otherCategoryRow = document.getElementById('other-category-row');
+      const categorySelect = document.getElementById('violation-category');
+      const violationSelect = document.getElementById('violation-type');
+      
+      if (otherViolationInput.value.trim() !== '') {
+        otherCategoryRow.style.display = 'block';
+        // Clear the dropdown selections when using other violation
+        categorySelect.value = '';
+        violationSelect.value = '';
+        updateSelectColor(categorySelect, null);
+        updateSelectColor(violationSelect, null);
+      } else {
+        otherCategoryRow.style.display = 'none';
+        document.getElementById('other-major').checked = false;
+        document.getElementById('other-minor').checked = false;
+      }
+    }
+
+    // Clear other violation when dropdown is used
+    function clearOtherViolation() {
+      const violationSelect = document.getElementById('violation-type');
+      const otherViolationInput = document.getElementById('other-violation');
+      const otherCategoryRow = document.getElementById('other-category-row');
+      
+      if (violationSelect.value !== '') {
+        otherViolationInput.value = '';
+        otherCategoryRow.style.display = 'none';
+        document.getElementById('other-major').checked = false;
+        document.getElementById('other-minor').checked = false;
+      }
+    }
+
+    // Category change handler
+    document.getElementById('violation-category').addEventListener('change', function() {
+      updateSelectColor(this, this.value);
+      filterViolations();
+      // Clear other violation when using dropdowns
+      document.getElementById('other-violation').value = '';
+      document.getElementById('other-category-row').style.display = 'none';
+    });
+
+    // Violation type change handler
+    document.getElementById('violation-type').addEventListener('change', function() {
+      const selected = this.options[this.selectedIndex];
+      if (selected && selected.dataset.category) {
+        const categorySelect = document.getElementById('violation-category');
+        categorySelect.value = selected.dataset.category;
+        updateSelectColor(categorySelect, selected.dataset.category);
+        updateSelectColor(this, selected.dataset.category);
+        // Clear other violation when using dropdowns
+        clearOtherViolation();
+      }
+    });
+
+    // Other violation input handler
+    document.getElementById('other-violation').addEventListener('input', toggleOtherCategory);
 
     // Form submission
     document.getElementById('reportForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
+      const categorySelect = document.getElementById('violation-category');
+      const violationSelect = document.getElementById('violation-type');
+      const otherViolationInput = document.getElementById('other-violation');
+      const otherMajorRadio = document.getElementById('other-major');
+      const otherMinorRadio = document.getElementById('other-minor');
+      
+      const hasDropdownSelection = violationSelect.value !== '' && categorySelect.value !== '';
+      const hasOtherViolation = otherViolationInput.value.trim() !== '';
+      const hasOtherCategory = otherMajorRadio.checked || otherMinorRadio.checked;
+      
+      // Check if student verification was done
+      if (!studentVerified) {
+        alert('Please click "Verify" to check if the student exists in the database.');
+        document.getElementById('checkStudentBtn').focus();
+        return false;
+      }
+      
+      // Validation for new student registration
+      if (!studentExists) {
+        const firstName = document.getElementById('student_first_name').value.trim();
+        const lastName = document.getElementById('student_last_name').value.trim();
+        
+        if (!firstName || !lastName) {
+          alert('Please provide First Name and Last Name to register the new student.');
+          if (!firstName) {
+            document.getElementById('student_first_name').focus();
+          } else {
+            document.getElementById('student_last_name').focus();
+          }
+          return false;
+        }
+      }
+      
+      // Violation validation
+      if (!hasDropdownSelection && !hasOtherViolation) {
+        alert('Please either select a Violation Category and Specific Violation, OR fill in the Other Violation field.');
+        return false;
+      }
+      
+      if (hasOtherViolation && !hasOtherCategory) {
+        alert('Please select Major or Minor for the Other Violation.');
+        return false;
+      }
+      
       const formData = new FormData(this);
+      
+      // If using other violation, set the type from radio button
+      if (hasOtherViolation && hasOtherCategory) {
+        const selectedCategory = otherMajorRadio.checked ? 'major' : 'minor';
+        formData.set('severity', selectedCategory);
+        formData.set('description', otherViolationInput.value.trim() + '\n\n' + formData.get('description'));
+      } else {
+        formData.set('severity', categorySelect.value);
+        formData.set('violation_type', violationSelect.value);
+      }
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
       
       fetch("{% url 'violations:guard_report_incident' %}", {
         method: 'POST',
@@ -317,15 +1021,46 @@
       .then(data => {
         if (data.success) {
           document.getElementById('reportForm').style.display = 'none';
+          document.querySelector('.form-footer').style.display = 'none';
           document.getElementById('reportSuccess').style.display = 'block';
-          document.getElementById('successMessage').textContent = data.message;
+          
+          // Show different message based on whether student was created
+          if (data.student_created) {
+            document.getElementById('successMessage').innerHTML = `
+              <strong style="color: #059669;">${data.message}</strong>
+              <br><br>
+              <small style="color: #6b7280;">The student can now log in using their Student ID as password.</small>
+            `;
+          } else {
+            document.getElementById('successMessage').textContent = data.message;
+          }
         } else {
+          // Check if student not found error - prompt to fill details
+          if (data.student_not_found) {
+            document.getElementById('newStudentFields').style.display = 'block';
+            document.getElementById('studentStatusIndicator').style.display = 'block';
+            document.getElementById('studentStatusIndicator').className = 'student-status-indicator status-not-found';
+            document.getElementById('studentStatusIndicator').innerHTML = `
+              <i class="fas fa-user-plus"></i>
+              <div class="status-details">
+                <span class="status-title">New Student</span>
+                <span class="status-info">${data.error}</span>
+              </div>
+            `;
+            studentVerified = true;
+            studentExists = false;
+            document.getElementById('student_first_name').focus();
+          }
           alert(data.error || 'Error submitting report. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Report';
         }
       })
       .catch(err => {
         console.error('Error:', err);
         alert('Error submitting report. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Report';
       });
     });
 
@@ -338,6 +1073,107 @@
   </script>
   
   <style>
+    /* Camera Capture Styles */
+    .camera-capture-container {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .camera-preview-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto 16px;
+      background: #1a472a;
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 280px;
+    }
+
+    .camera-preview {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    .camera-canvas {
+      display: none;
+    }
+
+    .captured-image-preview {
+      width: 100%;
+    }
+
+    .captured-image-preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      color: #94a3b8;
+      gap: 12px;
+    }
+
+    .camera-placeholder i {
+      font-size: 48px;
+      color: #64748b;
+    }
+
+    .camera-placeholder span {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .camera-controls .btn {
+      min-width: 140px;
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      border: none;
+    }
+
+    .btn-warning:hover {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .camera-preview-wrapper {
+        max-width: 100%;
+        min-height: 200px;
+      }
+
+      .camera-placeholder {
+        min-height: 200px;
+      }
+
+      .camera-controls .btn {
+        min-width: 120px;
+        font-size: 12px;
+        padding: 10px 16px;
+      }
+    }
+
     /* Official Top Navigation Styles */
     .official-top-nav {
       position: fixed;
@@ -615,6 +1451,11 @@
 
     .stat-icon-alert {
       background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      color: #ffffff;
+    }
+
+    .stat-icon-resolved {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
       color: #ffffff;
     }
 
@@ -1008,6 +1849,46 @@
       margin-right: 4px;
     }
 
+    /* Activity Log Section */
+    .activity-log-section {
+      border: 2px solid #2563eb;
+    }
+
+    .activity-log-section .activity-bar {
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    }
+
+    .activity-log-section .directory-title {
+      color: #ffffff;
+    }
+
+    .activity-log-section .directory-subtitle {
+      color: rgba(255,255,255,0.9);
+    }
+
+    .activity-row {
+      background: #eff6ff;
+    }
+
+    .activity-row:hover {
+      background: #dbeafe;
+    }
+
+    .program-sub {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .location-text {
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .col-location {
+      max-width: 120px;
+    }
+
     /* Quick Actions */
     .guard-quick-actions {
       display: flex;
@@ -1167,17 +2048,19 @@
       justify-content: center;
       z-index: 20000;
       backdrop-filter: blur(4px);
+      padding: 20px;
     }
 
-    .modal-container {
+    .modal-container.official-form-card {
       background: #ffffff;
-      border-radius: 16px;
-      width: 90%;
-      max-width: 520px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 800px;
       max-height: 90vh;
-      overflow: hidden;
+      overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       animation: modalSlideIn 0.3s ease;
+      border: 1px solid #e5e7eb;
     }
 
     @keyframes modalSlideIn {
@@ -1191,33 +2074,91 @@
       }
     }
 
-    .modal-header {
-      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+    /* Official Form Header */
+    .form-header {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
       color: #ffffff;
-      padding: 20px 24px;
-      display: flex;
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
       align-items: center;
-      justify-content: space-between;
+      border-bottom: 4px solid #f4b41a;
     }
 
-    .modal-header h3 {
+    .form-header-logo img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      background: #ffffff;
+      border-radius: 50%;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-header-text {
+      text-align: center;
+    }
+
+    .form-header-text h1 {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0 0 4px 0;
       font-family: 'Poppins', sans-serif;
-      font-size: 18px;
+    }
+
+    .form-header-text h2 {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 8px 0;
+      opacity: 0.9;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .form-header-text h3 {
+      font-size: 16px;
       font-weight: 600;
       margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      font-family: 'Poppins', sans-serif;
     }
 
-    .modal-close {
-      width: 36px;
-      height: 36px;
+    .form-header-meta {
+      text-align: right;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+    }
+
+    .form-header-meta span {
+      background: rgba(255,255,255,0.15);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .form-header-meta strong {
+      color: #f4b41a;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(220, 38, 38, 0.8);
       border: none;
       color: #ffffff;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1225,133 +2166,527 @@
       transition: all 0.2s;
     }
 
-    .modal-close:hover {
-      background: rgba(255, 255, 255, 0.25);
+    .modal-close-btn:hover {
+      background: #dc2626;
+      transform: scale(1.1);
     }
 
-    .modal-body {
-      padding: 24px;
-      max-height: calc(90vh - 180px);
-      overflow-y: auto;
+    /* Official Form Body */
+    .official-form {
+      padding: 32px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    /* Form Sections */
+    .form-section {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      background: #fafbfc;
     }
 
-    .form-group label {
-      display: block;
-      font-family: 'Poppins', sans-serif;
+    .form-section legend {
       font-size: 13px;
       font-weight: 600;
       color: #1a472a;
-      margin-bottom: 8px;
-    }
-
-    .form-group label i {
-      margin-right: 6px;
-      color: #2d6a3f;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 12px 16px;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      background: #ffffff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-family: 'Poppins', sans-serif;
-      font-size: 14px;
+    }
+
+    .form-section legend i {
+      color: #2d5a3d;
+    }
+
+    /* Form Rows & Fields */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-field.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
       color: #374151;
-      transition: all 0.2s;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .required {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1f2937;
+      transition: all 0.2s ease;
+      font-family: 'Poppins', sans-serif;
       box-sizing: border-box;
     }
 
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-input:focus {
       outline: none;
-      border-color: #1a472a;
-      box-shadow: 0 0 0 4px rgba(26, 71, 42, 0.1);
+      border-color: #2d5a3d;
+      box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.1);
     }
 
-    .form-group textarea {
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+
+    .form-textarea {
       resize: vertical;
       min-height: 100px;
+      line-height: 1.6;
     }
 
-    .form-actions {
+    .field-hint {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
       display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .field-hint i {
+      font-size: 10px;
+    }
+
+    .field-hint-inline {
+      font-size: 11px;
+      font-weight: 400;
+      color: #b45309;
+      margin-left: 8px;
+    }
+
+    /* Other Violation Section */
+    .other-violation-section {
+      background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+      border: 1px dashed #d97706;
+      border-radius: 8px;
+      padding: 16px;
       margin-top: 8px;
     }
 
-    .btn-cancel {
-      padding: 12px 24px;
+    .other-violation-section .field-label {
+      color: #92400e;
+    }
+
+    .other-violation-category {
       background: #f3f4f6;
-      color: #6b7280;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 8px;
       border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .btn-cancel:hover {
-      background: #e5e7eb;
+    /* Student ID Input with Verify Button */
+    .student-id-input-wrapper {
+      display: flex;
+      gap: 10px;
     }
 
-    .btn-submit {
-      padding: 12px 28px;
-      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+    .student-id-input-wrapper .form-input {
+      flex: 1;
+    }
+
+    .check-student-btn {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
       color: #ffffff;
       border: none;
-      border-radius: 10px;
+      border-radius: 6px;
       font-family: 'Poppins', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+    .check-student-btn:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .check-student-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Student Status Indicator */
+    .student-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-top: 12px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .student-status-indicator i {
+      font-size: 28px;
+    }
+
+    .student-status-indicator .status-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .student-status-indicator .status-title {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .student-status-indicator .status-info {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .student-status-indicator .status-sub {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .student-status-indicator.status-found {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border: 2px solid #10b981;
+      color: #065f46;
+    }
+
+    .student-status-indicator.status-found i {
+      color: #059669;
+    }
+
+    .student-status-indicator.status-not-found {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .student-status-indicator.status-not-found i {
+      color: #d97706;
+    }
+
+    .student-status-indicator.status-error {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 2px solid #ef4444;
+      color: #991b1b;
+    }
+
+    .student-status-indicator.status-error i {
+      color: #dc2626;
+    }
+
+    /* New Student Fields Section */
+    .new-student-fields {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #3b82f6;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .new-student-notice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.15);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e40af;
+    }
+
+    .new-student-notice i {
+      font-size: 20px;
+      color: #2563eb;
+    }
+
+    .new-student-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px dashed #f59e0b;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #92400e;
+      margin-top: 12px;
+    }
+
+    .new-student-note i {
+      color: #d97706;
+    }
+
+    /* Checkbox/Radio Group */
+    .checkbox-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 12px 20px;
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .checkbox-label:hover {
+      border-color: #9ca3af;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .checkbox-label input[type="radio"] {
+      display: none;
+    }
+
+    .checkbox-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 50%;
+      position: relative;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .checkbox-label input[type="radio"]:checked + .checkbox-custom {
+      border-color: currentColor;
+    }
+
+    .checkbox-label input[type="radio"]:checked + .checkbox-custom::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .major-checkbox:has(input:checked) {
+      border-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .major-checkbox .checkbox-custom {
+      color: #dc2626;
+    }
+
+    .minor-checkbox:has(input:checked) {
+      border-color: #d97706;
+      background: #fffbeb;
+    }
+
+    .minor-checkbox .checkbox-custom {
+      color: #d97706;
+    }
+
+    .checkbox-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-text i {
+      font-size: 14px;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .form-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #92400e;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .form-notice i {
+      color: #d97706;
+      font-size: 14px;
+      margin-top: 1px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(26, 71, 42, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #143d23 0%, #1a472a 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 71, 42, 0.4);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    /* Form Footer */
+    .form-footer {
+      background: #f9fafb;
+      padding: 16px 32px;
+      text-align: center;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .form-footer p {
+      font-size: 11px;
+      color: #6b7280;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .form-footer-meta {
+      margin-top: 4px !important;
+      font-weight: 500;
+      color: #9ca3af !important;
     }
 
     /* Success State */
     .modal-success {
-      padding: 40px 24px;
+      padding: 60px 40px;
       text-align: center;
     }
 
     .success-icon {
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       border-radius: 50%;
-      margin: 0 auto 20px;
+      margin: 0 auto 24px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
     }
 
     .success-icon i {
-      font-size: 40px;
+      font-size: 48px;
       color: #ffffff;
     }
 
     .modal-success h4 {
       font-family: 'Poppins', sans-serif;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       color: #1a472a;
       margin: 0 0 12px 0;
@@ -1361,25 +2696,81 @@
       font-family: 'Poppins', sans-serif;
       font-size: 14px;
       color: #6b7280;
-      margin: 0 0 24px 0;
+      margin: 0 0 28px 0;
     }
 
-    .btn-close-success {
-      padding: 12px 32px;
-      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    /* Responsive Modal */
+    @media (max-width: 768px) {
+      .modal-overlay {
+        padding: 10px;
+      }
 
-    .btn-close-success:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(26, 71, 42, 0.3);
+      .form-header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 20px;
+        gap: 12px;
+      }
+
+      .form-header-logo {
+        justify-self: center;
+      }
+
+      .form-header-logo img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .form-header-text h1 {
+        font-size: 12px;
+      }
+
+      .form-header-text h2 {
+        font-size: 10px;
+      }
+
+      .form-header-text h3 {
+        font-size: 14px;
+      }
+
+      .form-header-meta {
+        flex-direction: row;
+        justify-content: center;
+        text-align: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .modal-close-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+      }
+
+      .official-form {
+        padding: 20px;
+      }
+
+      .form-section {
+        padding: 16px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .action-buttons {
+        flex-direction: column-reverse;
+      }
+
+      .btn {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .form-footer {
+        padding: 12px 20px;
+      }
     }
   </style>
 </body>

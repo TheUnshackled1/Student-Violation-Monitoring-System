@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="{% static 'violations/css/main.css' %}" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Flatpickr Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Cloudflare Turnstile CAPTCHA -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
@@ -156,6 +160,26 @@
             width: 100%;
             margin: 8px 0;
             box-sizing: border-box;
+        }
+        /* Date Picker Styling */
+        .date-picker-input {
+            cursor: pointer !important;
+            background: #fefefe !important;
+        }
+        .date-picker-input:hover {
+            background: #f5f3ff !important;
+        }
+        .flatpickr-calendar {
+            font-family: 'Poppins', sans-serif !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+        }
+        .flatpickr-day.selected {
+            background: #1a472a !important;
+            border-color: #1a472a !important;
+        }
+        .flatpickr-day:hover {
+            background: #d1fae5 !important;
         }
         .signature-canvas-container {
             border: 1px solid #000;
@@ -339,6 +363,279 @@
         .print-btn:hover {
             opacity: 0.9;
         }
+        
+        /* Official Top Navigation Styles */
+        .official-top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 50%, #1a472a 100%);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            border-bottom: 3px solid #fbbf24;
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-university {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fbbf24;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .brand-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .nav-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .nav-department {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 10px;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-system {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-icon-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-icon-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .nav-actions .profile-menu .profile-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+        }
+
+        .nav-actions .profile-menu .profile-btn .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fbbf24;
+            color: #1a472a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Official Section Styles */
+        .official-section {
+            background: #ffffff;
+            border: 2px solid #1a472a;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 18px 30px;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+            border-bottom: 3px double #1a472a;
+        }
+
+        .section-header-logo img {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+        }
+
+        .section-header-text {
+            text-align: center;
+            flex: 1;
+        }
+
+        .section-republic {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 10px;
+            color: #374151;
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .section-university {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a472a;
+            margin: 3px 0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .section-address {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 10px;
+            color: #4b5563;
+            margin: 2px 0;
+            font-style: italic;
+        }
+
+        .section-office {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a472a;
+            margin: 5px 0 0 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title-bar {
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+            color: #ffffff;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-subtitle {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .section-footer {
+            background: #f9fafb;
+            padding: 10px 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .section-footer p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Required Field Indicator */
+        .required-field {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .letter-field.error {
+            border-bottom-color: #dc2626 !important;
+            background: #fef2f2 !important;
+        }
+
+        .field-error-msg {
+            color: #dc2626;
+            font-size: 11px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error-msg.show {
+            display: block;
+        }
+
+        .signature-canvas-container.error {
+            border-color: #dc2626 !important;
+            background: #fef2f2 !important;
+        }
+
         @media print {
             body * { visibility: hidden; }
             .letter-template, .letter-template * { visibility: visible; }
@@ -360,28 +657,44 @@
             .letter-template {
                 padding: 20px;
             }
+            .nav-center {
+                display: none;
+            }
         }
     </style>
 </head>
 <body class="role-student">
-    <!-- Top Navigation -->
-    <header class="top-nav no-print">
-        <div class="top-left">
-            <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
-            <span class="header-title">Letter of Apology</span>
-        </div>
-        <div class="top-right">
-            <a href="{% url 'violations:student_dashboard' %}" class="icon-btn" title="Back to Dashboard">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div class="profile-menu">
-                <button class="profile-btn" id="profileBtn">
-                    <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
-                    <span class="name">{{ request.user.first_name|default:request.user.username }}</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="dropdown" id="profileDropdown">
-                    <a href="{% url 'violations:auth_logout' %}">Logout</a>
+    <!-- Official Top Navigation -->
+    <header class="official-top-nav no-print">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="brand-logo">
+                    <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU" />
+                </div>
+                <div class="brand-text">
+                    <span class="brand-university">CHMSU</span>
+                    <span class="brand-title">Student Portal</span>
+                </div>
+            </div>
+
+            <div class="nav-center">
+                <span class="nav-department">Office of Student Affairs</span>
+                <span class="nav-system">Letter of Apology</span>
+            </div>
+
+            <div class="nav-actions">
+                <a href="{% url 'violations:student_dashboard' %}" class="nav-icon-btn" title="Back to Dashboard">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div class="profile-menu">
+                    <button class="profile-btn" id="profileBtn">
+                        <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+                        <span class="name">{{ request.user.first_name|default:request.user.username }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown" id="profileDropdown">
+                        <a href="{% url 'violations:auth_logout' %}">Logout</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -471,6 +784,15 @@
                 </button>
             </div>
             
+            <!-- Required Fields Notice -->
+            <div class="no-print" style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-exclamation-triangle" style="color: #d97706; font-size: 1.25rem;"></i>
+                <div>
+                    <strong style="color: #92400e;">All fields marked with <span style="color: #dc2626;">*</span> are required</strong>
+                    <p style="margin: 0; font-size: 0.875rem; color: #92400e;">Please fill out all required fields before proceeding to Step 3.</p>
+                </div>
+            </div>
+            
             <!-- Official CHMSU Letter of Apology Template -->
             <div class="letter-template" id="letterTemplate">
                 <div class="letter-header">
@@ -488,22 +810,32 @@
                 
                 <div class="letter-body">
                     <p style="margin-bottom: 24px;">
-                        Date: <input type="text" class="letter-field" id="letterDate" placeholder="e.g. December 13, 2025" style="min-width: 180px; width: 180px;" />
-                        <span style="font-size: 11px; color: #666; margin-left: 8px;">Format: Month Day, Year</span>
+                        Date: <span class="required-field">*</span> 
+                        <span style="position: relative; display: inline-block;">
+                            <input type="text" class="letter-field date-picker-input" id="letterDate" placeholder="Select date" style="min-width: 200px; width: 200px; padding-right: 35px; cursor: pointer;" readonly required />
+                            <i class="fas fa-calendar-alt" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #6b7280; pointer-events: none;"></i>
+                        </span>
+                        <span class="field-error-msg" id="dateError">Please select the date</span>
                     </p>
                     
                     <p style="margin-bottom: 4px;"><strong>The Student Formator</strong></p>
                     <p style="margin-bottom: 16px;">
-                        <input type="text" class="letter-field" id="letterCampus" placeholder="Campus" style="min-width: 80px; width: 80px;" /> Campus
+                        <span class="required-field">*</span> <input type="text" class="letter-field" id="letterCampus" placeholder="Campus" style="min-width: 100px; width: 100px;" required /> Campus
+                        <span class="field-error-msg" id="campusError">Please enter your campus</span>
                     </p>
                     
                     <p style="margin-bottom: 16px;">SIR/MADAM:</p>
                     
                     <p style="margin-bottom: 16px;">
-                        I, <input type="text" class="letter-field" id="letterName" placeholder="Full Name" style="min-width: 150px; width: 150px;" />,<strong>(NAME)</strong> from 
-                        <input type="text" class="letter-field" id="letterAddress" placeholder="Home Address" style="min-width: 200px; width: 200px;" /> <strong>(Home Address)</strong> of
-                        <input type="text" class="letter-field" id="letterProgram" placeholder="Program, Major, Year & Section" style="min-width: 250px; width: 250px;" /> <strong>(Program, Major, Year & Section)</strong>
+                        I, <span class="required-field">*</span> <input type="text" class="letter-field" id="letterName" placeholder="Full Name" style="min-width: 180px; width: 180px;" required />, <strong>(NAME)</strong> from 
+                        <span class="required-field">*</span> <input type="text" class="letter-field" id="letterAddress" placeholder="Home Address" style="min-width: 220px; width: 220px;" required /> <strong>(Home Address)</strong> of
+                        <span class="required-field">*</span> <input type="text" class="letter-field" id="letterProgram" placeholder="Program, Major, Year & Section" style="min-width: 280px; width: 280px;" required /> <strong>(Program, Major, Year & Section)</strong>
                     </p>
+                    <div class="no-print" style="margin-bottom: 16px;">
+                        <span class="field-error-msg" id="nameError">Please enter your full name</span>
+                        <span class="field-error-msg" id="addressError">Please enter your home address</span>
+                        <span class="field-error-msg" id="programError">Please enter your program details</span>
+                    </div>
                     
                     <p style="margin-bottom: 16px;">has violated the Student Code of Conduct.</p>
                     
@@ -529,15 +861,13 @@
                     <p style="margin-top: 32px;">Respectfully yours,</p>
                     
                     <div class="letter-signature">
-                        <p style="font-size: 12px; color: #666; margin-bottom: 4px;">Sign here:</p>
-                        <div class="signature-canvas-container">
+                        <p style="font-size: 12px; color: #666; margin-bottom: 4px;">Electronic Signature: <span class="required-field">*</span></p>
+                        <div class="signature-canvas-container" id="signatureContainer">
                             <canvas id="signatureCanvas" class="signature-canvas"></canvas>
                             <button type="button" class="clear-signature" onclick="clearSignature()">Clear</button>
                         </div>
-                        <div style="border-top: 1px solid #000; width: 250px; margin-top: 8px; padding-top: 4px; text-align: center;">
-                            <input type="text" class="letter-field" id="letterPrintedName" placeholder="Your Signature" style="text-align: center; border-bottom: none;" />
-                            <div style="font-size: 12px; color: #666;">Signature is a Must!</div>
-                        </div>
+                        <span class="field-error-msg no-print" id="signatureError">Please sign in the box above</span>
+                        <div style="font-size: 11px; color: #666; margin-top: 8px;">Sign using your mouse or touchscreen</div>
                     </div>
                     
                     <div class="letter-footer">
@@ -811,7 +1141,7 @@
                             </div>
                             
                             <p style="margin-bottom: 12px;">
-                                Date: <span style="background: #f0f9ff; padding: 2px 6px; border-radius: 4px; border-bottom: 1px solid #0369a1;">{{ apology.letter_date|default:apology.submitted_at|date:"F d, Y" }}</span>
+                                Date: <span style="background: #f0f9ff; padding: 2px 6px; border-radius: 4px; border-bottom: 1px solid #0369a1;">{% if apology.letter_date %}{{ apology.letter_date }}{% else %}{{ apology.submitted_at|date:"F d, Y" }}{% endif %}</span>
                             </p>
                             
                             <p style="margin-bottom: 4px;"><strong>The Student Formator</strong></p>
@@ -938,6 +1268,35 @@
         document.addEventListener('click', (e) => {
             if (!profileBtn?.contains(e.target) && !profileDropdown?.contains(e.target)) {
                 profileDropdown?.classList.remove('show');
+            }
+        });
+
+        // Initialize Flatpickr Date Picker
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('letterDate');
+            if (dateInput && typeof flatpickr !== 'undefined') {
+                flatpickr(dateInput, {
+                    dateFormat: "F j, Y",  // Format: December 24, 2025
+                    defaultDate: new Date(),  // Set today's date as default
+                    allowInput: false,
+                    disableMobile: false,
+                    animate: true,
+                    monthSelectorType: "dropdown",
+                    maxDate: "today",  // Can't select future dates
+                    locale: {
+                        firstDayOfWeek: 0  // Sunday
+                    },
+                    onReady: function(selectedDates, dateStr, instance) {
+                        // Add custom class to calendar
+                        instance.calendarContainer.classList.add('chmsu-calendar');
+                    },
+                    onChange: function(selectedDates, dateStr, instance) {
+                        // Remove error state when date is selected
+                        dateInput.classList.remove('error');
+                        const errorMsg = document.getElementById('dateError');
+                        if (errorMsg) errorMsg.classList.remove('show');
+                    }
+                });
             }
         });
 
@@ -1452,28 +1811,74 @@
             const letterViolation = document.getElementById('letterViolation');
             const letterPrintedName = document.getElementById('letterPrintedName');
             
-            // Validate that at least the name is filled
-            if (!letterName?.value?.trim()) {
-                e.preventDefault();
-                alert('Please fill out the letter form with your full name in Step 2.');
-                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
+            // Clear all previous error states
+            clearFieldErrors();
+            
+            let hasErrors = false;
+            
+            // Validate Date
+            if (!letterDate?.value?.trim()) {
+                showFieldError('letterDate', 'dateError');
+                hasErrors = true;
             }
             
-            // Validate violation description - required field with max 300 words
+            // Validate Campus
+            if (!letterCampus?.value?.trim()) {
+                showFieldError('letterCampus', 'campusError');
+                hasErrors = true;
+            }
+            
+            // Validate Full Name
+            if (!letterName?.value?.trim()) {
+                showFieldError('letterName', 'nameError');
+                hasErrors = true;
+            }
+            
+            // Validate Home Address
+            if (!letterAddress?.value?.trim()) {
+                showFieldError('letterAddress', 'addressError');
+                hasErrors = true;
+            }
+            
+            // Validate Program
+            if (!letterProgram?.value?.trim()) {
+                showFieldError('letterProgram', 'programError');
+                hasErrors = true;
+            }
+            
+            // Check word count for violation (optional but max 300 words)
             const violationText = letterViolation?.value?.trim() || '';
             const wordCount = violationText ? violationText.split(/\s+/).filter(word => word.length > 0).length : 0;
-            if (!violationText) {
-                e.preventDefault();
-                alert('Please enter the specific violation/s in Step 2.');
-                letterViolation?.focus();
-                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
-            }
             if (wordCount > 300) {
                 e.preventDefault();
                 alert('The Specific Violation/s field has a maximum of 300 words. You have ' + wordCount + ' words.');
                 letterViolation?.focus();
+                letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            
+            // Validate Signature (check if canvas has been drawn on)
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let isCanvasEmpty = true;
+                for (let i = 3; i < imageData.length; i += 4) {
+                    if (imageData[i] > 0) {
+                        isCanvasEmpty = false;
+                        break;
+                    }
+                }
+                if (isCanvasEmpty) {
+                    document.getElementById('signatureContainer')?.classList.add('error');
+                    document.getElementById('signatureError').classList.add('show');
+                    hasErrors = true;
+                }
+            }
+            
+            // If there are validation errors, stop submission
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Please fill out all required fields marked with * in Step 2.');
                 letterSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 return;
             }
@@ -1493,7 +1898,6 @@
             document.getElementById('hiddenLetterAddress').value = letterAddress?.value || '';
             document.getElementById('hiddenLetterProgram').value = letterProgram?.value || '';
             document.getElementById('hiddenLetterViolations').value = letterViolation?.value || '';
-            document.getElementById('hiddenLetterPrintedName').value = letterPrintedName?.value || '';
             
             // Capture signature as base64 image
             if (canvas) {
@@ -1508,6 +1912,31 @@
                 showCaptchaModal();
                 return;
             }
+        });
+        
+        // Helper functions for field validation
+        function showFieldError(fieldId, errorId) {
+            document.getElementById(fieldId)?.classList.add('error');
+            document.getElementById(errorId)?.classList.add('show');
+        }
+        
+        function clearFieldErrors() {
+            // Clear all error classes
+            const fields = ['letterDate', 'letterCampus', 'letterName', 'letterAddress', 'letterProgram', 'letterViolation'];
+            fields.forEach(id => document.getElementById(id)?.classList.remove('error'));
+            
+            document.getElementById('signatureContainer')?.classList.remove('error');
+            
+            // Hide all error messages
+            const errors = ['dateError', 'campusError', 'nameError', 'addressError', 'programError', 'signatureError'];
+            errors.forEach(id => document.getElementById(id)?.classList.remove('show'));
+        }
+        
+        // Clear error when user types in field
+        document.querySelectorAll('.letter-field').forEach(field => {
+            field.addEventListener('input', () => {
+                field.classList.remove('error');
+            });
         });
 
         // Word counter for violation textarea
