@@ -1146,7 +1146,7 @@ def staff_violation_detail_view(request, violation_id):
 	# Get related data
 	documents = ViolationDocument.objects.filter(violation=violation)
 	apology_letters = ApologyLetter.objects.filter(violation=violation)
-	verifications = StaffVerification.objects.filter(violation=violation).select_related('verified_by')
+	verifications = StaffVerification.objects.filter(violation=violation).select_related('staff')
 	
 	# Get offense history for the student
 	student_violations = Violation.objects.filter(student=violation.student).order_by('-created_at')
