@@ -2,104 +2,1563 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Reported Violations - OSA Coordinator</title>
-  <link rel="stylesheet" href="{% static 'violations/css/style.css' %}" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Reported Violations - OSA Coordinator</title>
+    <link rel="stylesheet" href="{% static 'violations/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'violations/css/main.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="role-faculty">
-  <header class="top-nav">
-    <div class="top-left">
-      <img src="{% static 'violations/images/chmsu_logo.png' %}" class="header-logo" alt="CHMSU" />
-      <span class="header-title">My Reported Violations</span>
-    </div>
-    <div class="top-right">
-      <a href="{% url 'violations:faculty_dashboard' %}" class="ghost-btn" style="color:#fff; border-color: rgba(255,255,255,.6)">
-        <i class="fas fa-arrow-left"></i> Back
-      </a>
-      <button class="icon-btn" id="notifBtn" aria-label="Notifications" style="margin-left:8px;">
-        <i class="fas fa-bell"></i>
-      </button>
-      <div class="profile-menu">
-        <button class="profile-btn" id="profileBtn">
-          <span class="avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
-          <span class="name">{{ request.user.first_name|default:request.user.username }}</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="dropdown" id="profileDropdown">
-          <a href="#">View Profile</a>
-          <a href="{% url 'violations:auth_logout' %}">Logout</a>
+    <!-- Official Top Navigation -->
+    <header class="official-top-nav">
+        <div class="nav-container">
+            <!-- Left: Logo and Title -->
+            <div class="nav-brand">
+                <div class="brand-logo">
+                    <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU" />
+                </div>
+                <div class="brand-text">
+                    <span class="brand-university">CHMSU</span>
+                    <span class="brand-title">My Reports</span>
+                </div>
+            </div>
+
+            <!-- Center: University Name -->
+            <div class="nav-center">
+                <span class="nav-department">Office of Student Affairs</span>
+                <span class="nav-system">Student Violation Tracking System</span>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="nav-actions">
+                <a href="{% url 'violations:faculty_dashboard' %}" class="nav-back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+                <a href="{% url 'violations:faculty_report' %}" class="nav-action-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Report</span>
+                </a>
+                <div class="nav-divider"></div>
+                <div class="nav-profile">
+                    <button class="nav-profile-btn" id="profileBtn">
+                        <span class="profile-avatar">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+                        <div class="profile-info">
+                            <span class="profile-name">{{ request.user.first_name|default:request.user.username }}</span>
+                            <span class="profile-role">Coordinator</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="nav-dropdown" id="profileDropdown">
+                        <a href="#"><i class="fas fa-user"></i> View Profile</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'violations:auth_logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+    </header>
+
+    <style>
+        /* Official Top Navigation Styles */
+        .official-top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 50%, #1a472a 100%);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            border-bottom: 3px solid #fbbf24;
+            pointer-events: auto !important;
+        }
+
+        .official-top-nav * {
+            pointer-events: auto !important;
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            pointer-events: auto !important;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-university {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fbbf24;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .brand-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .nav-department {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 10px;
+            color: rgba(255,255,255,0.8);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .nav-system {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            z-index: 10001;
+            pointer-events: auto !important;
+        }
+
+        .nav-back-btn,
+        .nav-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .nav-back-btn:hover,
+        .nav-action-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .nav-action-btn {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+        }
+
+        .nav-action-btn:hover {
+            background: rgba(251, 191, 36, 0.3);
+        }
+
+        .nav-divider {
+            width: 1px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            margin: 0 4px;
+        }
+
+        .nav-profile {
+            position: relative;
+            pointer-events: auto !important;
+        }
+
+        .nav-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 10px 5px 5px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            pointer-events: auto !important;
+            z-index: 10001;
+        }
+
+        .nav-profile-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .profile-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1a472a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .profile-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .profile-role {
+            font-family: 'Poppins', sans-serif;
+            font-size: 9px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .nav-profile-btn i {
+            color: rgba(255,255,255,0.7);
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 180px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .nav-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            color: #374151;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .nav-dropdown a:hover {
+            background: #f3f4f6;
+        }
+
+        .nav-dropdown a i {
+            width: 14px;
+            color: #6b7280;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        .nav-dropdown .logout-link {
+            color: #dc2626;
+        }
+
+        .nav-dropdown .logout-link i {
+            color: #dc2626;
+        }
+
+        @media (max-width: 1024px) {
+            .nav-center {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 12px;
+            }
+
+            .nav-back-btn span,
+            .nav-action-btn span {
+                display: none;
+            }
+
+            .profile-info {
+                display: none;
+            }
+
+            .nav-profile-btn {
+                padding: 4px;
+                border-radius: 50%;
+            }
+
+            .nav-profile-btn i {
+                display: none;
+            }
+        }
+    </style>
+
+    <div class="background-overlay" style="pointer-events:none;"></div>
+    <div class="background-image" style="pointer-events:none;"></div>
+
+    <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
+        
+        <!-- Official Statistics Section -->
+        <section class="official-stats-section">
+            <!-- Official Header -->
+            <div class="stats-header">
+                <div class="stats-header-logo">
+                    <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+                </div>
+                <div class="stats-header-text">
+                    <p class="stats-republic">Republic of the Philippines</p>
+                    <h1 class="stats-university">CARLOS HILADO MEMORIAL STATE UNIVERSITY</h1>
+                    <p class="stats-address">Talisay City, Negros Occidental</p>
+                    <p class="stats-office">Office of Student Affairs</p>
+                </div>
+                <div class="stats-header-logo">
+                    <img src="{% static 'violations/images/chmsu_logo.png' %}" alt="CHMSU Logo">
+                </div>
+            </div>
+
+            <div class="stats-title-bar">
+                <h2 class="stats-title"><i class="fas fa-file-alt"></i> MY VIOLATION REPORTS</h2>
+                <p class="stats-subtitle">Reports submitted by {{ request.user.get_full_name|default:request.user.username }} • {% now "F d, Y" %}</p>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card filter-card active" data-filter="all" role="button" tabindex="0">
+                    <div class="stat-icon stat-icon-primary">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Reports</span>
+                        <span class="stat-value">{% if reports %}{{ reports|length }}{% else %}0{% endif %}</span>
+                        <span class="stat-desc">All submissions</span>
+                    </div>
+                </div>
+
+                <div class="stat-card filter-card" data-filter="pending" role="button" tabindex="0">
+                    <div class="stat-icon stat-icon-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Pending</span>
+                        <span class="stat-value" id="pendingCount">0</span>
+                        <span class="stat-desc">Awaiting review</span>
+                    </div>
+                </div>
+
+                <div class="stat-card filter-card" data-filter="under_review" role="button" tabindex="0">
+                    <div class="stat-icon stat-icon-info">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Under Review</span>
+                        <span class="stat-value" id="reviewCount">0</span>
+                        <span class="stat-desc">Being processed</span>
+                    </div>
+                </div>
+
+                <div class="stat-card filter-card" data-filter="resolved" role="button" tabindex="0">
+                    <div class="stat-icon stat-icon-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Resolved</span>
+                        <span class="stat-value" id="resolvedCount">0</span>
+                        <span class="stat-desc">Cases closed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Footer -->
+            <div class="stats-footer">
+                <p><i class="fas fa-info-circle"></i> Click on any statistic card to filter the reports table below</p>
+            </div>
+        </section>
+
+        <!-- Reports Table Section -->
+        <section class="official-directory-section" style="margin-top:20px;">
+            <div class="directory-title-bar">
+                <h2 class="directory-title"><i class="fas fa-list"></i> REPORTS DIRECTORY</h2>
+                <p class="directory-subtitle">Academic Year {{ academic_year|default:"2024-2025" }} • Generated: {% now "F d, Y" %}</p>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="directory-toolbar">
+                <div class="toolbar-left">
+                    <span class="record-count"><i class="fas fa-file-alt"></i> Showing: <strong id="visibleCount">{% if reports %}{{ reports|length }}{% else %}0{% endif %}</strong> reports</span>
+                </div>
+                <div class="toolbar-right">
+                    <div class="directory-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="reportSearchInput" placeholder="Search by student, type, location..." />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Official Table -->
+            <div class="directory-table-wrapper">
+                <table class="directory-table" id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-seq">#</th>
+                            <th class="col-id">Report ID</th>
+                            <th class="col-student">Student</th>
+                            <th class="col-type">Type</th>
+                            <th class="col-location">Location</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-incident">Incident Date</th>
+                            <th class="col-reported">Reported</th>
+                            <th class="col-actions no-print">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reports and reports|length %}
+                            {% for v in reports %}
+                            <tr class="report-row" 
+                                data-status="{{ v.status }}"
+                                data-report-id="{{ v.id }}"
+                                data-student-name="{{ v.student.user.get_full_name|default:v.student.user.username }}"
+                                data-student-id="{{ v.student.student_id }}"
+                                data-type="{{ v.get_type_display }}"
+                                data-location="{{ v.location }}"
+                                data-description="{{ v.description }}"
+                                data-incident="{{ v.incident_at|date:'M d, Y g:i A' }}"
+                                data-reported="{{ v.created_at|date:'M d, Y' }}">
+                                <td class="col-seq">{{ forloop.counter }}</td>
+                                <td class="col-id"><code>#{{ v.id }}</code></td>
+                                <td class="col-student">
+                                    <div class="student-info">
+                                        <span class="student-name">{{ v.student.user.get_full_name|default:v.student.user.username }}</span>
+                                        <span class="student-id">{{ v.student.student_id }}</span>
+                                    </div>
+                                </td>
+                                <td class="col-type">
+                                    {% if v.type == 'major' %}
+                                        <span class="type-badge type-major">Major</span>
+                                    {% else %}
+                                        <span class="type-badge type-minor">Minor</span>
+                                    {% endif %}
+                                </td>
+                                <td class="col-location">{{ v.location|truncatechars:25 }}</td>
+                                <td class="col-status">
+                                    {% if v.status == 'reported' %}
+                                        <span class="status-badge status-pending">Reported</span>
+                                    {% elif v.status == 'under_review' %}
+                                        <span class="status-badge status-review">Under Review</span>
+                                    {% elif v.status == 'resolved' %}
+                                        <span class="status-badge status-resolved">Resolved</span>
+                                    {% elif v.status == 'dismissed' %}
+                                        <span class="status-badge status-dismissed">Dismissed</span>
+                                    {% else %}
+                                        <span class="status-badge">{{ v.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="col-incident">{{ v.incident_at|date:"M d, Y" }}<br><small>{{ v.incident_at|date:"g:i A" }}</small></td>
+                                <td class="col-reported">{{ v.created_at|date:"M d, Y" }}</td>
+                                <td class="col-actions no-print">
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-view view-details-btn" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr id="emptyRow">
+                                <td colspan="9" class="empty-state">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>No violation reports found.</p>
+                                    <a href="{% url 'violations:faculty_report' %}" class="empty-action-btn">
+                                        <i class="fas fa-plus"></i> Submit Your First Report
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                        <tr id="noResultsRow" style="display:none;">
+                            <td colspan="9" class="empty-state">
+                                <i class="fas fa-search"></i>
+                                <p>No reports match your search criteria.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="directory-footer">
+                <p class="footer-note"><i class="fas fa-info-circle"></i> This document is for official use only. Unauthorized distribution is prohibited.</p>
+                <p class="footer-generated">Document Reference: OSA-MR-{% now "Ymd" %} • Generated by: {{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Details Modal -->
+    <div class="modal" id="detailsModal" aria-hidden="true">
+        <div class="modal-card" style="max-width:600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-alt"></i> Violation Report Details</h3>
+                <button class="icon-btn" id="detailsClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="detailsBody">
+                <div class="detail-section">
+                    <h4 class="detail-section-title"><i class="fas fa-user-graduate"></i> Student Information</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Name</span>
+                            <span class="detail-value" id="modalStudentName">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Student ID</span>
+                            <span class="detail-value" id="modalStudentId">—</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4 class="detail-section-title"><i class="fas fa-exclamation-triangle"></i> Violation Details</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Report ID</span>
+                            <span class="detail-value" id="modalReportId">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Type</span>
+                            <span class="detail-value" id="modalType">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value" id="modalStatus">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location</span>
+                            <span class="detail-value" id="modalLocation">—</span>
+                        </div>
+                    </div>
+                    <div class="detail-item full-width">
+                        <span class="detail-label">Description</span>
+                        <p class="detail-description" id="modalDescription">—</p>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4 class="detail-section-title"><i class="fas fa-calendar"></i> Timeline</h4>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Incident Date</span>
+                            <span class="detail-value" id="modalIncident">—</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Reported On</span>
+                            <span class="detail-value" id="modalReported">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="login-button" id="detailsCloseBtn" style="background:linear-gradient(135deg,#1a472a 0%,#2d5a3f 100%);">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
     </div>
-  </header>
 
-  <div class="background-overlay"></div>
-  <div class="background-image"></div>
+    <style>
+        /* Official Statistics Section */
+        .official-stats-section {
+            background: #ffffff;
+            border: 2px solid #1a472a;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
 
-  <main class="container" style="position:relative; z-index:3; margin-top: calc(var(--header-height) + 24px);">
-    <div class="card">
-      <div class="table-responsive">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Student</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Incident</th>
-              <th>Reported</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if reports and reports|length %}
-              {% for v in reports %}
-              <tr>
-                <td>#{{ v.id }}</td>
-                <td>{{ v.student.user.get_full_name|default:v.student.user.username }}</td>
-                <td>{{ v.get_type_display }}</td>
-                <td>{{ v.get_status_display }}</td>
-                <td>{{ v.incident_at|date:"Y-m-d g:i A" }}</td>
-                <td>{{ v.created_at|date:"Y-m-d" }}</td>
-              </tr>
-              {% endfor %}
-            {% else %}
-              <tr>
-                <td colspan="6" style="text-align:center; color:#555;">No reports found.</td>
-              </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
+        .stats-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 30px;
+            background: linear-gradient(180deg, #f8faf8 0%, #ffffff 100%);
+            border-bottom: 3px double #1a472a;
+        }
 
-  <!-- Details Modal -->
-  <div class="modal" id="detailsModal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>Violation Details</h3>
-        <button class="icon-btn" id="detailsClose"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body" id="detailsBody">
-        <!-- Populated by JS (placeholder) -->
-      </div>
-    </div>
-  </div>
+        .stats-header-logo img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
 
-  <!-- Notifications Panel -->
-  <aside class="notif-panel" id="notifPanel" aria-hidden="true">
-    <div class="notif-header">
-      <h3>Notifications</h3>
-      <button class="icon-btn" id="notifClose"><i class="fas fa-times"></i></button>
-    </div>
-    <ul class="notif-list">
-      <li>OSA status updates will appear here.</li>
-    </ul>
-  </aside>
+        .stats-header-text {
+            text-align: center;
+            flex: 1;
+        }
 
-  <script src="{% static 'violations/js/script.js' %}"></script>
+        .stats-republic {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 11px;
+            color: #374151;
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stats-university {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a472a;
+            margin: 4px 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .stats-address {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 12px;
+            color: #4b5563;
+            margin: 2px 0;
+            font-style: italic;
+        }
+
+        .stats-office {
+            font-family: 'Times New Roman', Georgia, serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a472a;
+            margin: 6px 0 0 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .stats-title-bar {
+            background: #1a472a;
+            color: #ffffff;
+            padding: 14px 25px;
+            text-align: center;
+        }
+
+        .stats-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .stats-subtitle {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            border-bottom: 2px solid #1a472a;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:last-child {
+            border-right: none;
+        }
+
+        .stat-card:hover {
+            background: #f0fdf4;
+        }
+
+        .stat-card.active {
+            background: #dcfce7;
+            border-bottom: 3px solid #1a472a;
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-primary {
+            background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+            color: #ffffff;
+        }
+
+        .stat-icon-warning {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: #ffffff;
+        }
+
+        .stat-icon-info {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: #ffffff;
+        }
+
+        .stat-icon-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+        }
+
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a472a;
+            line-height: 1.2;
+        }
+
+        .stat-desc {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .stats-footer {
+            background: #f9fafb;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .stats-footer p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Official Directory Styles */
+        .official-directory-section {
+            background: #ffffff;
+            border: 2px solid #1a472a;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .directory-title-bar {
+            background: #1a472a;
+            color: #ffffff;
+            padding: 15px 25px;
+            text-align: center;
+        }
+
+        .directory-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .directory-subtitle {
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            margin: 6px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .directory-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .record-count {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .record-count strong {
+            color: #1a472a;
+            font-weight: 600;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .directory-search {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            min-width: 280px;
+        }
+
+        .directory-search i {
+            color: #6b7280;
+            margin-right: 8px;
+        }
+
+        .directory-search input {
+            border: none;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            width: 100%;
+            background: transparent;
+        }
+
+        .directory-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .directory-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .directory-table thead {
+            background: #1a472a;
+            color: #ffffff;
+        }
+
+        .directory-table thead th {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 10px;
+            text-align: left;
+            border: 1px solid #15392a;
+            white-space: nowrap;
+        }
+
+        .directory-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.15s;
+        }
+
+        .directory-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .directory-table tbody tr:hover {
+            background: #ecfdf5;
+        }
+
+        .directory-table tbody td {
+            padding: 12px 10px;
+            vertical-align: middle;
+            border-left: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            font-family: 'Poppins', sans-serif;
+            color: #374151;
+        }
+
+        .directory-table .col-seq {
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            width: 45px;
+        }
+
+        .directory-table .col-id code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #1a472a;
+            font-weight: 600;
+        }
+
+        .student-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-name {
+            font-weight: 500;
+            color: #1a472a;
+        }
+
+        .student-id {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .type-badge {
+            display: inline-block;
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .type-major {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .type-minor {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-review {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-resolved {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-dismissed {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            border-color: #1a472a;
+            color: #1a472a;
+            background: #ecfdf5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px !important;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            color: #d1d5db;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .empty-state p {
+            margin: 0 0 16px 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+        }
+
+        .empty-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+            color: #ffffff;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .empty-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+        }
+
+        .directory-footer {
+            background: #f9fafb;
+            border-top: 2px solid #1a472a;
+            padding: 15px 25px;
+            text-align: center;
+        }
+
+        .footer-note {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            color: #991b1b;
+            margin: 0 0 6px 0;
+            font-weight: 500;
+        }
+
+        .footer-generated {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 0;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(-20px) scale(0.95);
+            transition: transform 0.3s ease;
+            border: 2px solid #1a472a;
+            overflow: hidden;
+        }
+
+        .modal.show .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+            color: #ffffff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #fbbf24;
+        }
+
+        .modal-header h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header .icon-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-header .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px dashed #d1d5db;
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .detail-section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a472a;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-section-title i {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+            color: #ffffff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #1a472a;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .detail-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a472a;
+        }
+
+        .detail-description {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            color: #374151;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            background: #f9fafb;
+            border-top: 2px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .login-button {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-card {
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .stat-card:nth-child(2) {
+                border-right: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .stats-header-logo:last-child {
+                display: none;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                border-right: none;
+            }
+
+            .directory-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .directory-search {
+                min-width: 100%;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script>
+    (function(){
+        // Profile Dropdown Toggle
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        
+        if(profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', function(e) {
+                if(!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+        }
+
+        // Calculate statistics
+        const rows = document.querySelectorAll('.report-row');
+        let pendingCount = 0;
+        let reviewCount = 0;
+        let resolvedCount = 0;
+
+        rows.forEach(function(row) {
+            const status = row.dataset.status;
+            if(status === 'reported') pendingCount++;
+            else if(status === 'under_review') reviewCount++;
+            else if(status === 'resolved') resolvedCount++;
+        });
+
+        document.getElementById('pendingCount').textContent = pendingCount;
+        document.getElementById('reviewCount').textContent = reviewCount;
+        document.getElementById('resolvedCount').textContent = resolvedCount;
+
+        // Filter functionality
+        const filterCards = document.querySelectorAll('.filter-card');
+        const noResultsRow = document.getElementById('noResultsRow');
+        const visibleCountEl = document.getElementById('visibleCount');
+
+        function applyFilter(filterType) {
+            let visibleCount = 0;
+            rows.forEach(function(row) {
+                const status = row.dataset.status;
+                let show = false;
+                
+                if(filterType === 'all') {
+                    show = true;
+                } else if(filterType === 'pending') {
+                    show = status === 'reported';
+                } else if(filterType === 'under_review') {
+                    show = status === 'under_review';
+                } else if(filterType === 'resolved') {
+                    show = status === 'resolved' || status === 'dismissed';
+                }
+                
+                row.style.display = show ? '' : 'none';
+                if(show) visibleCount++;
+            });
+
+            if(noResultsRow) {
+                noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+            }
+            if(visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+
+            // Update active state
+            filterCards.forEach(function(card) {
+                card.classList.remove('active');
+                if(card.dataset.filter === filterType) {
+                    card.classList.add('active');
+                }
+            });
+        }
+
+        filterCards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                applyFilter(card.dataset.filter);
+            });
+            card.addEventListener('keydown', function(e) {
+                if(e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    applyFilter(card.dataset.filter);
+                }
+            });
+        });
+
+        // Check for hash on page load
+        if(window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            if(hash === 'pending') {
+                applyFilter('pending');
+            } else if(hash === 'resolved') {
+                applyFilter('resolved');
+            }
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('reportSearchInput');
+        if(searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = searchInput.value.toLowerCase();
+                let visibleCount = 0;
+
+                rows.forEach(function(row) {
+                    const text = row.innerText.toLowerCase();
+                    const matches = text.includes(query);
+                    row.style.display = matches ? '' : 'none';
+                    if(matches) visibleCount++;
+                });
+
+                if(noResultsRow) {
+                    noResultsRow.style.display = (visibleCount === 0 && query) ? '' : 'none';
+                }
+                if(visibleCountEl) {
+                    visibleCountEl.textContent = visibleCount;
+                }
+
+                // Reset filter active states during search
+                if(query) {
+                    filterCards.forEach(function(card) {
+                        card.classList.remove('active');
+                    });
+                }
+            });
+        }
+
+        // Details Modal
+        const modal = document.getElementById('detailsModal');
+        const detailsClose = document.getElementById('detailsClose');
+        const detailsCloseBtn = document.getElementById('detailsCloseBtn');
+
+        function openModal() {
+            if(modal) modal.classList.add('show');
+        }
+
+        function closeModal() {
+            if(modal) modal.classList.remove('show');
+        }
+
+        if(detailsClose) detailsClose.addEventListener('click', closeModal);
+        if(detailsCloseBtn) detailsCloseBtn.addEventListener('click', closeModal);
+        if(modal) modal.addEventListener('click', function(e) {
+            if(e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape') closeModal();
+        });
+
+        // View details buttons
+        document.querySelectorAll('.view-details-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const row = btn.closest('.report-row');
+                if(!row) return;
+
+                document.getElementById('modalStudentName').textContent = row.dataset.studentName || '—';
+                document.getElementById('modalStudentId').textContent = row.dataset.studentId || '—';
+                document.getElementById('modalReportId').textContent = '#' + row.dataset.reportId || '—';
+                document.getElementById('modalType').textContent = row.dataset.type || '—';
+                document.getElementById('modalLocation').textContent = row.dataset.location || '—';
+                document.getElementById('modalDescription').textContent = row.dataset.description || '—';
+                document.getElementById('modalIncident').textContent = row.dataset.incident || '—';
+                document.getElementById('modalReported').textContent = row.dataset.reported || '—';
+
+                // Status with styling
+                const status = row.dataset.status;
+                const statusEl = document.getElementById('modalStatus');
+                if(status === 'reported') {
+                    statusEl.innerHTML = '<span class="status-badge status-pending">Reported</span>';
+                } else if(status === 'under_review') {
+                    statusEl.innerHTML = '<span class="status-badge status-review">Under Review</span>';
+                } else if(status === 'resolved') {
+                    statusEl.innerHTML = '<span class="status-badge status-resolved">Resolved</span>';
+                } else if(status === 'dismissed') {
+                    statusEl.innerHTML = '<span class="status-badge status-dismissed">Dismissed</span>';
+                } else {
+                    statusEl.textContent = status || '—';
+                }
+
+                openModal();
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
