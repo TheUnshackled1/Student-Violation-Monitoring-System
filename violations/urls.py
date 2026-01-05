@@ -71,6 +71,7 @@ urlpatterns = [
     # OSA Staff - Reports
     path('staff/reports/', views.staff_reports_view, name='staff_reports'),
     path('staff/reports/export/', views.staff_export_report_view, name='staff_export_report'),
+    path('staff/reports/send/', views.staff_send_report_view, name='staff_send_report'),
     
     # OSA Staff - Messaging
     path('staff/send-message/', views.staff_send_message_view, name='staff_send_message'),

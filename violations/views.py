@@ -2054,58 +2054,241 @@ def staff_send_to_formator_view(request, letter_id):
 
 @role_required({User.Role.STAFF})
 def staff_reports_view(request):
-	"""Staff: Generate and view violation reports."""
+	"""Staff: Generate and view violation reports with comprehensive statistics."""
+	from datetime import timedelta
+	
 	# Date range filters
 	start_date = request.GET.get('start_date', '')
 	end_date = request.GET.get('end_date', '')
 	report_type = request.GET.get('report_type', 'summary')
 	
-	violations = Violation.objects.select_related('student', 'student__user', 'reported_by')
+	# Parse dates
+	start_date_obj = None
+	end_date_obj = None
+	
+	violations = Violation.objects.select_related('student', 'student__user', 'reported_by', 'violation_type')
 	
 	if start_date:
 		try:
-			start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-			violations = violations.filter(incident_at__gte=timezone.make_aware(start_dt))
+			start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
+			violations = violations.filter(incident_at__gte=timezone.make_aware(start_date_obj))
 		except ValueError:
 			pass
 	
 	if end_date:
 		try:
-			end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-			violations = violations.filter(incident_at__lte=timezone.make_aware(end_dt))
+			end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+			violations = violations.filter(incident_at__lte=timezone.make_aware(end_date_obj))
 		except ValueError:
 			pass
 	
-	# Summary statistics
+	# ============================================
+	# BASIC VIOLATION STATISTICS
+	# ============================================
 	total_violations = violations.count()
 	by_type = violations.values('type').annotate(count=Count('id'))
 	by_status = violations.values('status').annotate(count=Count('id'))
 	
-	# Top offenders
+	# Status counts
+	pending_count = violations.filter(status=Violation.Status.REPORTED).count()
+	in_progress_count = violations.filter(status=Violation.Status.UNDER_REVIEW).count()
+	resolved_count = violations.filter(status=Violation.Status.RESOLVED).count()
+	
+	# Resolution rate
+	resolution_rate = round((resolved_count / total_violations * 100), 1) if total_violations > 0 else 0
+	
+	# Average resolution time (for resolved violations)
+	avg_resolution_days = 0
+	resolved_violations = violations.filter(status=Violation.Status.RESOLVED, resolved_at__isnull=False)
+	if resolved_violations.exists():
+		total_days = 0
+		count = 0
+		for v in resolved_violations:
+			if v.resolved_at and v.incident_at:
+				delta = v.resolved_at - v.incident_at
+				total_days += delta.days
+				count += 1
+		avg_resolution_days = round(total_days / count, 1) if count > 0 else 0
+	
+	# ============================================
+	# APOLOGY LETTER STATISTICS
+	# ============================================
+	apology_letters = ApologyLetter.objects.select_related('student', 'violation')
+	if start_date_obj:
+		apology_letters = apology_letters.filter(submitted_at__gte=timezone.make_aware(start_date_obj))
+	if end_date_obj:
+		apology_letters = apology_letters.filter(submitted_at__lte=timezone.make_aware(end_date_obj))
+	
+	total_apologies = apology_letters.count()
+	apology_pending = apology_letters.filter(status=ApologyLetter.Status.PENDING).count()
+	apology_approved = apology_letters.filter(status=ApologyLetter.Status.APPROVED).count()
+	apology_rejected = apology_letters.filter(status=ApologyLetter.Status.REJECTED).count()
+	apology_revision = apology_letters.filter(status=ApologyLetter.Status.REVISION_NEEDED).count()
+	apology_formator_pending = apology_letters.filter(formator_status='pending').count()
+	apology_formator_signed = apology_letters.filter(formator_status='signed').count()
+	
+	# ============================================
+	# SEVERITY DISTRIBUTION
+	# ============================================
+	severity_stats = []
+	severity_colors = {
+		'minor': '#f59e0b',
+		'major': '#ef4444',
+		'grave': '#7c3aed'
+	}
+	
+	for severity_choice in Violation.Severity.choices:
+		severity_value = severity_choice[0]
+		severity_label = severity_choice[1]
+		count = violations.filter(type=severity_value).count()
+		percentage = round((count / total_violations * 100), 1) if total_violations > 0 else 0
+		severity_stats.append({
+			'severity': severity_label,
+			'severity_key': severity_value,
+			'count': count,
+			'percentage': percentage,
+			'color': severity_colors.get(severity_value, '#6b7280')
+		})
+	
+	# ============================================
+	# PROGRAM/DEPARTMENT BREAKDOWN
+	# ============================================
+	program_stats = violations.values('student__program').annotate(
+		count=Count('id')
+	).order_by('-count')[:10]
+	
+	program_breakdown = []
+	program_colors = ['#1a472a', '#2d6a3f', '#059669', '#10b981', '#34d399', '#6ee7b7', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7']
+	for i, prog in enumerate(program_stats):
+		program_name = prog['student__program'] or 'Unknown'
+		count = prog['count']
+		percentage = round((count / total_violations * 100), 1) if total_violations > 0 else 0
+		program_breakdown.append({
+			'program': program_name,
+			'count': count,
+			'percentage': percentage,
+			'color': program_colors[i % len(program_colors)]
+		})
+	
+	# ============================================
+	# YEAR LEVEL ANALYSIS
+	# ============================================
+	year_level_stats = violations.values('student__year_level').annotate(
+		count=Count('id')
+	).order_by('student__year_level')
+	
+	year_level_breakdown = []
+	max_year_count = max([yl['count'] for yl in year_level_stats], default=1)
+	for yl in year_level_stats:
+		year = yl['student__year_level']
+		count = yl['count']
+		year_label = f"Year {year}" if year else 'Unknown'
+		percentage = round((count / max_year_count * 100), 1) if max_year_count > 0 else 0
+		year_level_breakdown.append({
+			'year': year_label,
+			'year_num': year or 0,
+			'count': count,
+			'percentage': percentage
+		})
+	
+	# ============================================
+	# VIOLATION TYPE BREAKDOWN
+	# ============================================
+	violation_type_stats = violations.exclude(violation_type__isnull=True).values(
+		'violation_type__name', 'violation_type__severity'
+	).annotate(count=Count('id')).order_by('-count')[:10]
+	
+	violation_types = []
+	type_colors = ['#1a472a', '#2d5a3f', '#3d8b5f', '#4da67f', '#5dc19f', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e']
+	for i, vt in enumerate(violation_type_stats):
+		type_name = vt['violation_type__name'] or 'Unknown'
+		count = vt['count']
+		percentage = round((count / total_violations * 100), 1) if total_violations > 0 else 0
+		violation_types.append({
+			'type': type_name,
+			'severity': vt['violation_type__severity'],
+			'count': count,
+			'percentage': percentage,
+			'color': type_colors[i % len(type_colors)]
+		})
+	
+	# ============================================
+	# TOP OFFENDERS
+	# ============================================
 	top_offenders = (
 		violations.values('student__student_id', 'student__user__first_name', 'student__user__last_name')
 		.annotate(count=Count('id'))
 		.order_by('-count')[:10]
 	)
 	
-	# Monthly trend
-	monthly_trend = (
-		violations.extra(select={'month': "strftime('%%Y-%%m', incident_at)"})
+	# ============================================
+	# MONTHLY TREND (Last 6 months)
+	# ============================================
+	monthly_trend = []
+	six_months_ago = timezone.now() - timedelta(days=180)
+	monthly_data = (
+		violations.filter(incident_at__gte=six_months_ago)
+		.extra(select={'month': "strftime('%%Y-%%m', incident_at)"})
 		.values('month')
 		.annotate(count=Count('id'))
 		.order_by('month')
 	)
 	
+	max_monthly_count = max([m['count'] for m in monthly_data], default=1)
+	for m in monthly_data:
+		if m['month']:
+			try:
+				month_date = datetime.strptime(m['month'], '%Y-%m')
+				month_label = month_date.strftime('%b')
+			except:
+				month_label = m['month']
+			height = int((m['count'] / max_monthly_count) * 100) if max_monthly_count > 0 else 0
+			monthly_trend.append({
+				'month': month_label,
+				'full_month': m['month'],
+				'count': m['count'],
+				'height': max(height, 5)  # Minimum 5% height for visibility
+			})
+	
+	# ============================================
+	# RECENT VIOLATIONS
+	# ============================================
+	recent_violations = violations.order_by('-incident_at')[:10]
+	
 	ctx = {
 		'start_date': start_date,
 		'end_date': end_date,
 		'report_type': report_type,
+		
+		# Basic stats
 		'total_violations': total_violations,
+		'pending_count': pending_count,
+		'in_progress_count': in_progress_count,
+		'resolved_count': resolved_count,
+		'resolution_rate': resolution_rate,
+		'avg_resolution_days': avg_resolution_days,
+		
+		# Apology letter stats
+		'total_apologies': total_apologies,
+		'apology_pending': apology_pending,
+		'apology_approved': apology_approved,
+		'apology_rejected': apology_rejected,
+		'apology_revision': apology_revision,
+		'apology_formator': apology_formator_pending,
+		'apology_signed': apology_formator_signed,
+		
+		# Breakdowns
+		'severity_stats': severity_stats,
+		'program_breakdown': program_breakdown,
+		'year_level_breakdown': year_level_breakdown,
+		'violation_types': violation_types,
+		'top_offenders': top_offenders,
+		'monthly_trend': monthly_trend,
+		
+		# Data
 		'by_type': {item['type']: item['count'] for item in by_type},
 		'by_status': {item['status']: item['count'] for item in by_status},
-		'top_offenders': top_offenders,
-		'monthly_trend': list(monthly_trend),
-		'violations': violations.order_by('-incident_at')[:50],
+		'recent_violations': recent_violations,
 	}
 	return render(request, 'violations/staff/reports.html', ctx)
 
@@ -2154,6 +2337,103 @@ def staff_export_report_view(request):
 		])
 	
 	return response
+
+
+@role_required({User.Role.STAFF})
+def staff_send_report_view(request):
+	"""Staff: Send violation report summary to OSA Coordinator."""
+	if request.method != 'POST':
+		return redirect('violations:staff_reports')
+	
+	start_date = request.POST.get('start_date', '')
+	end_date = request.POST.get('end_date', '')
+	message_content = request.POST.get('message', '').strip()
+	
+	# Get statistics for the report
+	violations = Violation.objects.all()
+	apology_letters = ApologyLetter.objects.all()
+	
+	# Apply date filters
+	if start_date:
+		try:
+			start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+			violations = violations.filter(incident_at__gte=timezone.make_aware(start_dt))
+			apology_letters = apology_letters.filter(submitted_at__gte=timezone.make_aware(start_dt))
+		except ValueError:
+			pass
+	
+	if end_date:
+		try:
+			end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+			violations = violations.filter(incident_at__lte=timezone.make_aware(end_dt))
+			apology_letters = apology_letters.filter(submitted_at__lte=timezone.make_aware(end_dt))
+		except ValueError:
+			pass
+	
+	# Calculate statistics
+	total_violations = violations.count()
+	pending_count = violations.filter(status=Violation.Status.REPORTED).count()
+	in_progress_count = violations.filter(status=Violation.Status.UNDER_REVIEW).count()
+	resolved_count = violations.filter(status=Violation.Status.RESOLVED).count()
+	resolution_rate = round((resolved_count / total_violations * 100), 1) if total_violations > 0 else 0
+	total_apologies = apology_letters.count()
+	
+	# Build the report message
+	period_text = ""
+	if start_date and end_date:
+		period_text = f"Period: {start_date} to {end_date}"
+	else:
+		period_text = f"As of {timezone.now().strftime('%B %d, %Y')}"
+	
+	report_message = f"""📊 VIOLATION REPORT SUMMARY
+{period_text}
+
+📈 Statistics:
+• Total Violations: {total_violations}
+• Pending: {pending_count}
+• In Progress: {in_progress_count}
+• Resolved: {resolved_count}
+• Resolution Rate: {resolution_rate}%
+• Apology Letters: {total_apologies}
+"""
+	
+	if message_content:
+		report_message += f"""
+📝 Staff Notes:
+{message_content}
+"""
+	
+	report_message += f"""
+—
+Sent by: {request.user.get_full_name() or request.user.username}
+Generated: {timezone.now().strftime('%B %d, %Y at %I:%M %p')}"""
+	
+	# Find all OSA Coordinators
+	coordinators = User.objects.filter(role=User.Role.OSA_COORDINATOR)
+	
+	if not coordinators.exists():
+		messages.error(request, "No OSA Coordinators found in the system.")
+		return redirect('violations:staff_reports')
+	
+	# Send message to all coordinators
+	sent_count = 0
+	for coordinator in coordinators:
+		Message.objects.create(
+			sender=request.user,
+			receiver=coordinator,
+			content=report_message
+		)
+		sent_count += 1
+	
+	# Log the activity
+	ActivityLog.log_activity(
+		action='report_sent',
+		description=f"Sent violation report summary to {sent_count} coordinator(s). {period_text}",
+		performed_by=request.user
+	)
+	
+	messages.success(request, f"Report sent successfully to {sent_count} OSA Coordinator(s).")
+	return redirect('violations:staff_reports')
 
 
 @role_required({User.Role.STAFF})

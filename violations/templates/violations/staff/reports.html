@@ -30,6 +30,22 @@
       </div>
 
       <div class="nav-actions">
+        <div class="export-dropdown no-print">
+          <button class="nav-icon-btn" onclick="toggleExportMenu()" title="Export Report">
+            <i class="fas fa-download"></i>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <a href="{% url 'violations:staff_export_report' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="export-option">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <button onclick="window.print()" class="export-option">
+              <i class="fas fa-file-pdf"></i> Print/PDF
+            </button>
+          </div>
+        </div>
+        <button class="nav-icon-btn no-print" onclick="openSendModal()" title="Send to Coordinator">
+          <i class="fas fa-paper-plane"></i>
+        </button>
         <button class="nav-icon-btn" onclick="window.print()" title="Print Report">
           <i class="fas fa-print"></i>
         </button>
@@ -134,6 +150,190 @@
             <span class="stat-desc">Successfully closed</span>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Resolution Metrics Row -->
+    <section class="metrics-row" style="margin-top: 20px;">
+      <div class="metric-card resolution-metric">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="metric-content">
+          <span class="metric-label">Resolution Rate</span>
+          <span class="metric-value">{{ resolution_rate }}%</span>
+          <span class="metric-desc">of violations resolved</span>
+        </div>
+        <div class="metric-visual">
+          <svg class="progress-ring" width="60" height="60">
+            <circle class="progress-ring-bg" stroke="#e5e7eb" stroke-width="6" fill="transparent" r="24" cx="30" cy="30"/>
+            <circle class="progress-ring-circle" stroke="#059669" stroke-width="6" fill="transparent" r="24" cx="30" cy="30"
+              style="stroke-dasharray: {{ resolution_rate|default:0 }} 100; transform: rotate(-90deg); transform-origin: 50% 50%;"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="metric-content">
+          <span class="metric-label">Avg Resolution Time</span>
+          <span class="metric-value">{{ avg_resolution_days }} days</span>
+          <span class="metric-desc">average to resolve</span>
+        </div>
+      </div>
+      
+      <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);">
+          <i class="fas fa-envelope-open-text"></i>
+        </div>
+        <div class="metric-content">
+          <span class="metric-label">Total Apology Letters</span>
+          <span class="metric-value">{{ total_apologies }}</span>
+          <span class="metric-desc">letters submitted</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apology Letter Statistics Section -->
+    <section class="official-directory-section" style="margin-top:20px;">
+      <div class="directory-title-bar">
+        <h2 class="directory-title"><i class="fas fa-envelope"></i> APOLOGY LETTER STATISTICS</h2>
+        <p class="directory-subtitle">Submission and approval status</p>
+      </div>
+
+      <div class="apology-stats-grid">
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon pending">
+            <i class="fas fa-hourglass-half"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_pending }}</div>
+          <div class="apology-stat-label">Pending Review</div>
+        </div>
+        
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon approved">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_approved }}</div>
+          <div class="apology-stat-label">Staff Approved</div>
+        </div>
+        
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon rejected">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_rejected }}</div>
+          <div class="apology-stat-label">Rejected</div>
+        </div>
+        
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon revision">
+            <i class="fas fa-edit"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_revision }}</div>
+          <div class="apology-stat-label">Needs Revision</div>
+        </div>
+        
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon formator">
+            <i class="fas fa-user-clock"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_formator }}</div>
+          <div class="apology-stat-label">With Formator</div>
+        </div>
+        
+        <div class="apology-stat-card">
+          <div class="apology-stat-icon signed">
+            <i class="fas fa-signature"></i>
+          </div>
+          <div class="apology-stat-value">{{ apology_signed }}</div>
+          <div class="apology-stat-label">Formator Signed</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Severity Distribution Section -->
+    <section class="official-directory-section" style="margin-top:20px;">
+      <div class="directory-title-bar">
+        <h2 class="directory-title"><i class="fas fa-exclamation-circle"></i> SEVERITY DISTRIBUTION</h2>
+        <p class="directory-subtitle">Violations by severity level</p>
+      </div>
+
+      <div class="severity-container">
+        {% for severity in severity_stats %}
+        <div class="severity-item">
+          <div class="severity-header">
+            <span class="severity-label severity-{{ severity.severity_key }}">
+              <i class="fas fa-{% if severity.severity_key == 'minor' %}info-circle{% elif severity.severity_key == 'major' %}exclamation-triangle{% else %}skull-crossbones{% endif %}"></i>
+              {{ severity.severity }}
+            </span>
+            <span class="severity-count">{{ severity.count }} cases ({{ severity.percentage }}%)</span>
+          </div>
+          <div class="severity-bar">
+            <div class="severity-fill" style="width: {{ severity.percentage }}%; background: {{ severity.color }};"></div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-breakdown">
+          <i class="fas fa-chart-bar"></i>
+          <p>No severity data available</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Program/Department Breakdown Section -->
+    <section class="official-directory-section" style="margin-top:20px;">
+      <div class="directory-title-bar">
+        <h2 class="directory-title"><i class="fas fa-building"></i> PROGRAM BREAKDOWN</h2>
+        <p class="directory-subtitle">Violations by academic program</p>
+      </div>
+
+      <div class="program-container">
+        {% for prog in program_breakdown %}
+        <div class="program-item">
+          <div class="program-info">
+            <span class="program-name">{{ prog.program }}</span>
+            <span class="program-stats">{{ prog.count }} ({{ prog.percentage }}%)</span>
+          </div>
+          <div class="program-bar">
+            <div class="program-fill" style="width: {{ prog.percentage }}%; background: {{ prog.color }};"></div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-breakdown">
+          <i class="fas fa-building"></i>
+          <p>No program data available</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Year Level Analysis Section -->
+    <section class="official-directory-section" style="margin-top:20px;">
+      <div class="directory-title-bar">
+        <h2 class="directory-title"><i class="fas fa-graduation-cap"></i> YEAR LEVEL ANALYSIS</h2>
+        <p class="directory-subtitle">Violations by student year level</p>
+      </div>
+
+      <div class="year-level-container">
+        {% for yl in year_level_breakdown %}
+        <div class="year-level-card">
+          <div class="year-level-num">{{ yl.year_num|default:"?" }}</div>
+          <div class="year-level-label">{{ yl.year }}</div>
+          <div class="year-level-count">{{ yl.count }}</div>
+          <div class="year-level-bar-wrap">
+            <div class="year-level-bar" style="height: {{ yl.percentage }}%;"></div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-breakdown" style="width: 100%;">
+          <i class="fas fa-graduation-cap"></i>
+          <p>No year level data available</p>
+        </div>
+        {% endfor %}
       </div>
     </section>
 
@@ -298,7 +498,112 @@
     </section>
   </main>
 
+  <!-- Send to Coordinator Modal -->
+  <div class="modal-overlay" id="sendModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fas fa-paper-plane"></i> Send Report to OSA Coordinator</h3>
+        <button class="modal-close" onclick="closeSendModal()">&times;</button>
+      </div>
+      <form method="post" action="{% url 'violations:staff_send_report' %}">
+        {% csrf_token %}
+        <input type="hidden" name="start_date" value="{{ start_date }}">
+        <input type="hidden" name="end_date" value="{{ end_date }}">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Report Period:</label>
+            <p class="form-static">
+              {% if start_date and end_date %}
+                {{ start_date }} to {{ end_date }}
+              {% else %}
+                All Records (As of {% now "M d, Y" %})
+              {% endif %}
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="message">Additional Notes (Optional):</label>
+            <textarea name="message" id="message" rows="4" class="form-textarea" placeholder="Add any additional notes or highlights for the coordinator..."></textarea>
+          </div>
+          <div class="report-summary">
+            <h4>Report Summary</h4>
+            <div class="summary-grid">
+              <div class="summary-item">
+                <span class="summary-label">Total Violations</span>
+                <span class="summary-value">{{ total_violations }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Pending</span>
+                <span class="summary-value">{{ pending_count }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">In Progress</span>
+                <span class="summary-value">{{ in_progress_count }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Resolved</span>
+                <span class="summary-value">{{ resolved_count }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Resolution Rate</span>
+                <span class="summary-value">{{ resolution_rate }}%</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Apology Letters</span>
+                <span class="summary-value">{{ total_apologies }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" onclick="closeSendModal()">Cancel</button>
+          <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i> Send Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="{% static 'violations/js/script.js' %}"></script>
+  
+  <script>
+    // Export Dropdown Toggle
+    function toggleExportMenu() {
+      const menu = document.getElementById('exportMenu');
+      menu.classList.toggle('show');
+    }
+    
+    // Close export menu when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.export-dropdown')) {
+        const menu = document.getElementById('exportMenu');
+        if (menu) menu.classList.remove('show');
+      }
+    });
+    
+    // Send to Coordinator Modal
+    function openSendModal() {
+      document.getElementById('sendModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeSendModal() {
+      document.getElementById('sendModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    
+    // Close modal on overlay click
+    document.getElementById('sendModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeSendModal();
+      }
+    });
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeSendModal();
+      }
+    });
+  </script>
   
   <style>
     /* Official Top Navigation Styles */
@@ -1116,6 +1421,654 @@
 
       .analytics-row {
         grid-template-columns: 1fr;
+      }
+    }
+
+    /* Export Dropdown */
+    .export-dropdown {
+      position: relative;
+    }
+
+    .export-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-width: 180px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s;
+      z-index: 1000;
+    }
+
+    .export-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .export-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      color: #374151;
+      text-decoration: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      border: none;
+      background: none;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .export-option:hover {
+      background: #f3f4f6;
+    }
+
+    .export-option i {
+      width: 18px;
+      color: #1a472a;
+    }
+
+    /* Metrics Row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border: 2px solid #1a472a;
+      border-radius: 0;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .metric-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .metric-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .metric-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a472a;
+      line-height: 1.2;
+    }
+
+    .metric-desc {
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    .metric-visual {
+      flex-shrink: 0;
+    }
+
+    .progress-ring-bg {
+      stroke-dasharray: 151;
+    }
+
+    .progress-ring-circle {
+      stroke-dasharray: 0 151;
+      transition: stroke-dasharray 0.5s;
+    }
+
+    /* Apology Stats Grid */
+    .apology-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0;
+      padding: 0;
+    }
+
+    .apology-stat-card {
+      padding: 25px 20px;
+      text-align: center;
+      border-right: 1px solid #e5e7eb;
+      transition: background 0.2s;
+    }
+
+    .apology-stat-card:last-child {
+      border-right: none;
+    }
+
+    .apology-stat-card:hover {
+      background: #f0fdf4;
+    }
+
+    .apology-stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 12px;
+    }
+
+    .apology-stat-icon.pending {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #d97706;
+    }
+
+    .apology-stat-icon.approved {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #059669;
+    }
+
+    .apology-stat-icon.rejected {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      color: #dc2626;
+    }
+
+    .apology-stat-icon.revision {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #f59e0b;
+    }
+
+    .apology-stat-icon.formator {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #2563eb;
+    }
+
+    .apology-stat-icon.signed {
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      color: #4f46e5;
+    }
+
+    .apology-stat-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a472a;
+      display: block;
+    }
+
+    .apology-stat-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Severity Container */
+    .severity-container {
+      padding: 25px;
+    }
+
+    .severity-item {
+      margin-bottom: 24px;
+    }
+
+    .severity-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .severity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .severity-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .severity-label.severity-minor {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .severity-label.severity-major {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .severity-label.severity-grave {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+
+    .severity-count {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .severity-bar {
+      height: 16px;
+      background: #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .severity-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    /* Program Container */
+    .program-container {
+      padding: 25px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .program-item {
+      margin-bottom: 16px;
+    }
+
+    .program-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .program-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .program-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .program-stats {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .program-bar {
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .program-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+
+    /* Year Level Container */
+    .year-level-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 30px;
+      padding: 30px 25px;
+      min-height: 250px;
+    }
+
+    .year-level-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .year-level-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a472a;
+      line-height: 1;
+    }
+
+    .year-level-label {
+      font-family: 'Poppins', sans-serif;
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .year-level-count {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+      background: #1a472a;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 12px;
+    }
+
+    .year-level-bar-wrap {
+      width: 50px;
+      height: 120px;
+      background: #e5e7eb;
+      border-radius: 4px 4px 0 0;
+      margin-top: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .year-level-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(180deg, #1a472a 0%, #2d6a3f 100%);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.5s ease;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-container {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 550px;
+      max-height: 90vh;
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.show .modal-container {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
+      color: #ffffff;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .modal-close:hover {
+      opacity: 1;
+    }
+
+    .modal-body {
+      padding: 24px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-static {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      color: #1a472a;
+      margin: 0;
+      padding: 10px 14px;
+      background: #f0fdf4;
+      border-radius: 8px;
+      border: 1px solid #d1fae5;
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .form-textarea:focus {
+      outline: none;
+      border-color: #1a472a;
+      box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+    }
+
+    .report-summary {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .report-summary h4 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 12px 0;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .summary-item {
+      text-align: center;
+      padding: 10px;
+      background: #ffffff;
+      border-radius: 6px;
+    }
+
+    .summary-label {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 10px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    .summary-value {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a472a;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      background: #ffffff;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+      background: #f3f4f6;
+    }
+
+    .btn-send {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-send:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
+    }
+
+    /* Responsive for new sections */
+    @media (max-width: 1200px) {
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .apology-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .apology-stat-card {
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .apology-stat-card:nth-child(3) {
+        border-right: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-row {
+        grid-template-columns: 1fr;
+      }
+
+      .apology-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .apology-stat-card:nth-child(odd) {
+        border-right: 1px solid #e5e7eb;
+      }
+
+      .apology-stat-card:nth-child(even) {
+        border-right: none;
+      }
+
+      .year-level-container {
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media print {
+      .metrics-row,
+      .apology-stats-grid {
+        page-break-inside: avoid;
+      }
+
+      .modal-overlay {
+        display: none !important;
       }
     }
   </style>
