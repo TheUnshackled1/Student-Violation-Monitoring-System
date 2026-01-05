@@ -2039,18 +2039,27 @@
               <div style="display:grid; grid-template-columns:1fr 1fr 100px; gap:12px;">
                 <div>
                   <label for="newFirstName" style="font-weight:500; margin-bottom:6px; display:block;">First Name <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="first_name" id="newFirstName" required placeholder="First name"
-                         style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;" />
+                    <input type="text" name="first_name" id="newFirstName" required placeholder="First name"
+                      pattern="[A-Za-zÀ-ÿ' -]{1,50}"
+                      title="Letters only (spaces, hyphen, apostrophe allowed)"
+                      style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;"
+                      oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÿ' -]/g, '')" />
                 </div>
                 <div>
                   <label for="newLastName" style="font-weight:500; margin-bottom:6px; display:block;">Last Name <span style="color:#ef4444;">*</span></label>
-                  <input type="text" name="last_name" id="newLastName" required placeholder="Last name"
-                         style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;" />
+                    <input type="text" name="last_name" id="newLastName" required placeholder="Last name"
+                      pattern="[A-Za-zÀ-ÿ' -]{1,50}"
+                      title="Letters only (spaces, hyphen, apostrophe allowed)"
+                      style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;"
+                      oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÿ' -]/g, '')" />
                 </div>
                 <div>
                   <label for="newSuffix" style="font-weight:500; margin-bottom:6px; display:block;">Suffix <span style="color:#667085; font-size:11px;">(Optional)</span></label>
-                  <input type="text" name="suffix" id="newSuffix" placeholder="Jr., Sr."
-                         style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;" />
+                    <input type="text" name="suffix" id="newSuffix" placeholder="Jr., Sr."
+                      pattern="[A-Za-zÀ-ÿ.,' -]{0,15}"
+                      title="Letters only (comma/period/spaces/hyphen allowed)"
+                      style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px;"
+                      oninput="this.value = this.value.replace(/[^A-Za-zÀ-ÿ.,' -]/g, '')" />
                 </div>
               </div>
             </div>
