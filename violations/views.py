@@ -2813,72 +2813,144 @@ def guard_report_incident_view(request):
 				
 				# Create a User account for the new student
 				from django.contrib.auth import get_user_model
+				from django.db import transaction, IntegrityError
 				User = get_user_model()
 				
 				# Generate a username based on student_id
 				username = student_id.replace('-', '').lower()
 				
-				# Check if user already exists with this username
-				existing_user = User.objects.filter(username=username).first()
+				# Generate email for the student
+				base_email = email or f"{username}@student.chmsu.edu.ph"
 				
-				if existing_user:
-					# Check if this user already has a student profile
-					if hasattr(existing_user, 'student_profile'):
-						# User already has a student profile - use it
-						student = existing_user.student_profile
-					else:
-						# User exists but no student profile - create one
-						try:
-							year_level_int = int(year_level)
-						except (ValueError, TypeError):
-							year_level_int = 1
-						
-						student = StudentModel.objects.create(
-							user=existing_user,
-							student_id=student_id,
-							suffix=suffix,
-							program=program,
-							year_level=year_level_int,
-							year_level_assigned_at=timezone.now(),
-							department=program,
-							contact_number=contact_number,
-							guardian_name=guardian_name,
-							guardian_contact=guardian_contact,
-							enrollment_status='Active'
-						)
-						student_created = True
-				else:
-					# Create new user and student profile
-					full_last_name = f"{last_name} {suffix}".strip() if suffix else last_name
-					user = User.objects.create_user(
-						username=username,
-						first_name=first_name,
-						last_name=full_last_name,
-						password=student_id,  # Default password is student ID
-						email=email or f"{username}@student.chmsu.edu.ph",
-						role='student'  # Set the role to student
-					)
+				# Use transaction to prevent race conditions
+				try:
+					with transaction.atomic():
+						# Double-check student doesn't exist (race condition protection)
+						student = StudentModel.objects.filter(student_id__iexact=student_id).first()
+						if student:
+							# Student was created between our checks - use it
+							pass
+						else:
+							# Check if user already exists with this username OR email
+							existing_user = User.objects.filter(username=username).first()
+							if not existing_user and email:
+								# Also check by email if provided
+								existing_user = User.objects.filter(email__iexact=email).first()
+							
+							if existing_user:
+								# Check if a Student profile already exists for this user
+								existing_student = StudentModel.objects.filter(user=existing_user).first()
+								if existing_student:
+									# Use existing student profile
+									student = existing_student
+								else:
+									# User exists but no student profile - create one
+									try:
+										year_level_int = int(year_level)
+									except (ValueError, TypeError):
+										year_level_int = 1
+									
+									student = StudentModel.objects.create(
+										user=existing_user,
+										student_id=student_id,
+										suffix=suffix,
+										program=program,
+										year_level=year_level_int,
+										year_level_assigned_at=timezone.now(),
+										department=program,
+										contact_number=contact_number,
+										guardian_name=guardian_name,
+										guardian_contact=guardian_contact,
+										enrollment_status='Active'
+									)
+									student_created = True
+							else:
+								# Create new user and student profile
+								full_last_name = f"{last_name} {suffix}".strip() if suffix else last_name
+								
+								# Generate unique email if not provided or if it exists
+								final_email = base_email
+								email_counter = 1
+								while User.objects.filter(email__iexact=final_email).exists():
+									name_part = base_email.split('@')[0]
+									domain_part = base_email.split('@')[1]
+									final_email = f"{name_part}{email_counter}@{domain_part}"
+									email_counter += 1
+								
+								# Also ensure username is unique
+								final_username = username
+								username_counter = 1
+								while User.objects.filter(username=final_username).exists():
+									final_username = f"{username}_{username_counter}"
+									username_counter += 1
+								
+								user = User.objects.create_user(
+									username=final_username,
+									first_name=first_name,
+									last_name=full_last_name,
+									password=student_id,  # Default password is student ID
+									email=final_email,
+									role='student'  # Set the role to student
+								)
+								
+								# NOTE: A signal in signals.py auto-creates a Student profile
+								# when a User with role='student' is created. We need to fetch
+								# and update that profile instead of creating a new one.
+								try:
+									year_level_int = int(year_level)
+								except (ValueError, TypeError):
+									year_level_int = 1
+								
+								# Get the auto-created student profile and update it
+								student = StudentModel.objects.filter(user=user).first()
+								if student:
+									# Update the auto-created profile with proper data
+									student.student_id = student_id
+									student.suffix = suffix
+									student.program = program
+									student.year_level = year_level_int
+									student.year_level_assigned_at = timezone.now()
+									student.department = program
+									student.contact_number = contact_number
+									student.guardian_name = guardian_name
+									student.guardian_contact = guardian_contact
+									student.enrollment_status = 'Active'
+									student.save()
+								else:
+									# Signal didn't create one, create manually
+									student = StudentModel.objects.create(
+										user=user,
+										student_id=student_id,
+										suffix=suffix,
+										program=program,
+										year_level=year_level_int,
+										year_level_assigned_at=timezone.now(),
+										department=program,
+										contact_number=contact_number,
+										guardian_name=guardian_name,
+										guardian_contact=guardian_contact,
+										enrollment_status='Active'
+									)
+								student_created = True
+				except IntegrityError as e:
+					# If we still get an integrity error, try to fetch the existing student
+					student = StudentModel.objects.filter(student_id__iexact=student_id).first()
+					if not student:
+						# Try to find by username
+						existing_user = User.objects.filter(username=username).first()
+						if not existing_user and email:
+							existing_user = User.objects.filter(email__iexact=email).first()
+						if existing_user:
+							student = StudentModel.objects.filter(user=existing_user).first()
 					
-					# Create the Student profile
-					try:
-						year_level_int = int(year_level)
-					except (ValueError, TypeError):
-						year_level_int = 1
-					
-					student = StudentModel.objects.create(
-						user=user,
-						student_id=student_id,
-						suffix=suffix,
-						program=program,
-						year_level=year_level_int,
-						year_level_assigned_at=timezone.now(),
-						department=program,
-						contact_number=contact_number,
-						guardian_name=guardian_name,
-						guardian_contact=guardian_contact,
-						enrollment_status='Active'
-					)
-					student_created = True
+					if not student:
+						import traceback
+						print(f"IntegrityError in guard report: {e}")
+						print(traceback.format_exc())
+						return JsonResponse({
+							'success': False,
+							'error': f'Database error: {str(e)}. The student may already exist with different details.'
+						})
 			
 			# Get violation type if provided
 			violation_type = None

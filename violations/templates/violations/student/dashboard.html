@@ -2023,9 +2023,9 @@
                 <!-- Evidence (if any) -->
                 <div id="evidenceSection" style="display:none;">
                     <label style="font-size:12px; color:#667085; display:block; margin-bottom:4px;">Evidence</label>
-                    <a id="violationEvidence" href="#" target="_blank" style="display:inline-flex; align-items:center; gap:6px; color:#3b82f6; text-decoration:none;">
+                    <button id="violationEvidence" type="button" data-evidence-url="" style="display:inline-flex; align-items:center; gap:6px; color:#3b82f6; background:none; border:none; cursor:pointer; padding:0; font-size:inherit; font-family:inherit;">
                         <i class="fas fa-file-alt"></i> <span>View Evidence File</span>
-                    </a>
+                    </button>
                 </div>
                 
                 <!-- Apology Letter Summary Section -->
@@ -2047,6 +2047,55 @@
                     <i class="fas fa-pen-to-square"></i> Write Apology Letter
                 </a>
                 <button class="login-button" id="violationModalCloseBtn" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Viewer Modal -->
+    <div class="modal" id="evidenceModal" aria-hidden="true">
+        <div class="modal-card" style="max-width:850px; max-height:90vh; display:flex; flex-direction:column;">
+            <div class="modal-header" style="background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color:#fff;">
+                <h3><i class="fas fa-file-image"></i> Evidence File</h3>
+                <button class="icon-btn" id="evidenceModalClose" style="color:#fff;"><i class="fas fa-times"></i></button>
+            </div>
+            <!-- Zoom Controls -->
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px; padding:10px 16px; background:#f3f4f6; border-bottom:1px solid #e5e7eb;">
+                <button id="evidenceZoomOut" class="icon-btn" title="Zoom Out" style="background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:6px 10px;">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <span id="evidenceZoomLevel" style="font-size:13px; font-weight:500; min-width:50px; text-align:center;">100%</span>
+                <button id="evidenceZoomIn" class="icon-btn" title="Zoom In" style="background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:6px 10px;">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button id="evidenceZoomReset" class="icon-btn" title="Reset Zoom" style="background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:6px 10px; margin-left:8px;">
+                    <i class="fas fa-undo"></i>
+                </button>
+                <a id="evidenceDownloadBtn" href="#" download style="margin-left:auto; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+            <div class="modal-body" style="padding:0; flex:1; overflow:hidden;">
+                <!-- Scrollable Container -->
+                <div id="evidenceScrollContainer" style="max-height:60vh; overflow:auto; background:#374151; padding:16px; display:flex; align-items:center; justify-content:center;">
+                    <!-- Image Evidence -->
+                    <img id="evidenceImage" src="" alt="Evidence" style="max-width:100%; height:auto; display:none; transform-origin:center center; transition:transform 0.2s ease; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.3);" />
+                    <!-- PDF/Document Evidence -->
+                    <iframe id="evidencePdf" src="" style="width:100%; height:55vh; border:none; display:none; background:#fff; border-radius:4px;"></iframe>
+                    <!-- Fallback for other file types -->
+                    <div id="evidenceFallback" style="display:none; text-align:center; padding:40px; color:#fff;">
+                        <i class="fas fa-file" style="font-size:64px; margin-bottom:16px; opacity:0.7;"></i>
+                        <p style="margin:0 0 16px 0;">This file type cannot be previewed directly.</p>
+                        <a id="evidenceFallbackLink" href="#" target="_blank" style="color:#60a5fa; text-decoration:underline;">Open in new tab</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="display:flex; gap:10px; justify-content:flex-end; padding:16px; border-top:1px solid #e5e7eb;">
+                <a id="evidenceOpenNewTab" href="#" target="_blank" class="login-button" style="background:linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                </a>
+                <button class="login-button" id="evidenceModalCloseBtn" style="background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:#fff; padding:6px 12px; border-radius:6px; border:none; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
                     <i class="fas fa-times"></i> Close
                 </button>
             </div>
@@ -2707,7 +2756,7 @@
                 const evidenceUrl = row.dataset.evidence;
                 if(evidenceUrl && evidenceUrl.trim()) {
                     evidenceSection.style.display = 'block';
-                    evidence.href = evidenceUrl;
+                    evidence.dataset.evidenceUrl = evidenceUrl;
                 } else {
                     evidenceSection.style.display = 'none';
                 }
@@ -2727,15 +2776,6 @@
             if(closeBtn) closeBtn.addEventListener('click', closeModal);
             if(closeBtnFooter) closeBtnFooter.addEventListener('click', closeModal);
             if(modal) modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
-            document.addEventListener('keydown', (e) => { 
-                if(e.key === 'Escape') {
-                    if(pdfModal && pdfModal.classList.contains('show')) {
-                        closePdfModal();
-                    } else if(modal.classList.contains('show')) {
-                        closeModal();
-                    }
-                }
-            });
             
             // Click on view buttons
             document.querySelectorAll('.view-violation-btn').forEach(btn => {
@@ -2744,6 +2784,147 @@
                     const row = btn.closest('.violation-row');
                     if(row) openModal(row);
                 });
+            });
+            
+            // ========== Evidence Modal Functionality ==========
+            const evidenceModal = document.getElementById('evidenceModal');
+            const evidenceModalClose = document.getElementById('evidenceModalClose');
+            const evidenceModalCloseBtn = document.getElementById('evidenceModalCloseBtn');
+            const evidenceImage = document.getElementById('evidenceImage');
+            const evidencePdf = document.getElementById('evidencePdf');
+            const evidenceFallback = document.getElementById('evidenceFallback');
+            const evidenceFallbackLink = document.getElementById('evidenceFallbackLink');
+            const evidenceDownloadBtn = document.getElementById('evidenceDownloadBtn');
+            const evidenceOpenNewTab = document.getElementById('evidenceOpenNewTab');
+            const evidenceScrollContainer = document.getElementById('evidenceScrollContainer');
+            
+            // Evidence zoom functionality
+            let evidenceZoom = 100;
+            const evidenceMinZoom = 50;
+            const evidenceMaxZoom = 300;
+            const evidenceZoomStep = 25;
+            const evidenceZoomLevelEl = document.getElementById('evidenceZoomLevel');
+            const evidenceZoomInBtn = document.getElementById('evidenceZoomIn');
+            const evidenceZoomOutBtn = document.getElementById('evidenceZoomOut');
+            const evidenceZoomResetBtn = document.getElementById('evidenceZoomReset');
+            
+            function updateEvidenceZoom() {
+                if(evidenceImage && evidenceImage.style.display !== 'none') {
+                    evidenceImage.style.transform = `scale(${evidenceZoom / 100})`;
+                }
+                if(evidenceZoomLevelEl) evidenceZoomLevelEl.textContent = evidenceZoom + '%';
+                if(evidenceZoomInBtn) evidenceZoomInBtn.disabled = evidenceZoom >= evidenceMaxZoom;
+                if(evidenceZoomOutBtn) evidenceZoomOutBtn.disabled = evidenceZoom <= evidenceMinZoom;
+            }
+            
+            if(evidenceZoomInBtn) {
+                evidenceZoomInBtn.addEventListener('click', () => {
+                    if(evidenceZoom < evidenceMaxZoom) {
+                        evidenceZoom += evidenceZoomStep;
+                        updateEvidenceZoom();
+                    }
+                });
+            }
+            
+            if(evidenceZoomOutBtn) {
+                evidenceZoomOutBtn.addEventListener('click', () => {
+                    if(evidenceZoom > evidenceMinZoom) {
+                        evidenceZoom -= evidenceZoomStep;
+                        updateEvidenceZoom();
+                    }
+                });
+            }
+            
+            if(evidenceZoomResetBtn) {
+                evidenceZoomResetBtn.addEventListener('click', () => {
+                    evidenceZoom = 100;
+                    updateEvidenceZoom();
+                    if(evidenceScrollContainer) {
+                        evidenceScrollContainer.scrollTop = 0;
+                        evidenceScrollContainer.scrollLeft = 0;
+                    }
+                });
+            }
+            
+            function openEvidenceModal(url) {
+                if(!url) return;
+                
+                // Reset zoom
+                evidenceZoom = 100;
+                updateEvidenceZoom();
+                
+                // Hide all content types first
+                evidenceImage.style.display = 'none';
+                evidencePdf.style.display = 'none';
+                evidenceFallback.style.display = 'none';
+                
+                // Set download and new tab links
+                evidenceDownloadBtn.href = url;
+                evidenceOpenNewTab.href = url;
+                evidenceFallbackLink.href = url;
+                
+                // Determine file type from URL
+                const lowerUrl = url.toLowerCase();
+                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?|$)/i.test(lowerUrl);
+                const isPdf = /\.pdf(\?|$)/i.test(lowerUrl);
+                
+                if(isImage) {
+                    evidenceImage.src = url;
+                    evidenceImage.style.display = 'block';
+                    evidenceImage.onload = function() {
+                        // Reset scroll position after image loads
+                        if(evidenceScrollContainer) {
+                            evidenceScrollContainer.scrollTop = 0;
+                            evidenceScrollContainer.scrollLeft = 0;
+                        }
+                    };
+                } else if(isPdf) {
+                    evidencePdf.src = url;
+                    evidencePdf.style.display = 'block';
+                } else {
+                    // Fallback for other file types
+                    evidenceFallback.style.display = 'block';
+                }
+                
+                evidenceModal.classList.add('show');
+            }
+            
+            function closeEvidenceModal() {
+                evidenceModal.classList.remove('show');
+                // Clear sources to stop loading
+                evidenceImage.src = '';
+                evidencePdf.src = '';
+            }
+            
+            // Evidence modal event listeners
+            if(evidenceModalClose) evidenceModalClose.addEventListener('click', closeEvidenceModal);
+            if(evidenceModalCloseBtn) evidenceModalCloseBtn.addEventListener('click', closeEvidenceModal);
+            if(evidenceModal) {
+                evidenceModal.addEventListener('click', (e) => {
+                    if(e.target === evidenceModal) closeEvidenceModal();
+                });
+            }
+            
+            // Click on evidence button to open modal
+            if(evidence) {
+                evidence.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const url = evidence.dataset.evidenceUrl;
+                    if(url) openEvidenceModal(url);
+                });
+            }
+            
+            // Global escape key handler for all modals
+            document.addEventListener('keydown', (e) => { 
+                if(e.key === 'Escape') {
+                    if(evidenceModal && evidenceModal.classList.contains('show')) {
+                        closeEvidenceModal();
+                    } else if(pdfModal && pdfModal.classList.contains('show')) {
+                        closePdfModal();
+                    } else if(modal.classList.contains('show')) {
+                        closeModal();
+                    }
+                }
             });
         })();
     </script>

@@ -331,18 +331,21 @@
                 <label class="field-label">First Name <span class="required">*</span></label>
                 <input type="text" id="student_first_name" name="first_name" 
                        placeholder="Enter First Name" 
+                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-'ñÑ]/g, '')"
                        class="form-input">
               </div>
               <div class="form-field" style="flex:1;">
                 <label class="field-label">Last Name <span class="required">*</span></label>
                 <input type="text" id="student_last_name" name="last_name" 
                        placeholder="Enter Last Name" 
+                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-'ñÑ]/g, '')"
                        class="form-input">
               </div>
               <div class="form-field" style="flex:0 0 100px;">
                 <label class="field-label">Suffix <span style="color:#667085; font-size:10px;">(Optional)</span></label>
                 <input type="text" id="student_suffix" name="suffix" 
                        placeholder="Jr., Sr."
+                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-'.]/g, '')"
                        class="form-input">
               </div>
             </div>
@@ -396,6 +399,7 @@
                 <label class="field-label">Guardian Name</label>
                 <input type="text" id="student_guardian_name" name="guardian_name" 
                        placeholder="Parent/Guardian name"
+                       oninput="this.value = this.value.replace(/[^a-zA-Z\s\-'ñÑ.]/g, '')"
                        class="form-input">
               </div>
               <div class="form-field">
