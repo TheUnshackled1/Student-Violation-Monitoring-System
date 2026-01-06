@@ -2422,18 +2422,20 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': csrfToken
                             },
-                            body: JSON.stringify({ message_id: msgId })
+                            body: JSON.stringify({ message_id: parseInt(msgId) })
                         });
                         
-                        if(response.ok) {
+                        const data = await response.json();
+                        
+                        if(response.ok && data.status === 'ok') {
                             // Remove the item from the list and reload
                             location.reload();
                         } else {
-                            alert('Failed to delete message');
+                            alert('Failed to delete message: ' + (data.error || data.status));
                         }
                     } catch(err) {
                         console.error('Error deleting message:', err);
-                        alert('Error deleting message');
+                        alert('Error deleting message: ' + err.message);
                     }
                 });
             });
@@ -2451,17 +2453,19 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRFToken': csrfToken
                             },
-                            body: JSON.stringify({ message_id: msgId })
+                            body: JSON.stringify({ message_id: parseInt(msgId) })
                         });
                         
-                        if(response.ok) {
+                        const data = await response.json();
+                        
+                        if(response.ok && data.status === 'ok') {
                             location.reload();
                         } else {
-                            alert('Failed to restore message');
+                            alert('Failed to restore message: ' + (data.error || data.status));
                         }
                     } catch(err) {
                         console.error('Error restoring message:', err);
-                        alert('Error restoring message');
+                        alert('Error restoring message: ' + err.message);
                     }
                 });
             });

@@ -85,6 +85,7 @@ urlpatterns = [
     # OSA Staff - Alert Management
     path('staff/schedule-meeting/<int:alert_id>/', views.staff_schedule_meeting_view, name='staff_schedule_meeting'),
     path('staff/resolve-alert/<int:alert_id>/', views.staff_resolve_alert_view, name='staff_resolve_alert'),
+    path('staff/mark-meeting-met/<int:alert_id>/', views.staff_mark_meeting_met_view, name='staff_mark_meeting_met'),
 
     # Guard Portal
     path('guard/login/', views.guard_login_view, name='guard_login'),

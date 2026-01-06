@@ -314,7 +314,7 @@
             </div>
             <div class="form-field">
               <label class="field-label">Originally Reported By</label>
-              <div class="readonly-field">{{ violation.reported_by.get_full_name|default:violation.reported_by.username }}</div>
+              <div class="readonly-field">{% if violation.reported_by %}{{ violation.reported_by.get_full_name|default:violation.reported_by.username }}{% else %}—{% endif %}</div>
             </div>
           </div>
           {% endif %}

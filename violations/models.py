@@ -257,6 +257,12 @@ class StaffAlert(models.Model):
 
 	Use this to notify staff and avoid duplicate alerts while an alert remains unresolved.
 	"""
+	class MeetingStatus(models.TextChoices):
+		NOT_SCHEDULED = "not_scheduled", "Not Scheduled"
+		SCHEDULED = "scheduled", "Scheduled"
+		MET = "met", "Met/Completed"
+		EXPIRED = "expired", "Did Not Meet/Expired"
+
 	student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="alerts")
 	triggered_violation = models.ForeignKey("Violation", on_delete=models.SET_NULL, null=True, blank=True)
 	effective_major_count = models.PositiveIntegerField()
@@ -265,6 +271,13 @@ class StaffAlert(models.Model):
 	resolved_at = models.DateTimeField(null=True, blank=True)
 	scheduled_meeting = models.DateTimeField(null=True, blank=True, help_text="Scheduled meeting time with OSA Coordinator")
 	meeting_notes = models.TextField(blank=True, help_text="Additional notes for the meeting")
+	meeting_status = models.CharField(
+		max_length=20, 
+		choices=MeetingStatus.choices, 
+		default=MeetingStatus.NOT_SCHEDULED,
+		help_text="Current status of the scheduled meeting"
+	)
+	meeting_status_updated_at = models.DateTimeField(null=True, blank=True, help_text="When the meeting status was last updated")
 
 	class Meta:
 		ordering = ["-created_at"]
@@ -273,6 +286,21 @@ class StaffAlert(models.Model):
 		self.resolved = True
 		self.resolved_at = timezone.now()
 		self.save(update_fields=["resolved", "resolved_at"])
+
+	def update_meeting_status(self, status):
+		"""Update meeting status and timestamp."""
+		self.meeting_status = status
+		self.meeting_status_updated_at = timezone.now()
+		self.save(update_fields=["meeting_status", "meeting_status_updated_at"])
+
+	def check_meeting_expired(self):
+		"""Check if meeting has expired and update status if so."""
+		if (self.meeting_status == self.MeetingStatus.SCHEDULED and 
+			self.scheduled_meeting and 
+			self.scheduled_meeting < timezone.now()):
+			self.update_meeting_status(self.MeetingStatus.EXPIRED)
+			return True
+		return False
 
 	def __str__(self):
 		return f"StaffAlert({self.student.student_id} = {self.effective_major_count} @ {self.created_at:%Y-%m-%d %H:%M})"

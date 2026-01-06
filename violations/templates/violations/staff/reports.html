@@ -30,53 +30,6 @@
       </div>
 
       <div class="nav-actions">
-        <div class="print-settings-dropdown no-print">
-          <button class="nav-icon-btn" onclick="togglePrintSettings()" title="Print Settings">
-            <i class="fas fa-cog"></i>
-          </button>
-          <div class="print-settings-menu" id="printSettingsMenu">
-            <div class="print-settings-header">
-              <i class="fas fa-print"></i> Print Settings
-            </div>
-            <div class="print-settings-body">
-              <label class="print-setting-label">Paper Size:</label>
-              <div class="paper-size-options">
-                <label class="paper-option">
-                  <input type="radio" name="paperSize" value="a4" checked onchange="setPaperSize('a4')">
-                  <span>A4 (210×297mm)</span>
-                </label>
-                <label class="paper-option">
-                  <input type="radio" name="paperSize" value="legal" onchange="setPaperSize('legal')">
-                  <span>Legal (216×356mm)</span>
-                </label>
-                <label class="paper-option">
-                  <input type="radio" name="paperSize" value="letter" onchange="setPaperSize('letter')">
-                  <span>Letter (216×279mm)</span>
-                </label>
-                <label class="paper-option">
-                  <input type="radio" name="paperSize" value="folio" onchange="setPaperSize('folio')">
-                  <span>Folio (216×330mm)</span>
-                </label>
-              </div>
-              <label class="print-setting-label" style="margin-top: 12px;">Orientation:</label>
-              <div class="paper-size-options">
-                <label class="paper-option">
-                  <input type="radio" name="orientation" value="portrait" checked onchange="setOrientation('portrait')">
-                  <span>Portrait</span>
-                </label>
-                <label class="paper-option">
-                  <input type="radio" name="orientation" value="landscape" onchange="setOrientation('landscape')">
-                  <span>Landscape</span>
-                </label>
-              </div>
-            </div>
-            <div class="print-settings-footer">
-              <button type="button" onclick="window.print()" class="print-now-btn">
-                <i class="fas fa-print"></i> Print Now
-              </button>
-            </div>
-          </div>
-        </div>
         <div class="export-dropdown no-print">
           <button class="nav-icon-btn" onclick="toggleExportMenu()" title="Export Report">
             <i class="fas fa-download"></i>
@@ -93,7 +46,7 @@
         <button class="nav-icon-btn no-print" onclick="openSendModal()" title="Send to Coordinator">
           <i class="fas fa-paper-plane"></i>
         </button>
-        <button class="nav-icon-btn no-print" onclick="window.print()" title="Print Report">
+        <button class="nav-icon-btn" onclick="window.print()" title="Print Report">
           <i class="fas fa-print"></i>
         </button>
         <a href="{% url 'violations:staff_dashboard' %}" class="nav-icon-btn" title="Back to Dashboard">
@@ -616,63 +569,12 @@
     function toggleExportMenu() {
       const menu = document.getElementById('exportMenu');
       menu.classList.toggle('show');
-      // Close print settings if open
-      const printMenu = document.getElementById('printSettingsMenu');
-      if (printMenu) printMenu.classList.remove('show');
     }
-    
-    // Print Settings Toggle
-    function togglePrintSettings() {
-      const menu = document.getElementById('printSettingsMenu');
-      menu.classList.toggle('show');
-      // Close export menu if open
-      const exportMenu = document.getElementById('exportMenu');
-      if (exportMenu) exportMenu.classList.remove('show');
-    }
-    
-    // Set Paper Size
-    let currentPaperSize = 'a4';
-    let currentOrientation = 'portrait';
-    
-    function setPaperSize(size) {
-      currentPaperSize = size;
-      updatePrintClass();
-    }
-    
-    function setOrientation(orientation) {
-      currentOrientation = orientation;
-      updatePrintClass();
-    }
-    
-    function updatePrintClass() {
-      // Remove all print classes
-      document.body.classList.remove(
-        'print-a4', 'print-a4-landscape',
-        'print-legal', 'print-legal-landscape',
-        'print-letter', 'print-letter-landscape',
-        'print-folio', 'print-folio-landscape'
-      );
-      
-      // Add new print class
-      const className = currentOrientation === 'landscape' 
-        ? `print-${currentPaperSize}-landscape` 
-        : `print-${currentPaperSize}`;
-      document.body.classList.add(className);
-    }
-    
-    // Initialize with A4 portrait
-    document.addEventListener('DOMContentLoaded', function() {
-      updatePrintClass();
-    });
     
     // Close menus when clicking outside
     document.addEventListener('click', function(e) {
       if (!e.target.closest('.export-dropdown')) {
         const menu = document.getElementById('exportMenu');
-        if (menu) menu.classList.remove('show');
-      }
-      if (!e.target.closest('.print-settings-dropdown')) {
-        const menu = document.getElementById('printSettingsMenu');
         if (menu) menu.classList.remove('show');
       }
     });
@@ -1526,117 +1428,6 @@
       }
     }
 
-    /* Print Settings Dropdown */
-    .print-settings-dropdown {
-      position: relative;
-    }
-
-    .print-settings-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 8px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 25px rgba(0,0,0,0.2);
-      min-width: 260px;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-10px);
-      transition: all 0.2s;
-      z-index: 1001;
-      overflow: hidden;
-    }
-
-    .print-settings-menu.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .print-settings-header {
-      background: linear-gradient(135deg, #1a472a 0%, #2d5a3f 100%);
-      color: #ffffff;
-      padding: 12px 16px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .print-settings-body {
-      padding: 16px;
-    }
-
-    .print-setting-label {
-      display: block;
-      font-family: 'Poppins', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .paper-size-options {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .paper-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      color: #374151;
-    }
-
-    .paper-option:hover {
-      background: #f3f4f6;
-    }
-
-    .paper-option input[type="radio"] {
-      accent-color: #1a472a;
-    }
-
-    .print-settings-footer {
-      padding: 12px 16px;
-      background: #f9fafb;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .print-now-btn {
-      width: 100%;
-      padding: 10px 16px;
-      background: linear-gradient(135deg, #1a472a 0%, #2d6a3f 100%);
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .print-now-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(26, 71, 42, 0.3);
-    }
-
     /* Export Dropdown */
     .export-dropdown {
       position: relative;
@@ -2289,65 +2080,6 @@
        COMPREHENSIVE PRINT STYLES
        ======================================== */
     
-    /* Paper Size Definitions */
-    @page {
-      margin: 15mm 12mm;
-    }
-
-    /* A4 Size (Default) */
-    @page a4 {
-      size: A4 portrait;
-      margin: 15mm 12mm;
-    }
-
-    @page a4-landscape {
-      size: A4 landscape;
-      margin: 12mm 15mm;
-    }
-
-    /* Legal Size */
-    @page legal {
-      size: 216mm 356mm portrait;
-      margin: 15mm 12mm;
-    }
-
-    @page legal-landscape {
-      size: 356mm 216mm landscape;
-      margin: 12mm 15mm;
-    }
-
-    /* Letter Size */
-    @page letter {
-      size: letter portrait;
-      margin: 15mm 12mm;
-    }
-
-    @page letter-landscape {
-      size: letter landscape;
-      margin: 12mm 15mm;
-    }
-
-    /* Folio Size */
-    @page folio {
-      size: 216mm 330mm portrait;
-      margin: 15mm 12mm;
-    }
-
-    @page folio-landscape {
-      size: 330mm 216mm landscape;
-      margin: 12mm 15mm;
-    }
-
-    /* Print Body Classes */
-    body.print-a4 { page: a4; }
-    body.print-a4-landscape { page: a4-landscape; }
-    body.print-legal { page: legal; }
-    body.print-legal-landscape { page: legal-landscape; }
-    body.print-letter { page: letter; }
-    body.print-letter-landscape { page: letter-landscape; }
-    body.print-folio { page: folio; }
-    body.print-folio-landscape { page: folio-landscape; }
-
     @media print {
       /* Reset and base print styles */
       *, *::before, *::after {
@@ -2375,7 +2107,6 @@
       .nav-actions,
       .report-filter-bar,
       .modal-overlay,
-      .print-settings-dropdown,
       .export-dropdown {
         display: none !important;
       }

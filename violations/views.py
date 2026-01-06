@@ -640,6 +640,11 @@ def faculty_dashboard_view(request):
 	staff_alerts = StaffAlert.objects.select_related("student__user", "triggered_violation").filter(
 		resolved=False
 	).order_by("-created_at")
+	
+	# Check for expired meetings and update status automatically
+	for alert in staff_alerts:
+		alert.check_meeting_expired()
+	
 	ctx = {
 		"stats": {
 			"total": total_reports,
@@ -1374,6 +1379,11 @@ def staff_dashboard_view(request):
 	staff_alerts = StaffAlert.objects.select_related("student__user", "triggered_violation").filter(
 		resolved=False
 	).order_by("-created_at")
+	
+	# Check for expired meetings and update status automatically
+	for alert in staff_alerts:
+		alert.check_meeting_expired()
+	
 	ctx = {
 		"students": students,
 		"total_students": total_students,
@@ -2782,7 +2792,14 @@ def faculty_delete_message_view(request):
 		if not message_id:
 			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
 		
-		msg = get_object_or_404(Message, id=message_id, receiver=request.user)
+		# Allow deletion of both sent and received messages
+		msg = Message.objects.filter(id=message_id).filter(
+			models.Q(sender=request.user) | models.Q(receiver=request.user)
+		).first()
+		
+		if not msg:
+			return JsonResponse({'status': 'error', 'error': 'Message not found'}, status=404)
+		
 		msg.delete_for_user(request.user)
 		return JsonResponse({'status': 'ok'})
 	except json.JSONDecodeError:
@@ -2805,7 +2822,14 @@ def faculty_restore_message_view(request):
 		if not message_id:
 			return JsonResponse({'status': 'error', 'error': 'Missing message_id'}, status=400)
 		
-		msg = get_object_or_404(Message, id=message_id, receiver=request.user)
+		# Allow restoration of both sent and received messages
+		msg = Message.objects.filter(id=message_id).filter(
+			models.Q(sender=request.user) | models.Q(receiver=request.user)
+		).first()
+		
+		if not msg:
+			return JsonResponse({'status': 'error', 'error': 'Message not found'}, status=404)
+		
 		msg.restore_for_user(request.user)
 		return JsonResponse({'status': 'ok'})
 	except json.JSONDecodeError:
@@ -3031,6 +3055,8 @@ def staff_schedule_meeting_view(request, alert_id):
 		scheduled_meeting = datetime.strptime(scheduled_meeting_str, '%Y-%m-%dT%H:%M')
 		alert.scheduled_meeting = scheduled_meeting
 		alert.meeting_notes = meeting_notes
+		alert.meeting_status = StaffAlert.MeetingStatus.SCHEDULED
+		alert.meeting_status_updated_at = timezone.now()
 		alert.save()
 		
 		# Send notification to OSA Coordinator
@@ -3051,6 +3077,7 @@ Student Details:
 Meeting Details:
 - Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
 - Location: OSA Office
+- Status: SCHEDULED
 - Purpose: Review violation record and determine next steps
 {f"- Additional Notes: {meeting_notes}" if meeting_notes else ""}
 
@@ -3071,6 +3098,7 @@ You have been scheduled for a mandatory meeting with the OSA Coordinator due to 
 Meeting Details:
 - Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
 - Location: OSA Office
+- Status: SCHEDULED
 - Purpose: Review your violation record and discuss next steps
 {f"- Additional Notes: {meeting_notes}" if meeting_notes else ""}
 
@@ -3095,6 +3123,78 @@ OSA Staff
 		)
 		
 		return JsonResponse({"status": "success", "message": "Meeting scheduled successfully. Notifications sent to student and OSA Coordinator."})
+	except Exception as e:
+		return JsonResponse({"error": str(e)}, status=400)
+
+
+@role_required({User.Role.STAFF, User.Role.OSA_COORDINATOR})
+def staff_mark_meeting_met_view(request, alert_id):
+	"""Staff/OSA Coordinator: Mark a scheduled meeting as met/completed."""
+	if request.method != "POST":
+		return JsonResponse({"error": "Method not allowed"}, status=405)
+	
+	try:
+		alert = StaffAlert.objects.get(id=alert_id, resolved=False)
+	except StaffAlert.DoesNotExist:
+		return JsonResponse({"error": "Alert not found"}, status=404)
+	
+	# Only allow marking as met if status is scheduled
+	if alert.meeting_status != StaffAlert.MeetingStatus.SCHEDULED:
+		return JsonResponse({"error": "Meeting must be in scheduled status to mark as met"}, status=400)
+	
+	try:
+		# Update status to met
+		alert.meeting_status = StaffAlert.MeetingStatus.MET
+		alert.meeting_status_updated_at = timezone.now()
+		alert.save()
+		
+		# Send notification to OSA Coordinator
+		faculty_users = User.objects.filter(role=User.Role.OSA_COORDINATOR)
+		for faculty in faculty_users:
+			if faculty != request.user:  # Don't notify yourself
+				Message.objects.create(
+					sender=request.user,
+					receiver=faculty,
+					content=f"""MEETING STATUS UPDATE: Completed
+
+The scheduled meeting has been marked as COMPLETED.
+
+Student Details:
+- Student ID: {alert.student.student_id}
+- Name: {alert.student.user.get_full_name() or alert.student.user.username}
+- Effective Major Violations: {alert.effective_major_count}
+
+Meeting Details:
+- Original Scheduled Time: {alert.scheduled_meeting.strftime('%B %d, %Y at %I:%M %p') if alert.scheduled_meeting else 'N/A'}
+- Status: MET/COMPLETED
+- Marked by: {request.user.get_full_name() or request.user.username}
+
+Please follow up with any necessary disciplinary actions or documentation.
+""".strip()
+				)
+		
+		# Send notification to the student
+		Message.objects.create(
+			sender=request.user,
+			receiver=alert.student.user,
+			content=f"""MEETING STATUS UPDATE
+
+Your mandatory meeting with the OSA Coordinator has been marked as COMPLETED.
+
+Meeting Details:
+- Scheduled Time: {alert.scheduled_meeting.strftime('%B %d, %Y at %I:%M %p') if alert.scheduled_meeting else 'N/A'}
+- Status: MET/COMPLETED
+
+Thank you for attending the meeting. Please follow any instructions or action items discussed during the meeting.
+
+If you have any questions, contact the OSA Office.
+
+Regards,
+OSA Office
+""".strip()
+		)
+		
+		return JsonResponse({"status": "success", "message": "Meeting marked as completed. Notifications sent."})
 	except Exception as e:
 		return JsonResponse({"error": str(e)}, status=400)
 
