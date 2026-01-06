@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="gBase" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f4c2e"/>
+      <stop offset="100%" stop-color="#2e7d32"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#gBase)"/>
+  <circle cx="68%" cy="18%" r="420" fill="url(#glow)"/>
+
+  <!-- authoritative waves -->
+  <path d="M0,840 C360,760 680,900 960,860 C1240,820 1560,940 1920,880 L1920,1080 L0,1080 Z" fill="url(#wave)"/>
+  <path d="M0,900 C360,820 680,960 960,920 C1240,880 1560,1000 1920,940 L1920,1080 L0,1080 Z" fill="url(#wave)" opacity="0.7"/>
+
+  <!-- subtle governance icons: shield/check -->
+  <g stroke="#ffffff" stroke-opacity="0.10" fill="none" stroke-width="6">
+    <path d="M1520 160 l60 20 v70 c0 60 -60 90 -60 90 s-60 -30 -60 -90 v-70 z"/>
+    <path d="M1460 210 l25 25 l50 -50" stroke-width="8"/>
+  </g>
+</svg>

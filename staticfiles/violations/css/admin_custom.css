@@ -1,0 +1,15 @@
+/* Custom Admin Login Styles */
+
+/* Make the login logo smaller */
+.login-logo img,
+.login-box-body .login-logo img {
+    max-width: 120px !important;
+    max-height: 120px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Also control sidebar logo size */
+.brand-image {
+    max-height: 33px !important;
+}

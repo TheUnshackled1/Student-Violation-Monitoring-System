@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b5e20" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2e7d32" stop-opacity="0.9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02"/>
+    </linearGradient>
+    <filter id="softBlur" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+  </defs>
+
+  <!-- Base gradient background -->
+  <rect width="100%" height="100%" fill="url(#g1)"/>
+
+  <!-- Soft glow -->
+  <circle cx="65%" cy="18%" r="420" fill="url(#glow)"/>
+
+  <!-- Abstract waves -->
+  <path d="M0,820 C320,740 640,900 960,840 C1280,780 1600,920 1920,860 L1920,1080 L0,1080 Z" fill="url(#wave)"/>
+  <path d="M0,880 C340,820 640,980 960,920 C1280,860 1600,1000 1920,940 L1920,1080 L0,1080 Z" fill="url(#wave)" opacity="0.7"/>
+
+  <!-- Blurred highlight ribbon -->
+  <path d="M-100,300 C300,100 700,200 1100,280 C1500,360 1700,300 2100,200" stroke="#ffffff" stroke-opacity="0.08" stroke-width="120" fill="none" filter="url(#softBlur)"/>
+
+  <!-- Subtle dots pattern -->
+  <g fill="#ffffff" fill-opacity="0.08">
+    <circle cx="180" cy="180" r="3"/>
+    <circle cx="260" cy="260" r="2"/>
+    <circle cx="340" cy="160" r="2"/>
+    <circle cx="420" cy="220" r="3"/>
+    <circle cx="520" cy="140" r="2"/>
+  </g>
+</svg>
