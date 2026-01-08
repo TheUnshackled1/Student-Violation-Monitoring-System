@@ -303,11 +303,11 @@ WSGI_APPLICATION = "student_violation_system.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "student_tracking_db",
-        "USER": "postgres",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.environ.get("DB_NAME", "student_tracking_db"),  # your DB name
+        "USER": os.environ.get("DB_USER", "postgres"),             # your DB user
+        "PASSWORD": os.environ.get("DB_PASSWORD", "1234"),         # your DB password
+        "HOST": os.environ.get("DB_HOST", "your-render-db-host"),  # from Render dashboard
+        "PORT": os.environ.get("DB_PORT", "5432"),                 # default PostgreSQL port
     }
 }
 
