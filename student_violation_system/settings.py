@@ -267,6 +267,7 @@ JAZZMIN_UI_TWEAKS = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -299,25 +300,28 @@ WSGI_APPLICATION = "student_violation_system.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# PostgreSQL configuration
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "student_tracking_db"),  # your DB name
-        "USER": os.environ.get("DB_USER", "postgres"),             # your DB user
-        "PASSWORD": os.environ.get("DB_PASSWORD", "1234"),         # your DB password
-        "HOST": os.environ.get("DB_HOST", "your-render-db-host"),  # from Render dashboard
-        "PORT": os.environ.get("DB_PORT", "5432"),                 # default PostgreSQL port
-    }
-}
+# Use DATABASE_URL from Render (or other PaaS)
+import dj_database_url
 
-# SQLite (for local backup)
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # Production: Use DATABASE_URL from Render
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    # Local development: SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -357,6 +361,16 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = []
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# WhiteNoise static files compression
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Media files (user uploaded content)
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -366,7 +380,7 @@ AUTH_USER_MODEL = "violations.User"
 
 # These reverse names assume the app is included with namespace 'violations'
 LOGIN_URL = 'violations:auth_login'
-LOGIN_REDIRECT_URL = 'violationsauth_loginhboard'
+LOGIN_REDIRECT_URL = 'violations:staff_dashboard'
 LOGOUT_REDIRECT_URL = '/admin/login/'  # Redirect to admin login after logout
 
 # Default primary key field type
