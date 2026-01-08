@@ -1938,6 +1938,16 @@ def staff_student_detail_view(request, student_id: str):
 	dismissed_v = vqs.filter(status=Violation.Status.DISMISSED).count()
 	latest_incident = vqs.first().incident_at if total_v else None
 	
+	# Meeting statistics
+	from .models import StaffAlert
+	expired_meetings = student.expired_meetings_count
+	pending_meetings = student.pending_meetings_count
+	
+	# Get meeting alerts for display
+	meeting_alerts = StaffAlert.objects.filter(
+		student=student
+	).order_by('-created_at')
+	
 	# CGMC (Certificate of Good Moral Character) eligibility
 	cgmc = student.cgmc_eligibility
 	
@@ -1953,7 +1963,10 @@ def staff_student_detail_view(request, student_id: str):
 			"major_count": student.major_violation_count,
 			"minor_count": student.minor_violation_count,
 			"effective_major": student.effective_major_violations,
+			"expired_meetings": expired_meetings,
+			"pending_meetings": pending_meetings,
 		},
+		"meeting_alerts": meeting_alerts,
 		"cgmc": cgmc,
 		# Backward compatibility
 		"good_moral": {

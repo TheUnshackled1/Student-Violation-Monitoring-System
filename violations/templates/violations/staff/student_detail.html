@@ -235,6 +235,34 @@
             </div>
           </div>
 
+          <div class="criteria-item {% if vstats.expired_meetings == 0 %}criteria-pass{% else %}criteria-fail{% endif %}">
+            <div class="criteria-icon">
+              {% if vstats.expired_meetings == 0 %}
+                <i class="fas fa-check-circle text-success"></i>
+              {% else %}
+                <i class="fas fa-calendar-times text-danger"></i>
+              {% endif %}
+            </div>
+            <div class="criteria-content">
+              <span class="criteria-label">No Missed Meetings</span>
+              <span class="criteria-value">{{ vstats.expired_meetings }} expired</span>
+            </div>
+          </div>
+
+          <div class="criteria-item {% if vstats.pending_meetings == 0 %}criteria-pass{% else %}criteria-warning{% endif %}">
+            <div class="criteria-icon">
+              {% if vstats.pending_meetings == 0 %}
+                <i class="fas fa-check-circle text-success"></i>
+              {% else %}
+                <i class="fas fa-calendar-alt text-warning"></i>
+              {% endif %}
+            </div>
+            <div class="criteria-content">
+              <span class="criteria-label">No Pending Meetings</span>
+              <span class="criteria-value">{{ vstats.pending_meetings }} scheduled</span>
+            </div>
+          </div>
+
           <div class="criteria-item {% if cgmc.can_issue %}criteria-pass{% else %}criteria-fail{% endif %}">
             <div class="criteria-icon">
               {% if cgmc.can_issue %}
@@ -268,6 +296,14 @@
             <span class="breakdown-label">Pending Cases</span>
             <span class="breakdown-value {% if vstats.pending > 0 %}text-warning{% endif %}">{{ vstats.pending|default:'0' }}</span>
           </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Expired Meetings</span>
+            <span class="breakdown-value {% if vstats.expired_meetings > 0 %}text-danger{% endif %}">{{ vstats.expired_meetings|default:'0' }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Pending Meetings</span>
+            <span class="breakdown-value {% if vstats.pending_meetings > 0 %}text-warning{% endif %}">{{ vstats.pending_meetings|default:'0' }}</span>
+          </div>
         </div>
 
         <!-- Reasons & Recommendations -->
@@ -299,10 +335,10 @@
           <div>
             <p><strong>CGMC Eligibility Rules (Per CHMSU Student Handbook):</strong></p>
             <ul style="margin:8px 0 0 16px; font-size:12px; color:#374151;">
-              <li><strong>Eligible:</strong> No major offenses, no pending cases, sanctions completed (if any)</li>
+              <li><strong>Eligible:</strong> No major offenses, no pending cases, no missed meetings, sanctions completed (if any)</li>
               <li><strong>Conditional:</strong> Minor offenses only, all resolved, may be issued with administrative discretion</li>
-              <li><strong>Pending:</strong> Has unresolved case(s) — wait for resolution before applying</li>
-              <li><strong>Not Eligible:</strong> Major offense on record, or pattern of repeated misconduct</li>
+              <li><strong>Pending:</strong> Has unresolved case(s) or pending meeting — wait for resolution before applying</li>
+              <li><strong>Not Eligible:</strong> Major offense on record, missed scheduled meetings, or pattern of repeated misconduct</li>
             </ul>
             <p style="margin-top:8px; font-size:11px; color:#6b7280;"><em>This assessment is based on available disciplinary records as of the date of viewing. Certificate issuance requires official request and administrative approval.</em></p>
           </div>
@@ -1122,6 +1158,11 @@
       border-color: #fca5a5;
     }
 
+    .criteria-item.criteria-warning {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border-color: #fcd34d;
+    }
+
     .criteria-icon {
       font-size: 24px;
       flex-shrink: 0;
@@ -1133,6 +1174,10 @@
 
     .criteria-icon .text-danger {
       color: #ef4444;
+    }
+
+    .criteria-icon .text-warning {
+      color: #f59e0b;
     }
 
     .criteria-content {

@@ -346,7 +346,7 @@ AUTH_USER_MODEL = "violations.User"
 
 # These reverse names assume the app is included with namespace 'violations'
 LOGIN_URL = 'violations:auth_login'
-LOGIN_REDIRECT_URL = 'violationsauth_loginhboard'
+LOGIN_REDIRECT_URL = 'violations:dashboard'
 LOGOUT_REDIRECT_URL = '/admin/login/'  # Redirect to admin login after logout
 
 # Default primary key field type
