@@ -17,6 +17,7 @@
   <!-- PWA/Mobile App Icons -->
   <link rel="apple-touch-icon" href="{% static 'violations/images/chmsu_logo.png' %}" />
   <link rel="icon" type="image/png" href="{% static 'violations/images/chmsu_logo.png' %}" />
+  <link rel="manifest" href="{% static 'violations/manifest.json' %}" />
 </head>
 <body class="role-guard">
   <!-- Official Top Navigation -->
@@ -38,6 +39,9 @@
       </div>
 
       <div class="nav-actions">
+        <button type="button" id="ttsMuteBtn" class="nav-icon-btn tts-toggle" title="Toggle Voice Announcements" onclick="toggleTTSMute()">
+          <i class="fas fa-volume-up" id="ttsIcon"></i>
+        </button>
         <div class="guard-badge">
           <i class="fas fa-shield-alt"></i>
           <span>{{ guard_code }}</span>
@@ -613,6 +617,63 @@
 
   <script src="{% static 'violations/js/script.js' %}"></script>
   <script>
+    // ===== TEXT-TO-SPEECH WELCOME ANNOUNCEMENT =====
+    (function() {
+      // Check if TTS is muted
+      let ttsMuted = false;
+      try {
+        ttsMuted = localStorage.getItem('svms_tts_muted') === 'true';
+      } catch (e) { ttsMuted = false; }
+      
+      if (ttsMuted) return;
+      
+      // Only announce once per session
+      const sessionKey = 'guard_welcome_announced';
+      if (sessionStorage.getItem(sessionKey)) return;
+      
+      function announceWelcome() {
+        if (!('speechSynthesis' in window)) return;
+        
+        const guardCode = '{{ guard_code|escapejs }}';
+        const message = `Welcome ${guardCode}. You are now logged into the Security Guard Portal. Campus security monitoring is active.`;
+        
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(message);
+          
+          // Voice settings - professional, clear tone
+          utterance.rate = 0.95;
+          utterance.pitch = 0.85;
+          utterance.volume = 1;
+          
+          // Try to pick a professional voice
+          const voices = window.speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v =>
+            v.name.toLowerCase().includes('google uk english male') ||
+            v.name.toLowerCase().includes('david') ||
+            v.name.toLowerCase().includes('mark') ||
+            v.name.toLowerCase().includes('male') ||
+            (v.lang.startsWith('en') && v.name.toLowerCase().includes('natural'))
+          );
+          if (preferredVoice) utterance.voice = preferredVoice;
+          
+          window.speechSynthesis.speak(utterance);
+          sessionStorage.setItem(sessionKey, 'true');
+        } catch (err) {
+          console.error('Guard TTS Error:', err);
+        }
+      }
+      
+      // Wait for voices to load (some browsers need this)
+      if (window.speechSynthesis.getVoices().length > 0) {
+        setTimeout(announceWelcome, 500);
+      } else {
+        window.speechSynthesis.onvoiceschanged = function() {
+          setTimeout(announceWelcome, 500);
+        };
+      }
+    })();
+
     // Live clock
     function updateClock() {
       const now = new Date();
@@ -3162,6 +3223,84 @@
         font-size: 20px;
       }
     }
+
+    /* TTS Toggle Button Styles */
+    .tts-toggle {
+      position: relative;
+    }
+    
+    .tts-toggle.muted i {
+      color: #ef4444;
+    }
+    
+    .tts-toggle.muted::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 20px;
+      background: #ef4444;
+      transform: rotate(45deg);
+      top: 50%;
+      left: 50%;
+      margin-top: -10px;
+      margin-left: -1px;
+    }
   </style>
+  
+  <script>
+    // TTS Mute Toggle Function
+    function toggleTTSMute() {
+      let ttsMuted = false;
+      try {
+        ttsMuted = localStorage.getItem('svms_tts_muted') === 'true';
+      } catch (e) { ttsMuted = false; }
+      
+      ttsMuted = !ttsMuted;
+      
+      try {
+        localStorage.setItem('svms_tts_muted', ttsMuted ? 'true' : 'false');
+      } catch (e) {}
+      
+      updateTTSIcon(ttsMuted);
+      
+      // Cancel any ongoing speech if muted
+      if (ttsMuted && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      
+      // Brief feedback announcement
+      if (!ttsMuted && 'speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance('Voice announcements enabled.');
+        utterance.rate = 1;
+        utterance.volume = 0.8;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+    
+    function updateTTSIcon(muted) {
+      const btn = document.getElementById('ttsMuteBtn');
+      const icon = document.getElementById('ttsIcon');
+      if (btn && icon) {
+        if (muted) {
+          btn.classList.add('muted');
+          btn.title = 'Voice Announcements Off - Click to Enable';
+          icon.className = 'fas fa-volume-mute';
+        } else {
+          btn.classList.remove('muted');
+          btn.title = 'Voice Announcements On - Click to Mute';
+          icon.className = 'fas fa-volume-up';
+        }
+      }
+    }
+    
+    // Initialize TTS icon state on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      let ttsMuted = false;
+      try {
+        ttsMuted = localStorage.getItem('svms_tts_muted') === 'true';
+      } catch (e) {}
+      updateTTSIcon(ttsMuted);
+    });
+  </script>
 </body>
 </html>
