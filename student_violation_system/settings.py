@@ -31,8 +31,9 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host.strip()]
-
+# For Render, if no ALLOWED_HOSTS are set, allow Render’s domain
+if not ALLOWED_HOSTS and not DEBUG:
+    ALLOWED_HOSTS = ["*"]  # Optional: safer to replace with your Render URL
 
 # Application definition
 
