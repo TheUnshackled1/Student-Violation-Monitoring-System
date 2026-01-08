@@ -193,6 +193,40 @@ class Student(models.Model):
 		return False
 
 	@property
+	def has_expired_meetings(self):
+		"""Check if student has any expired/missed mandatory meetings."""
+		from .models import StaffAlert
+		return self.alerts.filter(
+			meeting_status=StaffAlert.MeetingStatus.EXPIRED
+		).exists()
+
+	@property
+	def expired_meetings_count(self):
+		"""Count of expired/missed mandatory meetings."""
+		from .models import StaffAlert
+		return self.alerts.filter(
+			meeting_status=StaffAlert.MeetingStatus.EXPIRED
+		).count()
+
+	@property
+	def has_pending_meetings(self):
+		"""Check if student has any scheduled meetings they need to attend."""
+		from .models import StaffAlert
+		return self.alerts.filter(
+			meeting_status=StaffAlert.MeetingStatus.SCHEDULED,
+			resolved=False
+		).exists()
+
+	@property
+	def pending_meetings_count(self):
+		"""Count of pending scheduled meetings."""
+		from .models import StaffAlert
+		return self.alerts.filter(
+			meeting_status=StaffAlert.MeetingStatus.SCHEDULED,
+			resolved=False
+		).count()
+
+	@property
 	def cgmc_eligibility(self):
 		"""Determine Certificate of Good Moral Character eligibility.
 		
@@ -215,6 +249,7 @@ class Student(models.Model):
 		- Unresolved/pending case
 		- Pattern of repeated violations
 		- 3+ effective major violations
+		- Expired/missed mandatory meetings
 		
 		Returns dict with:
 		- status: 'eligible', 'conditional', 'pending_review', 'not_eligible'
@@ -238,10 +273,28 @@ class Student(models.Model):
 		sanctions_done = self.sanctions_completed
 		clearance_ok = self.clearance_period_passed
 		repeated_pattern = self.has_repeated_misconduct
+		expired_meetings = self.expired_meetings_count
+		pending_meetings = self.pending_meetings_count
 		
 		# ============================================
 		# NOT ELIGIBLE (❌) - Automatic Disqualification
 		# ============================================
+		
+		# Check for expired/missed mandatory meetings
+		if expired_meetings > 0:
+			reasons.append(f"{expired_meetings} expired/missed mandatory meeting(s)")
+			recommendations.append("Contact OSA Office immediately to reschedule and attend meetings")
+			recommendations.append("Missed meetings indicate failure to comply with disciplinary process")
+			return {
+				'status': 'not_eligible',
+				'can_issue': False,
+				'label': 'Not Eligible',
+				'description': f'Student has {expired_meetings} expired/missed mandatory meeting(s) with the OSA Office. Failure to attend scheduled meetings disqualifies student from receiving a Certificate of Good Moral Character.',
+				'reasons': reasons,
+				'recommendations': recommendations,
+				'badge_class': 'badge-ineligible',
+				'icon': 'fas fa-calendar-times',
+			}
 		
 		# Check for disqualifying major offense
 		if major_count > 0:
@@ -276,6 +329,21 @@ class Student(models.Model):
 		# ============================================
 		# PENDING REVIEW - Cannot issue yet
 		# ============================================
+		
+		# Check for pending mandatory meetings
+		if pending_meetings > 0:
+			reasons.append(f"{pending_meetings} pending mandatory meeting(s)")
+			recommendations.append("Attend all scheduled meetings before applying for CGMC")
+			return {
+				'status': 'pending_review',
+				'can_issue': False,
+				'label': 'Pending Meeting Attendance',
+				'description': f'Student has {pending_meetings} scheduled mandatory meeting(s) with the OSA Office. CGMC cannot be issued until all meetings are attended.',
+				'reasons': reasons,
+				'recommendations': recommendations,
+				'badge_class': 'badge-pending',
+				'icon': 'fas fa-calendar-alt',
+			}
 		
 		if has_pending:
 			reasons.append(f"{pending_count} pending/under review case(s)")
@@ -501,6 +569,7 @@ class StaffAlert(models.Model):
 	resolved = models.BooleanField(default=False)
 	resolved_at = models.DateTimeField(null=True, blank=True)
 	scheduled_meeting = models.DateTimeField(null=True, blank=True, help_text="Scheduled meeting time with OSA Coordinator")
+	meeting_deadline = models.DateTimeField(null=True, blank=True, help_text="Deadline for the meeting - expires after this time")
 	meeting_notes = models.TextField(blank=True, help_text="Additional notes for the meeting")
 	meeting_status = models.CharField(
 		max_length=20, 
@@ -547,10 +616,10 @@ class StaffAlert(models.Model):
 		self.save(update_fields=["meeting_status", "meeting_status_updated_at"])
 
 	def check_meeting_expired(self):
-		"""Check if meeting has expired and update status if so."""
+		"""Check if meeting deadline has passed and update status if so."""
 		if (self.meeting_status == self.MeetingStatus.SCHEDULED and 
-			self.scheduled_meeting and 
-			self.scheduled_meeting < timezone.now()):
+			self.meeting_deadline and 
+			self.meeting_deadline < timezone.now()):
 			self.update_meeting_status(self.MeetingStatus.EXPIRED)
 			return True
 		return False

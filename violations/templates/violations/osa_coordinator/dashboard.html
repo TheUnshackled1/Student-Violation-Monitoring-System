@@ -1537,8 +1537,13 @@
                             {% endif %}
                         </p>
                         <p style="margin:0; color:#374151; font-size:13px;">
-                            <i class="fas fa-clock"></i> {{ alert.scheduled_meeting|date:"M d, Y g:i A" }}
+                            <i class="fas fa-clock"></i> Meeting: {{ alert.scheduled_meeting|date:"M d, Y g:i A" }}
                         </p>
+                        {% if alert.meeting_deadline %}
+                        <p style="margin:4px 0 0 0; color:#f59e0b; font-size:12px;">
+                            <i class="fas fa-hourglass-end"></i> Deadline: {{ alert.meeting_deadline|date:"M d, Y g:i A" }}
+                        </p>
+                        {% endif %}
                         {% if alert.meeting_status_updated_at %}
                         <p style="margin:4px 0 0 0; color:#6b7280; font-size:11px;">
                             Status updated: {{ alert.meeting_status_updated_at|date:"M d, Y g:i A" }}

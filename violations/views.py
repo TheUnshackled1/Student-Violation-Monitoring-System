@@ -3601,6 +3601,7 @@ def staff_schedule_meeting_view(request, alert_id):
 	try:
 		data = json.loads(request.body)
 		scheduled_meeting_str = data.get("scheduled_meeting")
+		meeting_deadline_str = data.get("meeting_deadline")
 		meeting_notes = data.get("meeting_notes", "")
 	except json.JSONDecodeError:
 		return JsonResponse({"error": "Invalid JSON data"}, status=400)
@@ -3608,11 +3609,21 @@ def staff_schedule_meeting_view(request, alert_id):
 	if not scheduled_meeting_str:
 		return JsonResponse({"error": "Meeting date/time required"}, status=400)
 	
+	if not meeting_deadline_str:
+		return JsonResponse({"error": "Meeting deadline required"}, status=400)
+	
 	try:
 		from datetime import datetime
 		# Parse datetime string from datetime-local input (format: YYYY-MM-DDTHH:MM)
 		scheduled_meeting = datetime.strptime(scheduled_meeting_str, '%Y-%m-%dT%H:%M')
+		meeting_deadline = datetime.strptime(meeting_deadline_str, '%Y-%m-%dT%H:%M')
+		
+		# Validate deadline is after meeting time
+		if meeting_deadline <= scheduled_meeting:
+			return JsonResponse({"error": "Deadline must be after meeting time"}, status=400)
+		
 		alert.scheduled_meeting = scheduled_meeting
+		alert.meeting_deadline = meeting_deadline
 		alert.meeting_notes = meeting_notes
 		alert.meeting_status = StaffAlert.MeetingStatus.SCHEDULED
 		alert.meeting_status_updated_at = timezone.now()
@@ -3635,10 +3646,13 @@ Student Details:
 
 Meeting Details:
 - Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
+- Deadline: {meeting_deadline.strftime('%B %d, %Y at %I:%M %p')}
 - Location: OSA Office
 - Status: SCHEDULED
 - Purpose: Review violation record and determine next steps
 {f"- Additional Notes: {meeting_notes}" if meeting_notes else ""}
+
+⚠️ Note: Meeting will automatically expire if student doesn't attend by the deadline.
 
 Please be prepared to discuss the student's violation history and appropriate disciplinary actions.
 
@@ -3656,6 +3670,7 @@ You have been scheduled for a mandatory meeting with the OSA Coordinator due to 
 
 Meeting Details:
 - Date & Time: {scheduled_meeting.strftime('%B %d, %Y at %I:%M %p')}
+- ⚠️ DEADLINE: {meeting_deadline.strftime('%B %d, %Y at %I:%M %p')}
 - Location: OSA Office
 - Status: SCHEDULED
 - Purpose: Review your violation record and discuss next steps
@@ -3663,6 +3678,7 @@ Meeting Details:
 
 Important Notes:
 - This meeting is mandatory and your attendance is required
+- ⚠️ If you don't attend by the deadline, this meeting will expire and additional action may be taken
 - Please arrive 10 minutes early
 - Bring your Student ID
 - Come prepared to discuss your recent violations

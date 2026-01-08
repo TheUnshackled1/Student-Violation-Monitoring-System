@@ -2,7 +2,7 @@
 Management command to check for expired meetings and send notifications.
 
 This command should be run periodically (e.g., via cron job) to:
-1. Check all scheduled meetings that have passed
+1. Check all scheduled meetings that have passed their deadline
 2. Mark them as expired if the student didn't meet
 3. Send notifications to both student and OSA Coordinator
 4. Log the activity
@@ -44,11 +44,11 @@ class Command(BaseCommand):
         expired_count = 0
         notified_count = 0
         
-        # Find all scheduled meetings that have passed
+        # Find all scheduled meetings where the deadline has passed
         expired_meetings = StaffAlert.objects.filter(
             resolved=False,
             meeting_status=StaffAlert.MeetingStatus.SCHEDULED,
-            scheduled_meeting__lt=now
+            meeting_deadline__lt=now
         ).select_related('student', 'student__user', 'triggered_violation')
         
         if verbose or dry_run:
@@ -57,9 +57,11 @@ class Command(BaseCommand):
         for alert in expired_meetings:
             student = alert.student
             meeting_time = alert.scheduled_meeting
+            deadline = alert.meeting_deadline
             
             if verbose:
                 self.stdout.write(f"  - Processing alert #{alert.id} for {student.student_id}")
+                self.stdout.write(f"    Meeting: {meeting_time}, Deadline: {deadline}")
             
             if dry_run:
                 self.stdout.write(f"    [DRY-RUN] Would mark as expired and notify")
@@ -84,10 +86,11 @@ class Command(BaseCommand):
                     receiver=student.user,
                     content=f"""⚠️ MEETING MISSED - URGENT NOTICE
 
-Your mandatory meeting with the OSA Coordinator has EXPIRED because you did not attend.
+Your mandatory meeting with the OSA Coordinator has EXPIRED because you did not attend before the deadline.
 
 Meeting Details:
-- Scheduled Time: {meeting_time.strftime('%B %d, %Y at %I:%M %p')}
+- Scheduled Time: {meeting_time.strftime('%B %d, %Y at %I:%M %p') if meeting_time else 'N/A'}
+- Deadline: {deadline.strftime('%B %d, %Y at %I:%M %p') if deadline else 'N/A'}
 - Location: OSA Office
 - Status: DID NOT MEET / EXPIRED
 
@@ -114,7 +117,7 @@ This is an automated notification from the CHMSU Violation Monitoring System.
                         receiver=osa,
                         content=f"""⚠️ MEETING MISSED ALERT
 
-A student has FAILED to attend their scheduled meeting.
+A student has FAILED to attend their scheduled meeting before the deadline.
 
 Student Details:
 - Student ID: {student.student_id}
@@ -122,7 +125,8 @@ Student Details:
 - Effective Major Violations: {alert.effective_major_count}
 
 Meeting Details:
-- Scheduled Time: {meeting_time.strftime('%B %d, %Y at %I:%M %p')}
+- Scheduled Time: {meeting_time.strftime('%B %d, %Y at %I:%M %p') if meeting_time else 'N/A'}
+- Deadline: {deadline.strftime('%B %d, %Y at %I:%M %p') if deadline else 'N/A'}
 - Location: OSA Office
 - Status: DID NOT MEET / EXPIRED
 

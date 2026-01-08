@@ -1701,8 +1701,13 @@
               {% endif %}
             </p>
             <p style="margin:0; color:#374151; font-size:13px;">
-              <i class="fas fa-clock"></i> {{ alert.scheduled_meeting|date:"M d, Y g:i A" }}
+              <i class="fas fa-clock"></i> Meeting: {{ alert.scheduled_meeting|date:"M d, Y g:i A" }}
             </p>
+            {% if alert.meeting_deadline %}
+            <p style="margin:4px 0 0 0; color:#f59e0b; font-size:12px;">
+              <i class="fas fa-hourglass-end"></i> Deadline: {{ alert.meeting_deadline|date:"M d, Y g:i A" }}
+            </p>
+            {% endif %}
             {% if alert.meeting_status_updated_at %}
             <p style="margin:4px 0 0 0; color:#6b7280; font-size:11px;">
               Status updated: {{ alert.meeting_status_updated_at|date:"M d, Y g:i A" }}
@@ -1846,6 +1851,17 @@
           </div>
           
           <div class="form-group" style="margin-bottom:16px;">
+            <label for="meetingDeadline" style="font-weight:500; margin-bottom:6px; display:block;">
+              <i class="fas fa-hourglass-end"></i> Expiration Deadline <span style="color:#dc2626;">*</span>
+            </label>
+            <input type="datetime-local" id="meetingDeadline" required 
+                   style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px; font-family:inherit;">
+            <small style="color:#f59e0b; font-size:12px; margin-top:4px; display:block;">
+              <i class="fas fa-exclamation-triangle"></i> Meeting will automatically expire after this date/time if student doesn't attend
+            </small>
+          </div>
+          
+          <div class="form-group" style="margin-bottom:16px;">
             <label for="meetingNotes" style="font-weight:500; margin-bottom:6px; display:block;">Additional Notes (Optional)</label>
             <textarea id="meetingNotes" rows="3" placeholder="Any special instructions or notes for the meeting..."
                       style="width:100%; padding:10px; border:1px solid #d0d5dd; border-radius:8px; resize:vertical; font-family:inherit;"></textarea>
@@ -1858,7 +1874,7 @@
             <li>Location: OSA Office, Carlos Hilado Memorial State University</li>
             <li>Both student and OSA Coordinator will be notified</li>
             <li>Meeting is mandatory for the student</li>
-            <li>All times are in Philippine Time (PHT)</li>
+            <li>If deadline passes without attendance, meeting expires automatically</li>
           </ul>
         </div>
       </div>
@@ -2846,11 +2862,17 @@
           document.getElementById('meetingStudentName').textContent = studentName;
           document.getElementById('meetingStudentId').textContent = studentId;
           
-          // Set minimum date to tomorrow
+          // Set minimum date to tomorrow for meeting date
           const tomorrow = new Date();
           tomorrow.setDate(tomorrow.getDate() + 1);
           const minDateTime = tomorrow.toISOString().slice(0, 16);
           document.getElementById('meetingDate').min = minDateTime;
+          document.getElementById('meetingDeadline').min = minDateTime;
+          
+          // Clear previous values
+          document.getElementById('meetingDate').value = '';
+          document.getElementById('meetingDeadline').value = '';
+          document.getElementById('meetingNotes').value = '';
           
           // Store alert ID for later use
           document.getElementById('meetingModalConfirm').dataset.alertId = alertId;
@@ -3017,10 +3039,22 @@
       document.getElementById('meetingModalConfirm').addEventListener('click', async () => {
         const alertId = document.getElementById('meetingModalConfirm').dataset.alertId;
         const meetingDate = document.getElementById('meetingDate').value;
+        const meetingDeadline = document.getElementById('meetingDeadline').value;
         const meetingNotes = document.getElementById('meetingNotes').value;
         
         if (!meetingDate) {
           alert('Please select a meeting date and time.');
+          return;
+        }
+        
+        if (!meetingDeadline) {
+          alert('Please set an expiration deadline for the meeting.');
+          return;
+        }
+        
+        // Validate deadline is after meeting date
+        if (new Date(meetingDeadline) <= new Date(meetingDate)) {
+          alert('Expiration deadline must be after the meeting date/time.');
           return;
         }
         
@@ -3033,6 +3067,7 @@
             },
             body: JSON.stringify({ 
               scheduled_meeting: meetingDate,
+              meeting_deadline: meetingDeadline,
               meeting_notes: meetingNotes 
             })
           });
