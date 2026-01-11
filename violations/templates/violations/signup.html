@@ -318,12 +318,14 @@
 
 		.collapsible-content {
 			padding: 20px 18px;
-			display: none;
 			background: #ffffff;
+			overflow: hidden;
+			height: 0;
+			transition: height 0.25s ease;
 		}
 
 		.form-section.collapsible.open .collapsible-content {
-			display: block;
+			height: auto;
 		}
 
 		/* Form Grid */
@@ -656,36 +658,34 @@
 									<label for="student_id">Student ID Number</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-id-card"></i>
-										<input type="text" id="student_id" name="student_id" placeholder="e.g., 21-12345" />
+										<input type="text" id="student_id" name="student_id" placeholder="e.g., 20251234" pattern="[0-9]{8}" maxlength="8" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required />
 									</div>
-									<small class="helper-text">Use your official CHMSU student ID.</small>
+									<small class="helper-text">Enter your 8-digit CHMSU student ID (numbers only).</small>
 								</div>
 								<div class="form-group" data-role="student">
 									<label for="student_name">Full Name</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-user"></i>
-										<input type="text" id="student_name" name="student_name" placeholder="Surname, Firstname Middlename" />
+										<input type="text" id="student_name" name="student_name" placeholder="Surname, Firstname Middlename" pattern="[A-Za-z\s,.-]+" oninput="this.value = this.value.replace(/[^A-Za-z\s,.-]/g, '')" required />
 									</div>
+									<small class="helper-text">Letters only (e.g., Dela Cruz, Juan Santos).</small>
+								</div>
+								<div class="form-group" data-role="student">
+									<label for="student_suffix">Suffix (Optional)</label>
+									<div class="input-with-icon">
+										<i class="fa-solid fa-user-tag"></i>
+										<input type="text" id="student_suffix" name="student_suffix" placeholder="e.g., Jr., Sr., III" pattern="[A-Za-z.]+" oninput="this.value = this.value.replace(/[^A-Za-z.]/g, '')" />
 									</div>
+									<small class="helper-text">Letters only (Jr., Sr., III, etc.).</small>
 								</div>
 								<div class="form-group" data-role="student">
 									<label for="student_email">E-mail Address</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-envelope"></i>
-										<input type="email" id="student_email" name="student_email" placeholder="you@chmsu.edu.ph" />
+										<input type="email" id="student_email" name="student_email" placeholder="you@chmsu.edu.ph" required />
 									</div>
 								</div>
-								<div class="form-group password-group" data-role="student">
-									<label for="student_password">Password</label>
-									<div class="input-with-icon">
-										<i class="fa-solid fa-lock"></i>
-										<input type="password" id="student_password" name="student_password" placeholder="Create a strong password" />
-										<span class="password-toggle" onclick="togglePasswordVisibility('student_password')">
-											<i class="fas fa-eye"></i>
-										</span>
-									</div>
-									<small class="helper-text">Use at least 8 characters with a mix of letters and numbers.</small>
-								</div>
+							</div>
 							</div>
 						</div>
 
@@ -697,25 +697,36 @@
 							<div class="collapsible-content" id="student-academic-content">
 							<div class="form-grid">
 								<div class="form-group" data-role="student">
-									<label for="student_program">Program / Course</label>
-									<div class="input-with-icon">
-										<i class="fa-solid fa-graduation-cap"></i>
-										<input type="text" id="student_program" name="student_program" placeholder="e.g., BS Computer Science" />
-									</div>
-									</div>
-								</div>
-								<div class="form-group" data-role="student">
 									<label for="student_year_level">Year Level</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-layer-group"></i>
-										<input type="number" min="1" max="10" id="student_year_level" name="student_year_level" placeholder="e.g., 3" />
+										<select id="student_year_level" name="student_year_level" required>
+											<option value="" disabled selected>Select Year Level</option>
+											<option value="1">1st Year</option>
+											<option value="2">2nd Year</option>
+											<option value="3">3rd Year</option>
+											<option value="4">4th Year</option>
+										</select>
 									</div>
+									<small class="helper-text">Automatically levels up after 10 months.</small>
 								</div>
 								<div class="form-group" data-role="student">
-									<label for="student_department">Department</label>
+									<label for="student_department">College / Department</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-building-columns"></i>
-										<input type="text" id="student_department" name="student_department" placeholder="e.g., College of ICT" />
+										<select id="student_department" name="student_department" required>
+											<option value="" disabled selected>Select College</option>
+											<option value="CAS">CAS - College of Arts and Sciences</option>
+											<option value="CBMA">CBMA - College of Business Management and Accountancy</option>
+											<option value="CCS">CCS - College of Computer Studies</option>
+											<option value="COEd">COEd - College of Education</option>
+											<option value="CIT">CIT - College of Industrial Technology</option>
+											<option value="COE">COE - College of Engineering</option>
+											<option value="CON">CON - College of Nursing</option>
+											<option value="CTHM">CTHM - College of Tourism and Hospitality Management</option>
+											<option value="CAF">CAF - College of Agriculture and Fishery</option>
+											<option value="CGS">CGS - College of Graduate Studies</option>
+										</select>
 									</div>
 								</div>
 								<div class="form-group" data-role="student">
@@ -730,42 +741,31 @@
 									</div>
 								</div>
 							</div>
+							</div>
 						</div>
 
 						<div class="form-section collapsible" data-role="student" id="student-contact">
 							<button class="collapsible-header" type="button" aria-expanded="false" aria-controls="student-contact-content">
-								<span class="section-title">Contact &amp; Guardian</span>
+								<span class="section-title">Guardian Information</span>
 								<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
 							</button>
 							<div class="collapsible-content" id="student-contact-content">
 							<div class="form-grid">
 								<div class="form-group" data-role="student">
-									<label for="student_contact_number">Contact Number</label>
-									<div class="input-with-icon">
-										<i class="fa-solid fa-phone"></i>
-										<input type="text" id="student_contact_number" name="student_contact_number" placeholder="e.g., 09XXXXXXXXX" />
-									</div>
-								</div>
-								<div class="form-group" data-role="student">
 									<label for="guardian_name">Guardian Name</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-user-shield"></i>
-										<input type="text" id="guardian_name" name="guardian_name" placeholder="Parent/Guardian full name" />
+										<input type="text" id="guardian_name" name="guardian_name" placeholder="Parent/Guardian full name" pattern="[A-Za-z\s,.-]+" oninput="this.value = this.value.replace(/[^A-Za-z\s,.-]/g, '')" required />
 									</div>
+									<small class="helper-text">Letters only.</small>
 								</div>
 								<div class="form-group" data-role="student">
-									<label for="guardian_contact">Guardian Contact</label>
+									<label for="guardian_contact">Guardian Contact Number</label>
 									<div class="input-with-icon">
 										<i class="fa-solid fa-mobile-screen-button"></i>
-										<input type="text" id="guardian_contact" name="guardian_contact" placeholder="e.g., 09XXXXXXXXX" />
+										<input type="text" id="guardian_contact" name="guardian_contact" placeholder="e.g., 09XXXXXXXXX" pattern="[0-9]{11}" maxlength="11" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required />
 									</div>
-								</div>
-								<div class="form-group" data-role="student">
-									<label for="student_profile_image">Profile Image (2x2)</label>
-									<div class="file-input-row">
-										<input type="file" id="student_profile_image" name="student_profile_image" accept="image/*" />
-									</div>
-									<small class="helper-text">JPG/PNG, clear face, plain background preferred.</small>
+									<small class="helper-text">11-digit mobile number (e.g., 09171234567).</small>
 								</div>
 							</div>
 							</div>
