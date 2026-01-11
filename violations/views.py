@@ -1749,24 +1749,37 @@ def generate_prescriptive_recommendations(total_violations, total_major, total_m
 		dept_name = top_dept.get('student__department', 'Unknown')
 		dept_count = top_dept.get('count', 0)
 		
-		recommendations['department_focus'].append({
-			'icon': 'fa-building',
-			'department': dept_name,
-			'violation_count': dept_count,
-			'recommendation': f'Coordinate with {dept_name} administration for targeted intervention',
-			'actions': [
-				f'Schedule meeting with {dept_name} dean/coordinator',
-				'Review department-specific violation patterns',
-				'Consider department-level awareness programs',
-			]
-		})
-		
-		# If there's a significant gap between departments
+		# Determine severity based on violation count and comparison
+		severity = 'medium'
 		if len(dept_breakdown) > 1:
 			second_dept = dept_breakdown[1]
-			if dept_count > second_dept.get('count', 0) * 2:
-				recommendations['department_focus'][0]['priority'] = 'high'
-				recommendations['department_focus'][0]['note'] = f'{dept_name} has significantly more violations than other departments'
+			second_count = second_dept.get('count', 0)
+			if dept_count > second_count * 2:
+				severity = 'high'
+			elif dept_count <= second_count * 1.2:
+				severity = 'low'
+		
+		# Build recommendation
+		if dept_count > 20:
+			title = f'{dept_name} - High Priority Focus'
+			description = f'{dept_name} has {dept_count} recorded violations, the highest among all departments. This requires targeted intervention and coordination with department administration.'
+			action = f'Schedule meeting with {dept_name} dean/coordinator within this week'
+		elif dept_count > 10:
+			title = f'{dept_name} - Attention Needed'
+			description = f'{dept_name} has {dept_count} recorded violations. Review department-specific patterns and consider awareness programs.'
+			action = f'Coordinate with {dept_name} administration for targeted intervention'
+		else:
+			title = f'{dept_name} - Monitoring'
+			description = f'{dept_name} has {dept_count} recorded violations. Continue monitoring for patterns.'
+			action = f'Review {dept_name} violation patterns and maintain awareness'
+		
+		recommendations['department_focus'].append({
+			'icon': 'fa-building',
+			'severity': severity,
+			'title': title,
+			'description': description,
+			'action': action,
+		})
 	
 	# === VIOLATION INSIGHTS ===
 	
