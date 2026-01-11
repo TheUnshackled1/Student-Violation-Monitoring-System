@@ -2828,7 +2828,6 @@ def staff_reports_view(request):
 	# MONTHLY TREND (Last 6 months or date range)
 	# ============================================
 	from django.db.models.functions import TruncMonth
-	from calendar import monthrange
 	
 	monthly_trend = []
 	

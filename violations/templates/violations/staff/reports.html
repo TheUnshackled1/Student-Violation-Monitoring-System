@@ -367,68 +367,49 @@
     </section>
 
     <!-- Analytics Cards -->
-    <div class="analytics-row" style="margin-top:20px;">
+    <div class="analytics-row" style="margin-top:20px; display: block;">
       <!-- Top Offenders -->
-      <section class="analytics-card">
-        <div class="analytics-header">
-          <h3><i class="fas fa-user-times"></i> Top Offenders</h3>
+      <section class="official-directory-section" style="margin-top:20px; width:100%; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; background: #fff;">
+        <div class="directory-title-bar">
+          <h2 class="directory-title"><i class="fas fa-user-times"></i> TOP OFFENDERS</h2>
+          <p class="directory-subtitle">Most violations this period</p>
         </div>
-        <div class="analytics-content">
-          <table class="analytics-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Student</th>
-                <th>Violations</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for student in top_offenders %}
-              <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                  {% if student.student__student_id %}
-                  <a href="{% url 'violations:staff_student_detail' student.student__student_id %}">{{ student.student__user__first_name }} {{ student.student__user__last_name }}</a>
-                  <div class="student-id-sub">{{ student.student__student_id }}</div>
-                  {% else %}
-                  <span>Unknown Student</span>
-                  {% endif %}
-                </td>
-                <td><span class="count-badge">{{ student.count }}</span></td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="3" class="empty-cell">No data available</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </section>
 
-      <!-- Monthly Trend -->
-      <section class="analytics-card">
-        <div class="analytics-header">
-          <h3><i class="fas fa-chart-line"></i> Monthly Trend</h3>
-        </div>
-        <div class="analytics-content">
-          <div class="trend-chart">
-            {% for month in monthly_trend %}
-            <div class="trend-bar-container">
-              <div class="trend-bar" style="height: {{ month.height }}%;">
-                <span class="trend-value">{{ month.count }}</span>
-              </div>
-              <span class="trend-label">{{ month.month }}</span>
-            </div>
-            {% empty %}
-            <div class="empty-trend">
-              <i class="fas fa-chart-line"></i>
-              <p>No trend data available</p>
-            </div>
-            {% endfor %}
+        <div class="breakdown-container" style="padding: 18px 24px 24px 24px; max-width: none;">
+          <div class="breakdown-item" style="width:100%;">
+            <table class="analytics-table" style="font-size: 1.08rem; width:100%;">
+              <thead>
+                <tr>
+                  <th style="width:5%;">#</th>
+                  <th style="width:70%;">Student</th>
+                  <th style="width:25%;">Violations</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in top_offenders %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    {% if student.student__student_id %}
+                    <a href="{% url 'violations:staff_student_detail' student.student__student_id %}">{{ student.student__user__first_name }} {{ student.student__user__last_name }}</a>
+                    <div class="student-id-sub">{{ student.student__student_id }}</div>
+                    {% else %}
+                    <span>Unknown Student</span>
+                    {% endif %}
+                  </td>
+                  <td><span class="count-badge">{{ student.count }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="empty-cell">No data available</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
+
     </div>
 
     <!-- Recent Violations Table -->
