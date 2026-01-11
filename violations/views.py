@@ -2825,35 +2825,95 @@ def staff_reports_view(request):
 	)
 	
 	# ============================================
-	# MONTHLY TREND (Last 6 months)
+	# MONTHLY TREND (Last 6 months or date range)
 	# ============================================
-	monthly_trend = []
-	six_months_ago = timezone.now() - timedelta(days=180)
 	from django.db.models.functions import TruncMonth
+	from calendar import monthrange
+	
+	monthly_trend = []
+	
+	# Determine date range for monthly trend
+	if start_date_obj and end_date_obj:
+		# Use provided date range
+		trend_start = start_date_obj.date() if hasattr(start_date_obj, 'date') else start_date_obj
+		trend_end = end_date_obj.date() if hasattr(end_date_obj, 'date') else end_date_obj
+	else:
+		# Default to last 6 months
+		trend_end = timezone.now().date()
+		trend_start = trend_end - timedelta(days=180)
+	
+	# Get actual violation counts per month
 	monthly_data = (
-		violations.filter(incident_at__gte=six_months_ago)
+		violations.filter(incident_at__date__gte=trend_start, incident_at__date__lte=trend_end)
 		.annotate(month=TruncMonth('incident_at'))
 		.values('month')
 		.annotate(count=Count('id'))
 		.order_by('month')
 	)
-	max_monthly_count = max([m['count'] for m in monthly_data], default=1)
+	
+	# Create a dictionary of month -> count
+	monthly_counts = {}
 	for m in monthly_data:
 		if m['month']:
-			# m['month'] is a datetime/date object from TruncMonth
-			month_label = m['month'].strftime('%b')
-			height = int((m['count'] / max_monthly_count) * 100) if max_monthly_count > 0 else 0
-			monthly_trend.append({
-				'month': month_label,
-				'full_month': m['month'].strftime('%Y-%m'),
-				'count': m['count'],
-				'height': max(height, 5)  # Minimum 5% height for visibility
-			})
+			month_key = m['month'].strftime('%Y-%m')
+			monthly_counts[month_key] = m['count']
+	
+	# Generate all months in range (even with 0 counts)
+	current_date = trend_start.replace(day=1)  # Start from first day of month
+	end_date_first = trend_end.replace(day=1)
+	
+	all_months = []
+	while current_date <= end_date_first:
+		month_key = current_date.strftime('%Y-%m')
+		count = monthly_counts.get(month_key, 0)
+		all_months.append({
+			'date': current_date,
+			'count': count,
+			'month_key': month_key
+		})
+		# Move to next month
+		if current_date.month == 12:
+			current_date = current_date.replace(year=current_date.year + 1, month=1)
+		else:
+			current_date = current_date.replace(month=current_date.month + 1)
+	
+	# Limit to last 6 months if no date filter
+	if not start_date_obj and not end_date_obj and len(all_months) > 6:
+		all_months = all_months[-6:]
+	
+	# Calculate max count for height scaling
+	max_monthly_count = max([m['count'] for m in all_months], default=1)
+	
+	# Build monthly trend data
+	for month_info in all_months:
+		month_date = month_info['date']
+		count = month_info['count']
+		month_label = month_date.strftime('%b %y')  # e.g., "Jan 25"
+		height = int((count / max_monthly_count) * 100) if max_monthly_count > 0 else 0
+		
+		monthly_trend.append({
+			'month': month_label,
+			'full_month': month_info['month_key'],
+			'count': count,
+			'height': max(height, 5) if count > 0 else 0  # Minimum 5% height for visibility, 0 if no data
+		})
 	
 	# ============================================
 	# RECENT VIOLATIONS
 	# ============================================
 	recent_violations = violations.order_by('-incident_at')[:10]
+	
+	# Get staff name for signature
+	staff_name = request.user.get_full_name() or request.user.username
+	
+	# Get OSA Coordinator name (first available or default)
+	osa_coordinator_name = 'OSA Coordinator'
+	try:
+		first_coordinator = OSACoordinatorModel.objects.select_related('user').first()
+		if first_coordinator and first_coordinator.user:
+			osa_coordinator_name = first_coordinator.user.get_full_name() or first_coordinator.user.username
+	except:
+		pass
 	
 	ctx = {
 		'start_date': start_date,
@@ -2889,6 +2949,10 @@ def staff_reports_view(request):
 		'by_type': {item['type']: item['count'] for item in by_type},
 		'by_status': {item['status']: item['count'] for item in by_status},
 		'recent_violations': recent_violations,
+		
+		# Signatures
+		'staff_name': staff_name,
+		'osa_coordinator_name': osa_coordinator_name,
 	}
 	return render(request, 'violations/staff/reports.html', ctx)
 

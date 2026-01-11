@@ -492,6 +492,33 @@
         </table>
       </div>
 
+      <!-- Signature Section (Print Only) -->
+      <div class="signature-section print-only" style="margin-top: 50px; padding-top: 30px; page-break-inside: avoid;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; max-width: 600px; margin: 0 auto;">
+          <!-- OSA Staff Signature -->
+          <div style="flex: 1; text-align: center; padding: 0 20px;">
+            <div style="border-bottom: 1px solid #1f2937; width: 100%; margin-bottom: 8px; min-width: 200px;"></div>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 11pt; font-weight: 600; color: #1f2937; margin: 0; text-transform: uppercase;">
+              {{ staff_name }}
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 9pt; color: #4b5563; margin: 4px 0 0 0;">
+              OSA Staff
+            </p>
+          </div>
+          
+          <!-- OSA Coordinator Signature -->
+          <div style="flex: 1; text-align: center; padding: 0 20px;">
+            <div style="border-bottom: 1px solid #1f2937; width: 100%; margin-bottom: 8px; min-width: 200px;"></div>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 11pt; font-weight: 600; color: #1f2937; margin: 0; text-transform: uppercase;">
+              {{ osa_coordinator_name }}
+            </p>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 9pt; color: #4b5563; margin: 4px 0 0 0;">
+              OSA Coordinator
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="directory-footer">
         <p><i class="fas fa-info-circle"></i> This report is system-generated. For official records, please contact the Office of Student Affairs.</p>
@@ -2963,6 +2990,51 @@
 
       .directory-footer i {
         color: #1a472a !important;
+      }
+
+      /* ===== SIGNATURE SECTION ===== */
+      .signature-section {
+        margin-top: 40px !important;
+        padding-top: 30px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .signature-section > div {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: flex-start !important;
+        max-width: 600px !important;
+        margin: 0 auto !important;
+      }
+
+      .signature-section > div > div {
+        flex: 1 !important;
+        text-align: center !important;
+        padding: 0 20px !important;
+      }
+
+      .signature-section > div > div > div {
+        border-bottom: 1px solid #1f2937 !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+        min-width: 180px !important;
+      }
+
+      .signature-section > div > div > p:first-of-type {
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif !important;
+        font-size: 11pt !important;
+        font-weight: 600 !important;
+        color: #1f2937 !important;
+        margin: 0 !important;
+        text-transform: uppercase !important;
+      }
+
+      .signature-section > div > div > p:last-of-type {
+        font-family: 'Poppins', 'Segoe UI', 'Arial', sans-serif !important;
+        font-size: 9pt !important;
+        color: #4b5563 !important;
+        margin: 4px 0 0 0 !important;
       }
 
       /* ===== PAGE BREAK CONTROLS ===== */
