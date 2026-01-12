@@ -13,11 +13,21 @@ def create_role_profile(sender, instance: User, created: bool, **kwargs):
     # Auto-create a matching role profile for convenience
     if instance.role == User.Role.STUDENT:
         # Always trim username to 8 characters for student_id
-        Student.objects.create(user=instance, student_id=f"{instance.username}"[:8])
+        # Use get_or_create to avoid IntegrityError if a profile already exists
+        Student.objects.get_or_create(
+            user=instance,
+            defaults={"student_id": f"{instance.username}"[:8]},
+        )
     elif instance.role == User.Role.OSA_COORDINATOR:
-        OSACoordinator.objects.create(user=instance, employee_id=f"OSA-{instance.username}")
+        OSACoordinator.objects.get_or_create(
+            user=instance,
+            defaults={"employee_id": f"OSA-{instance.username}"},
+        )
     elif instance.role == User.Role.STAFF:
-        Staff.objects.create(user=instance, employee_id=f"STA-{instance.username}")
+        Staff.objects.get_or_create(
+            user=instance,
+            defaults={"employee_id": f"STA-{instance.username}"},
+        )
     # Record account creation event
     try:
         LoginActivity.objects.create(
