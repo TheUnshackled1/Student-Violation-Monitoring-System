@@ -15,4 +15,3 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "student_violation_system.settin
 
 application = get_wsgi_application()
 
-app = application
